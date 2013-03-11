@@ -1,0 +1,1593 @@
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" href="style.css" type="text/css" media="screen"></LINK>
+<SCRIPT type="text/JavaScript">
+<!--
+  function sw(id) {
+    if (document.getElementById) {
+      var content = document.getElementById(id);
+      content.className = (content.className == "close") ? "open" : "close";
+    }
+  }
+  
+  function exp(id0,id1) {
+    if (document.getElementById) {
+      document.getElementById(id0).className = "open";
+      document.getElementById(id1).className = "open";
+    }
+  }
+
+  function expand_all() {
+    for (var i=0; i<document.all.length; i++) {
+      var tag = document.all[i];
+      if (tag.className == "close") tag.className = "open";
+    }
+  }
+
+  function unexpand_all() {
+    for (var i=0; i<document.all.length; i++) {
+      var tag = document.all[i];
+      if (tag.className == "open") tag.className = "close";
+    }
+  }
+  
+  function expand_index() {
+    unexpand_all();
+    document.getElementById('form').className  = "open";
+    document.getElementById('exec').className  = "open";
+    document.getElementById('sub').className   = "open";
+    document.getElementById('create').className  = "open";
+    document.getElementById('control').className = "open";
+    document.getElementById('label').className   = "open";
+  }
+//-->
+</SCRIPT>
+<STYLE type="text/css">
+<!--
+  div.close { display:none; }
+  div.open  { display:block; }
+  h3 a { color:#ffffff; }
+  h3 a:hover,a:forcus { color:#ff9999; }
+  h4 a { color:#000000; }
+  h4 a:hover,a:forcus { color:#cc0000; }
+-->
+</STYLE>
+</HEAD>
+<BODY>
+<H1>
+  <DIV class="title">
+    Cannon Macro Language ver0.20
+  </DIV>
+  <DIV class="discription">
+    Cannon Macro Language (CML) 簡易リファレンスです
+  </DIV>
+</H1>
+
+<H2>
+  【コマンドリファレンス】
+  <DIV class="discription">
+    <A href="#DUMMY" onclick="expand_all()">【全て開く】</A>
+    <A href="#DUMMY" onclick="expand_index()">【インデックスまで開く】</A>
+    <A href="#DUMMY" onclick="unexpand_all()">【全て閉じる】</A>
+  </DIV>
+</H2>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('form');">
+    書式について
+  </A>
+  <DIV class="discription">
+    コメント文や数式の記述についてです．
+  </DIV>
+</H3>
+<DIV id="form" class="close">
+  <H4 id="form_comment">
+    <A id="expantion" href="#DUMMY" onclick="sw('comment');">
+      コメント (// , /* ~ */)
+    </A>
+  </H4>
+  <DIV id="comment" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        // <i>コメント</i>
+      </DIV>
+      <DIV class="statement">
+        /* <i>コメント</i> */
+      </DIV>
+      <DIV class="statement">
+        ' <i>コメント</i> '
+      </DIV>
+      <DIV class="outline">
+        コメント文を記述します．
+      </DIV>
+      <DIV class="discription">
+        "//" に続く1行，"/* ~ */" で括られた内部はコメントとして扱われ，読み飛ばされます．<br/>
+        また '...'(シングルクォーテーション)で括られた内部もコメントとして扱われますが，<br/>
+        コメント内容は保存されるため，ユーザー定義コマンドと併用することでプログラム内部から参照することが出来ます．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#user" onclick="exp('user','user');">ユーザー定義コマンド</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_sequence">
+    <A id="expantion" href="#DUMMY" onclick="sw('sequence');">
+      シーケンス ( {...} )
+    </A>
+  </H4>
+  <DIV id="sequence" class="close">
+    <DIV class="sequence">
+      <DIV class="statement">
+        {<i>[定数]</i> , <i>[定数]</i> , ...  <i>(一連のコマンド列)</i> }
+      </DIV>
+      <DIV class="outline">
+        シーケンス(一連のコマンド列)を記述します．
+      </DIV>
+      <DIV class="discription">
+        シーケンスとは，オブジェクトの動きを，一連のコマンド列によって表現したものです．<br/>
+        CMLでは，一連のコマンド列を中括弧"{ }"で括る事で，一つのシーケンスを定義します．<br/>
+        シーケンスは，&(シーケンス呼出), @*(ファイバ起動), n*/f* (オブジェクト生成) コマンドの直後で使用できます．<br/>
+        また，"@0" の省略が可能のため，上記コマンドを指定せずにシーケンスのみ記述した場合，ファイバを起動します．<br/><br/>
+        "{"の直後に数値を置く事で，プログラム内からこの数値を参照できます．<br/>
+        例えば "f{1 hoa0.1} f{2 hoa0.1}" と指定した場合，fコマンドにより CMLObject.fireObject() が呼び出される際，その引数で定数"1"/"2"を参照する事が出来ます．<br/>
+        これにより，fコマンドで生成されるオブジェクトをプログラム内で選択する事が可能となります．<br/>
+        ただし，この数値は<b>定数のみしか指定できず計算式を含める事は出来ません．</b><br/>
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_call"   onclick="exp('exec','call');">& (シーケンス呼出)</a></li>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (ファイバ起動)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+          <li><a href="#exec_other" onclick="exp('exec','other');">{.} (シーケンスの再呼び出し)</a></li>
+          <li><a href="#exec_other" onclick="exp('exec','other');">kf (ファイバの停止)</a></li>
+          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (反転実行)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_operator">
+    <A id="expantion" href="#DUMMY" onclick="sw('operator');">
+      数式(演算子)
+    </A>
+  </H4>
+  <DIV id="operator" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        + , - , * , / , %, ( , )
+      </DIV>
+      <DIV class="outline">
+        四則演算します．% は余剰計算です．
+      </DIV>
+      <DIV class="statement">
+        == , != , >= , <= , < , >
+      </DIV>
+      <DIV class="outline">
+        比較演算します．演算結果は 1(true) または 0(false) です．
+      </DIV>
+      <DIV class="statement">
+        !
+      </DIV>
+      <DIV class="outline">
+        単項演算子で論理反転します．0→1，非0→0 という非可逆演算を行います．
+      </DIV>
+      <DIV class="statement">
+        $sin, $cos, $tan, $asn, $acs, $atn, $sqr, $int and $abs
+      </DIV>
+      <DIV class="outline">
+        単項演算子で正弦,余弦,正接,逆正弦,逆余弦,逆正接,平方根,切捨て,絶対値を計算します．
+      </DIV>
+      <DIV class="statement">
+        $i?, $i??
+      </DIV>
+      <DIV class="outline">
+        整数乱数を返します．"$i?(n)"が返す範囲は0～(n-1)，"$i??(n)"は(-n+1)～(n-1)です.
+      </DIV>
+      <DIV class="discription">
+        引数には通常の四則演算と比較演算を利用することが出来ます．数値には小数と16進数が使えます．数値項で"0x"で始まる値を16進数として扱います．<br/>
+        論理和と論理積はありません．それぞれ，加算，乗算で代用してください．
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_value">
+    <A id="expantion" href="#DUMMY" onclick="sw('value');">
+      数式(変数)
+    </A>
+  </H4>
+  <DIV id="value" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        $?, $??
+      </DIV>
+      <DIV class="outline">
+        (random) 乱数を返します．範囲は $?;0<=n<1，$??;-1<=n<1 です．実装上は CMLObject.funcRand によって返される値です．
+      </DIV>
+      <DIV class="statement">
+        $r
+      </DIV>
+      <DIV class="outline">
+        (<U>R</U>ank) ゲーム難易度値を返します．範囲は実装依存です．実装上は CMLObject.globalRank または CMLObject.rank() によって返される値です．
+      </DIV>
+      <DIV class="statement">
+        $i
+      </DIV>
+      <DIV class="outline">
+        (<U>I</U>iterval) <a href="#sub_interval" onclick="exp('sub','interval');">i(変遷時間)コマンド</a>で現在指定されている値を返します．
+      </DIV>
+      <DIV class="statement">
+        $l, $l1, $l2, $l3, ... $l9
+      </DIV>
+      <DIV class="outline">
+        (<U>L</U>oop counter) <a href="#exec_loop" onclick="exp('exec','loop');">繰り返し実行コマンド</a>のカウンタを返します．
+      </DIV>
+      <DIV class="discription">
+        $lを指定すると，繰り返し実行１回目で0が返り，以降繰り返した回数インクリメントされた値が返ります．<br/>
+        また，入れ子状の繰り返し実行において，"$l1" により１階層上のループカウンタを参照出来ます．最大9階層上まで参照できます．
+      </DIV>
+      <DIV class="statement">
+        $1, $2, $3,... $9
+      </DIV>
+      <DIV class="outline">
+        (variable) 各変数に<a href="#form_assign" onclick="exp('form','assign');">代入</a>された値を返します．また，<a href="#label_lcall" onclick="exp('label','lcall');">ラベル呼出</a>で指定した引数を返します．
+      </DIV>
+      <DIV class="discription">
+        cmlでは，各シーケンスは$1～$9で示される9個の変数を持っており，その値の参照を行います．<br/>
+        これらの変数は，<a href="#form_assign" onclick="exp('form','assign');">代入</a>によって格納された値を保持しています．<br/>
+        また，<a href="#label_lcall" onclick="exp('label','lcall');">ラベル呼出</a>で指定した引数はこれら変数に順番に格納されます．<br/>
+        例えば，"#A{p$1,$2} &A 10,20" と記述した場合，$1=10, $2=20 を返し，位置を10,20に設定します．<br/>
+        また，ラベル定義していないシーケンス"{(sequence)}"に対しても引数を使用することが出来ます．<br/>
+        例えば，"&{p$1,$2}10,20" と記述した場合，$1=10, $2=20 を返し，位置を10,20に設定します．
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        $x, $y
+      </DIV>
+      <DIV class="outline">
+        (position <U>X</U>/<U>Y</U>) オブジェクトのx,y座標値を返します．
+      </DIV>
+      <DIV class="statement">
+        $sx, $sy
+      </DIV>
+      <DIV class="outline">
+        (<U>S</U>ign of position <U>X</U>/<U>Y</U>) オブジェクトのx,y座標値の符号を返します．$x<0 なら $sx=-1，$x>=0 なら $sx=1です．
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#control_pos" onclick="exp('control','pos')">p* (位置指定)</a></li></ul>
+      </DIV>
+      <DIV class="statement">
+        $v
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity) オブジェクトの速度を返します．
+      </DIV>
+      <DIV class="statement">
+        $vx, $vy
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity <U>X</U>/<U>Y</U>) オブジェクト速度のx,y成分を返します．
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#control_vel" onclick="exp('control','vel')">v* (速度指定)</a></li></ul>
+      </DIV>
+      <DIV class="statement">
+        $ho
+      </DIV>
+      <DIV class="outline">
+        (<U>H</U>ead angle of <U>O</U>bject) オブジェクトの角度を返します．
+      </DIV>
+      <DIV class="reference">
+        <ul>
+          <li><a href="#control_rot" onclick="exp('control','rot')">r* (旋回)</a></li>
+          <li><a href="#control_change_dir" onclick="exp('control','change_dir')">cd (方向指定)</a></li>
+        </ul>
+      </DIV>
+      <DIV class="statement">
+        $td
+      </DIV>
+      <DIV class="outline">
+        (<U>T</U>arget <U>D</U>istance) オブジェクトからターゲットオブジェクトまでの距離を返します．
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#sub_target" onclick="exp('sub','target');">t* (ターゲット指定)</a></li></ul>
+      </DIV>
+      <DIV class="statement">
+        $o, $o1, $o2,... $o9
+      </DIV>
+      <DIV class="outline">
+        (<U>O</U>bject count) nコマンドでオブジェクト生成時にID指定した子オブジェクトの数を返します．
+      </DIV>
+      <DIV class="discription">
+        "$o1～$o9" は各IDを持った子オブジェクトの数を返し，"$o" はID指定した子オブジェクトの総数を返します．<br/>
+        例えば，"n{}n1{}n1{}n2{}"と子オブジェクト4個生成した場合(3個はID指定)，$o1=2，$o2=1, $o=3 を返します．<br/>
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#create_single" onclick="exp('create','single');">n* (単体オブジェクト生成)</a></li></ul>
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        $p.x, $p.y, $p.sx, $p.sy, $p.v, $p.vx, $p.vy, $p.ho, $p.td, $p.o, $p.o1, ... $p.o9
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>arent) 親オブジェクトの各パラメータを参照します．
+      </DIV>
+      <DIV class="discription">
+        "$"の後に"p."を入れることで親オブジェクトの各パラメータを参照できます．          
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        $t.x, $t.y, $t.sx, $t.sy, $t.v, $t.vx, $t.vy, $t.ho, $t.td, $t.o, $t.o1, ... $t.o9
+      </DIV>
+      <DIV class="outline">
+        (<U>T</U>arget) ターゲットオブジェクトの各パラメータを参照します．"$t.td" は常に0を返します．
+      </DIV>
+      <DIV class="discription">
+        "$"の後に"t."を入れることでターゲットオブジェクトの各パラメータを参照できます．          
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#sub_target" onclick="exp('sub','target');">t* (ターゲット指定)</a></li></ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_assign">
+    <A id="expantion" href="#DUMMY" onclick="sw('assign');">
+      数式(変数代入) (l)
+    </A>
+  </H4>
+  <DIV id="assign" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        l$r=, l$1=, l$2=, l$3=,... l$9 <i>[代入値]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>L</U>et) 変数に値を代入します．
+      </DIV>
+      <DIV class="discription">
+        $1～$9で指定される9個の変数，及び難易度 $r へ値の代入を行います．<br/>
+        これらの変数は，シーケンス内で後から<a href="#form_value" onclick="exp('form','value');">参照</a>する事ができます．
+      </DIV>
+    </DIV>
+    <DIV class="command">
+      <DIV class="statement">
+        l$1+=, l$1-=, l$1*=, l$1/= <i>[計算値]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>L</U>et) 四則計算結果を代入します．
+      </DIV>
+      <DIV class="discription">
+        $1～$9で指定される9個の変数，及び難易度 $r へ値について演算結果の代入を行います．<br/>
+        例えば，"l$1=0[p$1l$1+=10w5]"では，位置0からスタートして，5フレーム毎に10ピクセルずつ右に動いていきます．<br/>
+        なお，これらの代入コマンドを，値のパラメータとして使用する事はできません．<br/>
+        つまり，上記の例を"l$1=0[pl$1+=10w5]"のように書く事はできません．
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('exec');">
+    実行制御コマンド
+  </A>
+  <DIV class="discription">
+    シーケンスの流れを制御するコマンド群です．待機，繰り返し，条件分岐，シーケンス呼出，ファイバ起動などがあります．
+  </DIV>
+</H3>
+<DIV id="exec" class="close">
+  <H4 id="exec_wait">
+    <A id="expantion" href="#DUMMY" onclick="sw('wait');">
+      待機 (w)
+    </A>
+  </H4>
+  <DIV id="wait" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        w <i>[待機フレーム数]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>W</U>ait) 引数で指定したフレーム数，待機します．
+      </DIV>
+      <DIV class="discription">
+        【初期値】
+        <ul>
+          <li>w1</li>
+        </ul>
+        引数省略時，前回待機したフレーム数と同じだけ待機します．引数=0 の場合，永久待機します．
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        ~
+      </DIV>
+      <DIV class="outline">
+        (wait interval) i(変遷時間指定)コマンドで指定したフレーム数，待機します．
+      </DIV>
+      <DIV class="discription">
+        引数はありません．i コマンドで指定したフレーム数，待機します．i コマンド指定値が 0 の場合，このコマンドは無視されます．<br/>
+        i コマンド指定値と ~ コマンド待機時間は一致していますが，変遷時間と ~ コマンド待機時間は g*(引力指定) を行った場合一致していません．<br/>
+        これは，g*(引力指定) を行った場合，変遷時間=0 になるためです．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (変遷時間指定)</a></li>
+          <li><a href="#control_gravity" onclick="exp('control','gravity');">gp (引力指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        w? <i>[式]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>W</U>ait <U>if</U>) 引数で指定した [式] が 0 になるまで，待機します．
+      </DIV>
+      <DIV class="discription">
+        引数で指定した [式] が 0 になるまで，待機します．
+      </DIV>
+    </DIV>
+  </DIV>
+    
+    
+  <H4 id="exec_loop">
+    <A id="expantion" href="#DUMMY" onclick="sw('loop');">
+      繰り返し ([...])
+    </A>
+  </H4>
+  <DIV id="loop" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        [ <i>[ループ回数]</i> <i>(sequence)</i> ] 
+      </DIV>
+      <DIV class="outline">
+        (loop) 引数で指定した回数，[...]内を繰り返し実行します．
+      </DIV>
+      <DIV class="discription">
+        ループ回数はループ内に入った時点で設定され，ループ内部で変化したとしても反映されません．
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="exec_branch">
+    <A id="expantion" href="#DUMMY" onclick="sw('branch');">
+      条件分岐 ([?...], [s?...])
+    </A>
+  </H4>
+  <DIV id="branch" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        [? <i>[式]</i> <i>(sequence)</i> : <i>(sequence)</i> ]
+      </DIV>
+      <DIV class="outline">
+        (<U>if</U> ... else ...) 引数で指定した条件式により分岐します．
+      </DIV>
+      <DIV class="discription">
+        [式]が非０なら ":"コマンド以前，０なら ":"コマンド以降が実行されます．
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        [s? <i>[式]</i> <i>(sequence)</i> : <i>[条件]</i> <i>(sequence)</i> : <i>[条件]</i> <i>(sequence)</i> ... ] 
+      </DIV>
+      <DIV class="outline">
+        (<U>S</U>elect <U>if</U> ... grater than or equal to ...) 引数で指定した式により分岐します．
+      </DIV>
+      <DIV class="discription">
+         ":"コマンドの引数以上，次の ":"コマンドの引数未満の場合，その間が実行されます．":"コマンドは低い値を先に記述する必要があります．<br/>
+         例えば，"[s?$r seqA :0.3 seqB :0.6 seqC]" では，$r<0.3 で seqA，0.3=<$r<0.6 で seqB，0.6=<$r で seqC が実行されます．
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="exec_call">
+    <A id="expantion" href="#DUMMY" onclick="sw('call');">
+      シーケンス呼出 (&)
+    </A>
+  </H4>
+  <DIV id="call" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        & <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (call) シーケンスを呼出します．
+      </DIV>
+      <DIV class="discription">
+        ({(sequence)}|ラベル) の内容がそこに記載されているものとして実行されます．<br/>
+        補助コマンドのパラメータは引き継がれます．例えば，"f4w3&{f}" と "#A{f} f4w3&A" は同じでfコマンドの弾速が引き継がれるため，速度4の弾を2回射出します．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_other"  onclick="exp('exec','other');">{.} (シーケンスの再呼び出し)</a></li>
+          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (反転実行)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^& <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake call) シーケンスを実行せずに，"&{.}"で呼び出されるシーケンスを差し替えます．
+      </DIV>
+      <DIV class="discription">
+        "&{.}" で呼び出されるシーケンスを差し替えます．このコマンドで呼出しても実際に実行はされません．
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="exec_fiber">
+    <A id="expantion" href="#DUMMY" onclick="sw('fiber');">
+      ファイバ起動 (@*) 
+    </A>
+  </H4>
+  <DIV id="fiber" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        @ <i>[排他実行ID]</i> <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (execute) 新規ファイバを起動します．
+      </DIV>
+      <DIV class="discription">
+        <i>({(sequence)}|ラベル)</i> の内容を実行するファイバを起動します．ファイバとは他言語におけるスレッドのような概念で，記述内容は並走して実行されます．<br/>
+        例えば，"&{[5f4w3]}a0.1" は弾を5連射<u>後に</u>加速するのに対し， "@{[5f4w3]}a0.1" では弾を5連射<u>しながら</u>加速します．<br/><br/>
+        また "@0" は省略可能です．つまり f*, n*, &, @* コマンドを指定せずに{...}またはラベルを記述した場合，"@0"が指定されたものとして実行されます．<br/><br/>
+        引数で[排他実行ID]>=1を指定した場合，同IDを持つファイバを停止して起動します．[排他実行ID]=0(デフォルト)の場合，他ファイバを停止しません．<br/><br/>
+        {(sequence)} 形式で記述した場合，補助コマンドのパラメータは引き継がれます．<br/>
+        ラベル 形式の場合，補助コマンドのパラメータは初期値にリセットされます．<br/>
+        例えば，"f4w3@{f}" は，速度4の弾を2回射出しますが，"#A{f} f4w3@A" は，速度4と1の弾を1回づつ射出します．
+      </DIV>
+      <DIV class="statement">
+        @o <i>[オブジェクトID]</i> (, <i>[オブジェクトID]</i> , ...) <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (execute <U>O</U>bject) n,f コマンドで生成時に指定した<i>[オブジェクトID]</i>を持つ子オブジェクトに対して，新規ファイバを起動します．
+      </DIV>
+      <DIV class="discription">
+        n,nc,f,fc コマンドで<i>[オブジェクトID]</i>を指定して生成した場合，指定<i>[オブジェクトID]</i>を持つ子オブジェクトに対して新規ファイバを起動します．<br/>
+        引数で複数<i>[オブジェクトID]</i>を指定した場合，孫オブジェクトに対してファイバを起動します．例えば，"@o1,2{...}"は"@o1{@o2{...}}"と同等です．<br/>
+        @oコマンドでは，補助コマンドのパラメータは常にリセットされます．また，<i>[排他実行ID]</i>の指定は出来ません．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_other" onclick="exp('exec','other');">{.} (シーケンスの再呼び出し)</a></li>
+          <li><a href="#exec_other" onclick="exp('exec','other');">kf (ファイバの停止)</a></li>
+          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (反転実行)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        @ko <i>[終了ステータス]</i> <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (execute when <U>K</U>ill <U>O</U>bject) 指定した<i>[終了ステータス]</i>でオブジェクトが破棄された場合，新規ファイバを起動します．
+      </DIV>
+      <DIV class="discription">
+        オブジェクトが破棄された瞬間に起動するファイバを指定できます．ファイバは<i>[終了ステータス]</i>毎に指定できます．
+        <i>[終了ステータス]</i>は koコマンド または CMLObject.destroy() の引数で指定した値で，実装依存です．<br/>
+        実行は1フレームのみ行われ，"w*", "~" のような時間指定コマンドは実行されず，それ以降のシーケンスは無視されます．
+        また，@koで指定したシーケンス内で ko を呼び出しても，シーケンスは循環しません．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#control_killobj" onclick="exp('control','killobj');">ko (オブジェクト破棄)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^@ <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake execute) シーケンスを実行せずに，"@*{.}"で呼び出されるシーケンスを差し替えます．
+      </DIV>
+      <DIV class="discription">
+        "@*{.}" で呼び出されるシーケンスを差し替えます．このコマンドで呼び出しても実際に実行はされません．
+      </DIV>
+    </DIV>
+  </DIV>
+  
+  <H4 id="exec_other">
+    <A id="expantion" href="#DUMMY" onclick="sw('other');">
+      その他
+    </A>
+  </H4>
+  <DIV id="other" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        {.}
+      </DIV>
+      <DIV class="outline">
+        前回呼び出したシーケンスを再度呼び出します．
+      </DIV>
+      <DIV class="discription">
+        &, @*, f*, n* の後置シーケンスで有効です．前回呼び出したシーケンスが再度呼び出されます．<br/>
+        呼び出されたシーケンスは，&, @*, f*, n* の各コマンド毎にファイバが保持しています．<br/>
+        例えば "n{seqA} f{seqB} n{.} f{.}" では，"n{.}","f{.}" は それぞれ seqA, seqB が呼び出されます．<br/>
+        また，"f{seqC} @{f{.}}" では，ファイバのパラメータとして呼出シーケンスも引き継がれるため，"f{.}"では seqC が呼び出されます．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_call"   onclick="exp('exec','call');">& (シーケンス呼出)</a></li>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (ファイバ起動)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        kf
+      </DIV>
+      <DIV class="outline">
+        (<U>K</U>ill all <U>F</U>ibers) 現在起動している全子ファイバを強制終了します．
+      </DIV>
+      <DIV class="discription">
+        そのファイバから並走起動した全てのファイバを強制的に終了します．<br/>
+        操作対象オブジェクトは関係有りません．@o で起動したファイバも強制終了します．<br/>
+        特定の排他実行IDを持つファイバのみを終了させたい場合は，"@1{}" のように空のシーケンスで上書きしてください．<br/>
+        排他実行ID=0 で起動したファイバを外部から終了させる手段は kf コマンドのみです．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (ファイバ起動)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('sub');">
+    補助コマンド
+  </A>
+  <DIV class="discription">
+    他コマンドと併せて使用するコマンド群です．値は他コマンドで参照され，補助コマンド単体での表面上の変化は有りません．
+  </DIV>
+</H3>
+<DIV id="sub" class="close">
+  <H4 id="sub_interval">
+    <A id="expantion" href="#DUMMY" onclick="sw('interval');">
+      変遷時間の指定 (i)
+    </A>
+  </H4>
+  <DIV id="interval" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        i <i>[フレーム数]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>I</U>nterval) オブジェクトパラメータの変更にかかる時間を指定します．
+      </DIV>
+      <DIV class="discription">
+        【被参照コマンド】
+        <ul>
+          <li>
+            <a href="#control_pos" onclick="exp('control','pos')">p*(位置)</a>,
+            <a href="#control_vel" onclick="exp('control','vel')">v*(速度)</a>,
+            <a href="#control_rot" onclick="exp('control','rot')">r*(旋回)</a>,
+            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd(方向転換)</a>,
+            <a href="#control_change_spd" onclick="exp('control','change_spd')">cs*(速度変化)</a>,
+            <a href="#exec_wait" onclick="exp('exec','wait')">~(変遷時間待機)の変遷時間</a>.
+          </li>
+          <li>
+            <a href="#control_acc" onclick="exp('control','acc')">a*(加速度)</a>,
+            <a href="#control_gravity" onclick="exp('control','gravity')">gp(引力)</a>は<b>変遷時間の指定は出来ません</b>．
+          </li>
+        </ul>
+        【初期値】
+        <ul>
+          <li>i0</li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_fiber_pos">
+    <A id="expantion" href="#DUMMY" onclick="sw('fiber_pos');">
+      位置の指定 (q*)
+    </A>
+  </H4>
+  <DIV id="fiber_pos" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        q <i>[x座標]</i> , <i>[y座標]</i>
+      </DIV>
+      <DIV class="outline">
+        (creating point) 位置を指定します．引数省略で 0 が設定されます．
+      </DIV>
+      <DIV class="statement">
+        qx <i>[x座標]</i>
+      </DIV>
+      <DIV class="outline">
+        (creating point <U>X</U>) x座標を指定します．y座標値は前回指定値から変化しません．
+      </DIV>
+      <DIV class="statement">
+        qy <i>[y座標]</i>
+      </DIV>
+      <DIV class="outline">
+        (creating point <U>Y</U>) y座標を指定します．x座標値は前回指定値から変化しません．
+      </DIV>
+
+      <DIV class="discription">
+        【被参照コマンド】
+        <ul>
+          <li>
+            <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f*(オブジェクト生成)</a>
+            コマンドの新規オブジェクトの初期位置．
+          </li>
+          <li>
+            <a href="#sub_head" onclick="exp('sub','head')">ht(ターゲット方向との相対角度指定)</a>
+            コマンドで計算される角度の原点
+          </li>
+        </ul>
+        【初期値】
+        <ul>
+          <li>q0,0</li>
+        </ul>
+        指定値はオブジェクトからの相対位置です．<br/>
+        オブジェクトを原点としてオブジェクト角度により回転した位置がスクリーン上の位置となります．
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_head">
+    <A id="expantion" href="#DUMMY" onclick="sw('head');">
+      角度の指定 (h*)
+    </A>
+  </H4>
+  <DIV id="head" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        ha <i>[角度]</i><br/>
+        hax <i>[角度]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead on <U>A</U>bsolute angle) スクリーン上の絶対角度(スクロール方向を0)で指定します．<br/>
+        (set <U>H</U>ead on <U>A</U>bsolute angle and fi<U>X</U>) ha と同じ意味です．
+      </DIV>
+
+      <DIV class="statement">
+        ho <i>[角度]</i><br/>
+        hox <i>[角度]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead relative to <U>O</U>bject angle) オブジェクト角度との相対角度で指定します．<br/>
+        (set <U>H</U>ead relative to <U>O</U>bject angle and fi<U>X</U>) その時点の角度で固定します．
+      </DIV>
+
+      <DIV class="statement">
+        hv <i>[角度]</i><br/>
+        hvx <i>[角度]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead on <U>V</U>elocity direction) オブジェクト進行方向との相対角度で指定します．<br/>
+        (set <U>H</U>ead on <U>V</U>elocity direction and fi<U>X</U>) その時点の角度で固定します．
+      </DIV>
+
+      <DIV class="statement">
+        hp <i>[角度]</i><br/>
+        hpx <i>[角度]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead relative to <U>P</U>arent object angle) 親オブジェクト角度との相対角度で指定します．<br/>
+        (set <U>H</U>ead relative to <U>P</U>arent object angle and fi<U>X</U>) その時点の角度で固定します．
+      </DIV>
+
+      <DIV class="statement">
+        ht <i>[角度]</i><br/>
+        htx <i>[角度]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead to <U>T</U>arget) ターゲット方向との相対角度で指定します．<br/>
+        (set <U>H</U>ead to <U>T</U>arget and fi<U>X</U>) その時点の角度で固定します．
+      </DIV>
+
+      <DIV class="statement">
+        hs <i>[角度]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead <U>S</U>equencial) 前回指定角度からの相対値による指定ですが，参照するコマンドにより意味が変化します．
+        <ul>
+          <li>f*(複数オブジェクト生成)コマンドに対しては，前回射出方向からの相対角で指定します．</li>
+          <li>r*(旋回)，cd(方向転換)コマンドに対しては，１フレーム辺りの回転量を指定します．</li>
+          <li>pd(位置), vd(速度), ad(加速度) コマンドに対しては，現在の角度からの相対値で指定します．</li>
+        </ul>
+      </DIV>
+
+      <DIV class="discription">
+        【被参照コマンド】
+        <ul>
+          <li>
+            <a href="#create_multi" onclick="exp('create','multi')">f*(複数オブジェクト生成)</a>
+            新規オブジェクトの初速度方向と初期角度．
+          </li>
+          <li>
+            <a href="#control_rot" onclick="exp('control','rot')">r*(旋回)</a>,
+            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd(方向転換)</a>
+            旋回終了角度．
+          </li>
+          <li>
+            <a href="#control_pos" onclick="exp('control','pos')">pd(位置)</a>,
+            <a href="#control_vel" onclick="exp('control','vel')">vd(速度)</a>,
+            <a href="#control_acc" onclick="exp('control','acc')">ad(加速度)</a>
+            方向．
+          </li>
+        </ul>
+        【初期値】
+        <ul>
+          <li>ht0</li>
+        </ul>
+        角度は，反時計周りを正として指定します．<br/><br/>
+        接尾子"x"が付かない場合，角度は随時更新され，接尾子"x"が付く場合，角度は固定されます．<br/>
+        "ht w30 f" では，30フレーム経過後に自機に向けて弾が放たれるのに対し，<br/>
+        "htx w30 f"では，30フレーム経過後に「30フレーム前に自機が居た位置に向けて」弾が放たれます．<br/><br/>
+        また，b* コマンドで連射を設定した場合にも随時更新が適用されます．<br/>
+        "bs5,0,0,5 ht f" では，5フレーム毎に自機に向けて弾が連射されるのに対し，<br/>
+        "bs5,0,0,5 htx f"では，最初の弾は自機に向けて放たれ，5フレーム毎にその弾と同方向に向けて弾が連射されます．
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_barrage">
+    <A id="expantion" href="#DUMMY" onclick="sw('barrage');">
+      複数オブジェクト生成コマンドの設定 (b*)
+    </A>
+  </H4>
+  <DIV id="barrage" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        bm <i>[弾数]</i> , <i>[扇中心角]</i> , <i>[速度範囲]</i> , <i>[連射間隔]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>B</U>arrage setting <U>M</U>ultiple) f コマンドの同時射出について扇状弾中心角/多重弾速度幅/連射間隔で指定します．
+      </DIV>
+      <DIV class="statement">
+        bs <i>[弾数]</i> , <i>[変化増減値]</i> , <i>[速度増減値]</i> , <i>[連射間隔]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>B</U>arrage setting <U>S</U>equencial) f コマンドの同時射出について角度増減値/速度増減値/連射間隔で指定します．
+      </DIV>
+      <DIV class="statement">
+        br <i>[弾数]</i> , <i>[角度範囲]</i> , <i>[速度範囲]</i> , <i>[連射間隔]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>B</U>arrage setting <U>R</U>andom) f コマンドの同時射出について乱数弾角度範囲/乱数弾速度範囲/連射間隔で指定します．
+      </DIV>
+      <DIV class="discription">
+        【被参照コマンド】
+        <ul>
+          <li>
+            <a href="#create_multi" onclick="exp('create','multi')">f*(複数オブジェクト生成)</a>
+            新規オブジェクトの個数，初期角度，初期速度．
+          </li>
+        </ul>
+        【初期値】
+        <ul>
+          <li>bs1,0,0,0</li>
+        </ul>
+        このコマンドを指定後，一回の f コマンドで，扇状弾/多重弾/連射弾/乱数弾を一度に射出するようになります．<br/>
+        bm コマンドで [扇中心角]=-360/+360を指定した場合，特例的に全方位弾として計算されます．<br/>
+        bs/br コマンドで [弾数]=0を指定し[連射間隔]>0の場合，kf(全子ファイバ破棄)コマンドを用いるかオブジェクトが破壊されるまで連射します．<br/><br/>
+        bm/bs/br コマンドは連続して記述することで，階層的に弾幕を設定する事が可能です．<br/>
+        例えば "bm3,30bm5,0,2" と記述した場合，一回の f コマンドで，速度幅2の多重弾5発が，中心角30度で3方向に射出されます．<br/>
+        "br5,90,0,10bm4,10" と記述した場合，一回の f コマンドで，中心角10度の扇状弾4発が，90度の範囲でランダムに10フレ間隔で5連射されます．
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        bv <i>[速度増減値]</i>
+      </DIV>
+      <DIV class="outline">
+        (sequencial setting of <U>B</U>ullet <U>V</U>elocity) 連続射出速度を指定します．
+      </DIV>
+      <DIV class="discription">
+        【被参照コマンド】
+        <ul>
+          <li>
+            <a href="#create_multi" onclick="exp('create','multi')">f*(複数オブジェクト生成)</a>
+            新規オブジェクトの初期速度．
+          </li>
+        </ul>
+        【初期値】
+        <ul>
+          <li>bv0</li>
+        </ul>
+        bs コマンドの第三引数のみ取り出した原始的コマンドで，ループコマンドなどと組み合わせる事でより細かい動作が可能です．<br/>
+        速度指定せずに f コマンドを呼び出した場合，前回射出速度から[速度増減値]を加算した速度で射出します．<br/>
+        bm/bs/br コマンドのように連続記述により，階層的弾幕を表現することは<b>出来ません</b>．
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_target">
+    <A id="expantion" href="#DUMMY" onclick="sw('target');">
+      ターゲットオブジェクトの指定 (t*)
+    </A>
+  </H4>
+  <DIV id="target" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        td
+      </DIV>
+      <DIV class="outline">
+        (set <U>T</U>arget to <U>D</U>efault) ターゲットオブジェクトをデフォルトターゲット(実装依存;通常プレイヤー)に変更します．
+      </DIV>
+
+      <DIV class="statement">
+        tp
+      </DIV>
+      <DIV class="outline">
+        (set <U>T</U>arget to <U>P</U>arent) ターゲットオブジェクトを親オブジェクトに変更します．
+      </DIV>
+
+      <DIV class="statement">
+        to <i>[object_id]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>T</U>arget to another <U>O</U>bject) ターゲットオブジェクトを指定idを持った子オブジェクトに変更します．
+      </DIV>
+
+      <DIV class="discription">
+        【被参照コマンド】
+        <ul>
+          <li>
+            <a href="#sub_head" onclick="exp('sub','head')">ht(ターゲット方向との相対角度指定)</a>
+            対象オブジェクト．
+          </li>
+        </ul>
+        【初期値】
+        <ul>
+          <li>td</li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+  
+  <H4 id="sub_mirror">
+    <A id="expantion" href="#DUMMY" onclick="sw('mirror');">
+      反転動作の指定 (m)
+    </A>
+  </H4>
+  <DIV id="mirror" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        m <i>[反転方向]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>M</U>irror) シーケンス上の次コマンドの動作を反転します．
+      </DIV>
+      <DIV class="discription">
+        【被参照コマンド】
+        <ul>
+          <li>
+            <a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q*(ファイバ位置)</a>,
+            <a href="#control_pos" onclick="exp('control','pos')">p*(位置)</a>,
+            <a href="#control_vel" onclick="exp('control','vel')">v*(速度)</a>,
+            <a href="#control_acc" onclick="exp('control','acc')">a*(加速度)</a>
+            各x/y成分．
+          </li>
+          <li>
+            <a href="#sub_head" onclick="exp('sub','head')">h*(角度指定)</a>,
+            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd*(方向転換)</a>
+            角度/回転方向．
+          </li>
+          <li>
+            <a href="#exec_call"   onclick="exp('exec','call');">& (シーケンス呼出)</a>,
+            <a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (ファイバ起動)</a>,
+            <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a>
+            内部シーケンス全て．
+          </li>
+        </ul>
+        【初期値】
+        <ul>
+          <li>指定無し</li>
+        </ul>
+        このコマンドは，他の補助コマンドと異なり，シーケンス上の次コマンドのみに作用します．<br/>
+        引数は，0;スクロール方向軸で反転，1;スクロール方向の垂直軸で反転，2;原点対称反転です．<br/>
+        &(シーケンス呼出), @*(ファイバ生成), n*/f*(オブジェクト生成)に対して使用すると，シーケンス内のコマンド全てが反転します．<br/>
+        反転させるコマンドは必ず次に記述する必要があります．例えば，条件分岐などで "[?$x<0 m]n..." のように記述する事は出来ません．
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('create');">
+    オブジェクト生成コマンド
+  </A>
+  <DIV class="discription">
+    新規オブジェクトを生成するコマンド群です．単数オブジェクト生成と複数オブジェクト一括生成の二種類のコマンドがあります．
+  </DIV>
+</H3>
+<DIV id="create" class="close">
+  <H4 id="create_single">
+    <A id="expantion" href="#DUMMY" onclick="sw('single');">
+      単体オブジェクトの生成 (n*)
+    </A>
+  </H4>
+  <DIV id="single" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        n <i>[オブジェクトID]</i> <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>N</U>ew) オブジェクトIDを指定して，単体の子オブジェクトを生成します．
+      </DIV>
+      <DIV class="discription">
+        単体のオブジェクトを，q コマンドで指定した相対位置に，初速度0で，生成します．<br/>
+        引数 [オブジェクトID] は，@o(ファイバ生成) コマンドや to(ターゲット指定), $co*(オブジェクト数の参照) で特定オブジェクトを参照するために指定します．<br/>
+        [オブジェクトID]>=1 を指定する事で，上記コマンドによるオブジェクトの参照が可能となります．<br/><br/>
+        このコマンドは，実装上 CMLObject.newObject() を呼び出してオブジェクトを生成します．<br/>
+      </DIV>
+
+      <DIV class="statement">
+        nc <i>[オブジェクトID]</i> <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>N</U>ew <U>C</U>hild) オブジェクトIDを指定して，相対位置に配置される単体の子オブジェクトを生成します．
+      </DIV>
+      <DIV class="discription">
+        単体のオブジェクトを，q コマンドで指定した相対位置に，初速度0で，生成します．<br/>
+        このコマンドで生成されたオブジェクトは，常に親オブジェクトの相対位置に配置されます．<br/>
+        引数 [オブジェクトID] は，@o(ファイバ生成) コマンドや to(ターゲット指定), $co*(オブジェクト数の参照) で特定オブジェクトを参照するために指定します．<br/>
+        [オブジェクトID]>=1 を指定する事で，上記コマンドによるオブジェクトの参照が可能となります．<br/><br/>
+        このコマンドは，実装上 CMLObject.newObject() を呼び出してオブジェクトを生成します．<br/>
+      </DIV>
+
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');"  >@o (子オブジェクトのファイバ起動)</a></li>
+          <li><a href="#exec_other"  onclick="exp('exec','other');"  >{.} (シーケンスの再呼び出し)</a></li>
+          <li><a href="#sub_mirror"  onclick="exp('sub','mirror');"  >m (反転実行)</a></li>
+          <li><a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (ファイバ位置)</a></li>
+          <li><a href="#sub_target"  onclick="exp('sub','target');"  >to (ターゲットオブジェクトの指定)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^n <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake <U>N</U>ew) オブジェクトを生成せずに，"{.}"で呼び出されるシーケンスを差し替えます．
+      </DIV>
+      <DIV class="discription">
+        "n*{.}" で呼び出されるシーケンスを差し替えます．オブジェクトは生成しません．
+      </DIV>
+    </DIV>
+  </DIV>
+
+    
+  <H4 id="create_multi">
+    <A id="expantion" href="#DUMMY" onclick="sw('multi');">
+      複数オブジェクトの生成 (f*)
+    </A>
+  </H4>
+  <DIV id="multi" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        f <i>[速度]</i> , <i>[オブジェクトID]</i> <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>F</U>ire) 初速度を指定して，単体/複数の子オブジェクトを生成します．
+      </DIV>
+
+      <DIV class="statement">
+        fc <i>[速度]</i> , <i>[オブジェクトID]</i> <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>F</U>ire <U>C</U>hild) 初速度を指定して，相対位置に配置される，単体/複数の子オブジェクトを生成します．
+      </DIV>
+
+      <DIV class="discription">
+        n*(オブジェクト生成)コマンドと同様，オブジェクトを生成しますが，
+        <ul>
+          <li>初速度を指定する点</li>
+          <li>b*(複数射出指定)コマンドに従い複数オブジェクトを同時に生成する点</li>
+          <li>後続の<i>{...}/ラベル</i>を省略できる点</li>
+          <li>実装上は CMLObject.fireObject() を呼び出してオブジェクトを生成する点</li>
+        </ul>
+        が異なります．<br/>
+        後続の<i>{...}/ラベル</i>を省略した場合は，再呼び出し"{.}"を省略したものとみなします．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_other"  onclick="exp('exec','other');"  >{.} (シーケンスの再呼び出し)</a></li>
+          <li><a href="#sub_mirror"  onclick="exp('sub','mirror');"  >m (反転実行)</a></li>
+          <li><a href="#sub_barrage"   onclick="exp('sub','barrage');" >b* (同時射出指定)</a></li>
+          <li><a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (ファイバ位置)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^f <i>[速度]</i> <i>({(sequence)}|ラベル)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake <U>F</U>ire) オブジェクトを生成せずに，"{.}"で呼び出されるシーケンスを差し替え，bv，ba，hs による指定を一回分進行させます．
+      </DIV>
+      <DIV class="discription">
+        "{.}"で呼び出されるシーケンスを差し替えて，bv，hs による指定を一回分進行させます．実際にオブジェクトは生成しません．<br/>
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_head" onclick="exp('sub','head');">hs (角度指定)</a></li>
+          <li><a href="#sub_barrage" onclick="exp('exec','barrage');">bv (連射指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('control');">
+    オブジェクト制御コマンド
+  </A>
+  <DIV class="discription">
+    オブジェクトを動かすコマンド群です．位置，速度，加速度，速度変化，方向転換，引力，旋回，破棄などのコマンドがあります．
+  </DIV>
+</H3>
+<DIV id="control" class="close">
+  <H4 id="control_pos">
+    <A id="expantion" href="#DUMMY" onclick="sw('pos');">
+      オブジェクト位置の指定 (p*)
+    </A>
+  </H4>
+  <DIV id="pos" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        p <i>[x座標]</i> , <i>[y座標]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition) オブジェクトの位置を指定します．引数省略で 0 が設定されます．
+      </DIV>
+      <DIV class="statement">
+        px <i>[x座標]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition <U>X</U>) オブジェクトのx座標を指定します．y座標値は変化しません．
+      </DIV>
+      <DIV class="statement">
+        py <i>[y座標]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition <U>Y</U>) オブジェクトのy座標を指定します．x座標値は変化しません．
+      </DIV>
+      <DIV class="statement">
+        pd <i>[指定角度方向距離]</i> , <i>[指定角度垂直方向距離]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition for head <U>D</U>irection) h*(角度指定)方向へのオブジェクトの位置を設定します．
+      </DIV>
+      <DIV class="discription">
+        座標値は nc/fc コマンドで生成したオブジェクトが操作対象の場合，親オブジェクトの相対位置となります．<br/>
+        それ以外の場合，スクリーン上の絶対位置(実装依存)となります．<br/>
+        i(変遷時間指定)コマンドにより位置変遷時間を指定します．i0 の場合，即時変更します．<br/>
+        変遷時間が指定されている場合は，３次スプラインにより補間されます．<br/>
+        このコマンドに続いて v*(速度指定) が指定された場合，３次スプライン補間の終点速度として計算されます．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (変遷時間指定)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (角度指定)</a></li>
+          <li><a href="#control_vel" onclick="exp('control','vel');">v* (速度指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="control_vel">
+    <A id="expantion" href="#DUMMY" onclick="sw('vel');">
+      オブジェクト速度の指定 (v*)
+    </A>
+  </H4>
+  <DIV id="vel" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        v <i>[x成分]</i> , <i>[y成分]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity) オブジェクトの速度を指定します．引数省略で 0 が設定されます．
+      </DIV>
+      <DIV class="statement">
+        vx <i>[x成分]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity <U>X</U>) オブジェクト速度のx成分を指定します．y成分値は変化しません．
+      </DIV>
+      <DIV class="statement">
+        vy <i>[y成分]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity <U>Y</U>) オブジェクト速度のy成分を指定します．x成分値は変化しません．
+      </DIV>
+      <DIV class="statement">
+        vd <i>[指定角度方向速度]</i> , <i>[指定角度垂直方向速度]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity for head <U>D</U>irection) h*(角度指定)方向へのオブジェクトの速度を設定します．
+      </DIV>
+      <DIV class="discription">
+        i(変遷時間指定)コマンドにより速度変遷時間を指定します．i0 の場合，即時変更します．<br/>
+        変遷時間が0で無く，同フレーム内で既に p コマンドを実行していた場合，３次スプライン補間の終了速度として扱われます．<br/>
+        変遷時間が0で無く，同フレーム内で p コマンドを実行していない場合，指定時間での速度変化(加減速)として扱われます．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (変遷時間指定)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (角度指定)</a></li>
+          <li><a href="#control_pos" onclick="exp('control','pos');">p* (位置指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="control_acc">
+    <A id="expantion" href="#DUMMY" onclick="sw('acc');">
+      オブジェクト加速度の指定 (a*)
+    </A>
+  </H4>
+  <DIV id="acc" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        a <i>[x成分]</i> , <i>[y成分]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration) オブジェクトの加速度を指定します．引数省略で 0 が設定されます．
+      </DIV>
+      <DIV class="statement">
+        ax <i>[x成分]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration <U>X</U>) オブジェクト加速度のx成分を指定します．y成分値は変化しません．
+      </DIV>
+      <DIV class="statement">
+        ay <i>[y成分]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration <U>Y</U>) オブジェクト加速度のy成分を指定します．x成分値は変化しません．
+      </DIV>
+      <DIV class="statement">
+        ad <i>[指定角度方向加速度]</i> , <i>[指定角度垂直方向加速度]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration for head <U>D</U>irection) h*(角度指定)方向へのオブジェクトの加速度を設定します．
+      </DIV>
+      <DIV class="discription">
+        i(変遷時間指定)コマンドによる加速時間の指定は<b>出来ません</b>．<br/>
+        加速を停止させるには，加速=0を指定するか，cd(方向転換), cs*(速度変化), gp(引力)，変遷時間を指定した p*(位置)/v*(速度) を指定する必要があります．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (角度指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="control_change_dir">
+    <A id="expantion" href="#DUMMY" onclick="sw('change_dir');">
+      方向転換(bulletML の changeDirection 互換) (cd)
+    </A>
+  </H4>
+  <DIV id="change_dir" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        cd <i>[1フレーム辺りの最大旋回角]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>D</U>irection) h*コマンドで指定した方向に旋回します．(bulletMLの&lt;changeDirection&gt;タグ相当)
+      </DIV>
+      <DIV class="discription">
+        進行方向とオブジェクト角度を同時に変更します（<a href="#control_rot" onclick="exp('control','rot')">r*コマンド</a>はオブジェクト角度のみ変更します）．
+        このコマンドを指定した時点でのオブジェクト角度が初期移動方向となります．<br/>
+        このコマンド以降，r*(旋回)コマンドなどでオブジェクト角度を変化させても，進行方向が変化するようになります(BMLモーションモード)．<br/>
+        このモードを解除したい場合，p*(位置), v*(速度), a*(加速度)，gp(引力)を指定する必要があります．<br/><br/>
+        h*(角度指定)コマンドにより基準方向と角度(bulletMLの&lt;direction&gt;タグとtype属性に相当)を指定します．<br/>
+        ha(絶対値指定), ho(オブジェクト角相対値指定)，ht(ターゲット方向相対値指定)，hs(連続指定)がそれぞれ，<br/>
+        &lt;changeDirection&gt; タグの type="absolute", type="relative", type="aim", type="sequence" に相当します．<br/>
+        i(変遷時間指定)コマンドにより旋回時間(bulletMLの&lt;term&gt;タグに相当)を指定します．i0 の場合，即時変更します．<br/>
+        引数で１フレーム辺りの最大旋回角度を指定します．引数=0の場合，最大旋回角度は無視され，この場合の挙動は &lt;changeDirection&gt; と同等です．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (変遷時間指定)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (角度指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+    
+  <H4 id="control_change_spd">
+    <A id="expantion" href="#DUMMY" onclick="sw('change_spd');">
+      速度変化(bulletML の changeSpeed 互換) (cs*)
+    </A>
+  </H4>
+  <DIV id="change_spd" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        csa <i>[speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>S</U>peed <U>A</U>bsolute) 指定した速度に変化させます．(bulletMLの&lt;changeSpeed type="Absolute"&gt;相当)
+      </DIV>
+
+      <DIV class="statement">
+        csr <i>[speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>S</U>peed <U>R</U>elative) 現在の速度の相対値で指定し，速度変化させます．(bulletMLの&lt;changeSpeed type="Relative"&gt;相当)
+      </DIV>
+
+      <DIV class="statement">
+        css <i>[speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>S</U>peed <U>S</U>equence) 指定値で１フレーム辺り加速(減速)します．(bulletMLの&lt;changeSpeed type="Sequence"&gt;相当)
+      </DIV>
+      <DIV class="discription">
+        オブジェクト角方向に速度を変化させます．このコマンドを指定した時点でのオブジェクト角度が初期移動方向となります．<br/>
+        このコマンド以降，r コマンドなどでオブジェクト角度を変化させると，進行方向も変化するようになります(BMLモーションモード)．<br/>
+        このモードを解除したい場合，p*(位置), v*(速度), a*(加速度)，g*(引力)を指定する必要があります．<br/><br/>
+        i(変遷時間指定)コマンドにより加減速時間(bulletML &lt;term&gt;)を指定します．i0 の場合，即時変更します．<br/>
+        引数で速度(bulletML &lt;speed&gt;)を指定します．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (変遷時間指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+    
+  <H4 id="control_gravity">
+    <A id="expantion" href="#DUMMY" onclick="sw('gravity');">
+      引力指定 (gp)
+    </A>
+  </H4>
+  <DIV id="gravity" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        gp <i>[引力]</i> , <i>[摩擦係数]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>G</U>ravity at <U>P</U>osition) 指定位置からの引力を指定します．
+      </DIV>
+      <DIV class="discription">
+        このコマンド以降，p(位置)コマンドで指定した位置にからの引力によりオブジェクトが移動します(引力モーションモード)．このモードでは下記計算式が適用されます．<br/><br/>
+        [加速度] = [指定位置までの距離] * [引力の強さ] / 100 - [速度] * [摩擦係数] / 100<br/><br/>
+        このモードを解除したい場合，"gp0,0"を指定するか，v*(速度), a*(加速度)，cd(方向転換), cs*(速度変化)，i(変遷時間)指定後にp*(位置) を指定する必要があります．<br/>
+        また，このコマンドを実行すると 変遷時間指定=0 にセットされます．ただし"~"コマンドによる待機時間はそのままです．<br/>
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#control_pos" onclick="exp('control','pos');">p (位置指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+
+  <H4 id="control_rot">
+    <A id="expantion" href="#DUMMY" onclick="sw('rot');">
+      オブジェクト旋回の指定 (r*)
+    </A>
+  </H4>
+  <DIV id="rot" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        r <i>[開始速度]</i> , <i>[終了速度]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>R</U>otate) オブジェクトをh* commandで指定した角度まで旋回させます．
+      </DIV>
+      <DIV class="discription">
+        i(変遷時間指定)で旋回にかかる時間を指定し，h*(角度指定)で旋回角度を指定します．i0 の場合，即時変更します．<br/>
+        旋回角度は開始/終了速度を元に３次スプライン補間により計算されます．<br/>
+        [開始速度] / [終了速度] は，等速回転した場合の回転速度を1とした相対値で指定します．<br/><br/>
+        r0,0 の場合，回転は加速→中央で最高速回転→減速し，開始/終了回転速度は 0 となるように補間されます．<br/>
+        r1,1 の場合，等速回転をします．<br/>
+        r2,0(r0,2) の場合，等加速(減速)回転をします．<br/>
+        r-1,0 の場合，最初反対方向に回転後，加速→減速し，終了回転速度は 0 となるように補間されます．
+      </DIV>
+
+      <DIV class="statement">
+        rc <i>[1フレーム辺りの最大旋回角]</i> 
+      </DIV>
+      <DIV class="outline">
+        (<U>R</U>otate <U>C</U>onstant) オブジェクト角度を指定角度まで等速旋回させます．
+      </DIV>
+      <DIV class="discription">
+        i(変遷時間指定)で旋回にかかる時間を指定し，h*(角度指定)で旋回角度を指定します．i0 の場合，即時変更します．<br/>
+        引数で１フレーム辺りの最大旋回角度を指定できます．<br/>
+        引数=0の場合，最大旋回角度は無視されます．この場合の挙動は r1,1 と同じになります．
+      </DIV>
+
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (変遷時間指定)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (角度指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+
+  <H4 id="control_killobj">
+    <A id="expantion" href="#DUMMY" onclick="sw('killobj');">
+      オブジェクトの破棄 (ko)
+    </A>
+  </H4>
+  <DIV id="killobj" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        ko <i>[終了ステータス]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>K</U>ill <U>O</U>bject) オブジェクトを破棄します．
+      </DIV>
+      <DIV class="discription">
+        オブジェクトが破棄され，ファイバが終了します．このコマンド以降のシーケンスは実行されません．<br/>
+        指定した[終了ステータス]は，@koコマンド，CMLObject.onDestroy()で参照されます．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_fiber" onclick="exp('exec','fiber');">@ko (終了時ファイバの指定)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('label');">
+    ラベル定義/呼出
+  </A>
+  <DIV class="discription">
+    シーケンスにラベルを付け，後からラベル指定でそのシーケンスを呼び出せるようにします．
+  </DIV>
+</H3>
+<DIV id="label" class="close">
+  <H4 id="label_define">
+    <A id="expantion" href="#DUMMY" onclick="sw('define');">
+      ラベル定義
+    </A>
+  </H4>
+  <DIV id="define" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        #NAME {(sequence)} (NAME = [A-Z_][A-Z0-9_]*)
+      </DIV>
+      <DIV class="outline">
+        シーケンスにラベルを付けます．
+      </DIV>
+      <DIV class="discription">
+        シーケンスにラベルを付け，あとから参照する事が出来ます．<br/>
+        ラベルには，頭文字に英大文字/アンダーバー(_)，それ以外の文字に英大文字/数字/アンダーバー(_)が使用できます．<br/><br/>
+        ラベル定義したシーケンス内でラベル定義を行った場合，外側ラベルの名前空間内のラベルとして扱われます．<br/>
+        例えば，"#A{#C{seqA} &C} #B{#C{seqB} &C}" という記述では，ラベル A 内で C と記述した場合 seqA が呼び出され，<br/>
+        ラベル B 内で C と記述した場合 seqB が呼び出されます．
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="label_lcall">
+    <A id="expantion" href="#DUMMY" onclick="sw('lcall');">
+      ラベル呼出
+    </A>
+  </H4>
+  <DIV id="lcall" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        NAME[.NAME]* <i>[引数]</i> , <i>[引数]</i> ... (NAME = [A-Z_][A-Z0-9_]*)
+      </DIV>
+      <DIV class="outline">
+        ラベル定義したシーケンスを呼び出します．
+      </DIV>
+      <DIV class="discription">
+        ラベル定義した名前をシーケンス内で直接指定すると，そのシーケンスが呼び出されます．<br/>
+        ラベルは，&(シーケンス呼出), @*(ファイバ起動), n*/f* (オブジェクト生成) コマンドの直後で使用できます．<br/>
+        また，"@0" の省略が可能のため，上記コマンドを指定せずにラベルのみ記述した場合，ファイバを起動します．<br/>
+        またラベル呼出時に引数を指定でき，シーケンス内部で"$1,$2..."として参照することが出来ます．<br/>
+        ただし，数値はラベル名として認識してしまうため，引数とラベルの間に空白文字を入れるか，第一引数を括弧で囲う必要があります．<br/><br/>
+        アクセス演算子 "." を用いることで名前空間を指定してラベルを呼び出せます．<br/>
+        また，呼出と同じ名前空間にそのラベルの定義がない場合，上位の名前空間から検索します．<br/>
+        例えば，"#A{&B.C &C} #B{#C{seqB} &C} #C{seqC}" という記述では，ラベル A 内で "B.C" と記述すると seqB が呼び出されます．<br/>
+        また，ラベル A 内で C と記述した場合 seqC が呼び出され，ラベル B 内で C と記述した場合 seqB が呼び出されます．
+      </DIV>
+      <DIV class="reference">
+        【参照】
+        <ul>
+          <li><a href="#exec_call"   onclick="exp('exec','call');">& (シーケンス呼出)</a></li>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (ファイバ起動)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+  
+  
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('user');">
+    ユーザー定義コマンド
+  </A>
+  <DIV class="discription">
+    実装依存のコマンド群です．
+  </DIV>
+</H3>
+<DIV id="user" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        &[a-z]+
+      </DIV>
+      <DIV class="outline">
+        実装依存のコマンドです．
+      </DIV>
+      <DIV class="discription">
+        プログラム内で CMLSequence.registerUserCommand() により関数を登録する事で，CML内から任意タイミングで呼び出せます．<br/>
+        また，コマンド名に "_" (アンダーバー) は<b>使えません</b>．<br/>
+      </DIV>
+    </DIV>
+</DIV>
+
+
+
+</BODY>
+</HTML>
+
+

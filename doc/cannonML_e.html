@@ -1,0 +1,1584 @@
+<HTML>
+<HEAD>
+<LINK rel="stylesheet" href="style.css" type="text/css" media="screen"></LINK>
+<SCRIPT type="text/JavaScript">
+<!--
+  function sw(id) {
+    if (document.getElementById) {
+      var content = document.getElementById(id);
+      content.className = (content.className == "close") ? "open" : "close";
+    }
+  }
+  
+  function exp(id0,id1) {
+    if (document.getElementById) {
+      document.getElementById(id0).className = "open";
+      document.getElementById(id1).className = "open";
+    }
+  }
+
+  function expand_all() {
+    for (var i=0; i<document.all.length; i++) {
+      var tag = document.all[i];
+      if (tag.className == "close") tag.className = "open";
+    }
+  }
+
+  function unexpand_all() {
+    for (var i=0; i<document.all.length; i++) {
+      var tag = document.all[i];
+      if (tag.className == "open") tag.className = "close";
+    }
+  }
+  
+  function expand_index() {
+    unexpand_all();
+    document.getElementById('form').className  = "open";
+    document.getElementById('exec').className  = "open";
+    document.getElementById('sub').className   = "open";
+    document.getElementById('create').className  = "open";
+    document.getElementById('control').className = "open";
+    document.getElementById('label').className   = "open";
+  }
+//-->
+</SCRIPT>
+<STYLE type="text/css">
+<!--
+  div.close { display:none; }
+  div.open  { display:block; }
+  h3 a { color:#ffffff; }
+  h3 a:hover,a:forcus { color:#ff9999; }
+  h4 a { color:#000000; }
+  h4 a:hover,a:forcus { color:#cc0000; }
+-->
+</STYLE>
+</HEAD>
+<BODY>
+<H1>
+  <DIV class="title">
+    Cannon Macro Language ver0.20
+  </DIV>
+  <DIV class="discription">
+    This is a lazy reference for Cannon Macro Language (CML).
+  </DIV>
+</H1>
+
+<H2>
+  [Command reference]
+  <DIV class="discription">
+    <A href="#DUMMY" onclick="expand_all()">[expand all]</A>
+    <A href="#DUMMY" onclick="expand_index()">[expand index]</A>
+    <A href="#DUMMY" onclick="unexpand_all()">[unexpand all]</A>
+  </DIV>
+</H2>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('form');">
+    Format
+  </A>
+  <DIV class="discription">
+    Comment, formula ...
+  </DIV>
+</H3>
+<DIV id="form" class="close">
+  <H4 id="form_comment">
+    <A id="expantion" href="#DUMMY" onclick="sw('comment');">
+      Comments (// , /* ~ */)
+    </A>
+  </H4>
+  <DIV id="comment" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        // <i>[Comment]</i>
+      </DIV>
+      <DIV class="statement">
+        /* <i>[Comment]</i> */
+      </DIV>
+      <DIV class="statement">
+        ' <i>[Comment]</i> '
+      </DIV>
+      <DIV class="outline">
+        Show comments.
+      </DIV>
+      <DIV class="discription">
+        Lines after "//" and statements between "/* ~ */" are ignored as a comments.<br/>
+        Statement between ' ~ '(Single quatation) is also ignored, but it is possible to refer from your program from the user defined command.
+      </DIV>
+      <DIV class="reference">
+         [see also]
+        <ul>
+          <li><a href="#user" onclick="exp('user','user');">User defined command</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_sequence">
+    <A id="expantion" href="#DUMMY" onclick="sw('sequence');">
+      Sequence ( {...} )
+    </A>
+  </H4>
+  <DIV id="sequence" class="close">
+    <DIV class="sequence">
+      <DIV class="statement">
+        {<i>[Parameter]</i> , <i>[Parameter]</i> , ...  <i>(A row of commands)</i> }
+      </DIV>
+      <DIV class="outline">
+        Define sequences.
+      </DIV>
+      <DIV class="discription">
+        The sequence is a row of commands that defines a motion of an object. In cannon ML, a row of commands between "{" and "}" defines a sequence.
+        The sequence can be set after <a href="#exec_call" onclick="exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="exp('exec','fiber');">@* (Create new fiber)</a> and
+        <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
+        And if you specify the sequence without any commands, the sequence is executed as "@0" command does.</br>
+        The values after "{" can refer from your program, but <b>it cannot include any formula, only constant values are available.</b></br>
+        For example, "f{1 hoa0.1} f{2 hoa0.1}" you can refer the values of "1" and "2" when the f command calls the function CMLObject.fireObject() in your program.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_call"   onclick="exp('exec','call');">& (Call sequence)</a></li>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#exec_other" onclick="exp('exec','other');">{.} (Recall sequence)</a></li>
+          <li><a href="#exec_other" onclick="exp('exec','other');">kf (Kill fiber)</a></li>
+          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (Mirror execution)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_operator">
+    <A id="expantion" href="#DUMMY" onclick="sw('operator');">
+      Formula (operators)
+    </A>
+  </H4>
+  <DIV id="operator" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        + , - , * , / , %, ( , )
+      </DIV>
+      <DIV class="outline">
+        Calculate in an argument.
+      </DIV>
+      <DIV class="statement">
+        == , != , >= , <= , < , >
+      </DIV>
+      <DIV class="outline">
+        Compare. The returning value is 1(true) or 0(false).
+      </DIV>
+      <DIV class="statement">
+        !
+      </DIV>
+      <DIV class="outline">
+        Bit calculation of "not". "0 to 1" and "not 0 to 0". This means !!2=1.
+      </DIV>
+      <DIV class="statement">
+        $sin, $cos, $tan, $asn, $acs, $atn, $sqr, $int and $abs
+      </DIV>
+      <DIV class="outline">
+        The sine, cosine, tangent, arcsine, arccosine, arctanenget, square root and floor calculation respectively.
+      </DIV>
+      <DIV class="statement">
+        $i?, $i??
+      </DIV>
+      <DIV class="outline">
+        (random) Return a random integer．The ranges are 0<=$i?(n)<n and -n<$i?(n)<n.
+      </DIV>
+      <DIV class="discription">
+        You can calculate and compare the number in an argument. Interger, float and hexadecimal are available. Prefix of "0x" means hexadecimal.
+        There are no "logical and" and "logical or". Use "*" and "+" instead of them.
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_value">
+    <A id="expantion" href="#DUMMY" onclick="sw('value');">
+      Formula (variables)
+    </A>
+  </H4>
+  <DIV id="value" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        $?, $??
+      </DIV>
+      <DIV class="outline">
+        (random) Return a random number．The ranges are 0<=n<1 and -1<=n<1 for $? and $?? respectively.
+      </DIV>
+      <DIV class="statement">
+        $r
+      </DIV>
+      <DIV class="outline">
+        (<U>R</U>ank) Return a game difficulty number. The renge depends on your program.
+      </DIV>
+      <DIV class="statement">
+        $i
+      </DIV>
+      <DIV class="outline">
+        (<U>I</U>iterval) Return a number specifyed by <a href="#sub_interval" onclick="exp('sub','interval');">i command</a>.
+      </DIV>
+      <DIV class="statement">
+        $l, $l1, $l2, $l3, ... $l9
+      </DIV>
+      <DIV class="outline">
+        (<U>L</U>oop counter) Return a counter of <a href="#exec_loop" onclick="exp('exec','loop');">loop command</a>.
+      </DIV>
+      <DIV class="discription">
+        Return 0 at first and increament on each repeat.<br/>
+        You can also get the counter of 1 outer loop by "$l1" in nested loop. You can get the counter of 9 outer loops at maximum.
+      </DIV>
+      <DIV class="statement">
+        $1, $2, $3,... $9
+      </DIV>
+      <DIV class="outline">
+        (variable) Return a number assigned by <a href="#form_assign" onclick="exp('form','assign');">assign command</a> or an argument of <a href="#label_lcall" onclick="exp('label','lcall');">call command</a>.
+      </DIV>
+      <DIV class="discription">
+        In cannon macro language, you can use 9 variables ($1-$9) in a sequence.<br/>
+        These variables hold a number assigned by <a href="#form_assign" onclick="exp('form','assign');">assign command</a>.
+        And these variables are initialized by the arguments of <a href="#label_lcall" onclick="exp('label','lcall');">call command</a>.
+        For example, "#A{p$1,$2} &A 10,20" sets position at (10, 20). "&{p$1,$2}10,20" also sets position at (10, 20).
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        $x, $y
+      </DIV>
+      <DIV class="outline">
+        (position <U>X</U>/<U>Y</U>) Return the x and y values of the objects position.
+      </DIV>
+      <DIV class="statement">
+        $sx, $sy
+      </DIV>
+      <DIV class="outline">
+        (<U>S</U>ign of position <U>X</U>/<U>Y</U>) Return the sign of x and y values of the objects position. $sx=-1 when $x<0, and $sx=1 when $x>=0.
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#control_pos" onclick="exp('control','pos')">p* (Set position)</a></li></ul>
+      </DIV>
+      <DIV class="statement">
+        $v
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity) Return the abslute value of the objects velocity.
+      </DIV>
+      <DIV class="statement">
+        $vx, $vy
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity <U>X</U>/<U>Y</U>) Return x and y values of the objects velocity.
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#control_vel" onclick="exp('control','vel')">v* (Set the velocity)</a></li></ul>
+      </DIV>
+      <DIV class="statement">
+        $ho
+      </DIV>
+      <DIV class="outline">
+        (<U>H</U>ead angle of <U>O</U>bject) Return the angle of the object.
+      </DIV>
+      <DIV class="reference">
+        <ul>
+          <li><a href="#control_rot" onclick="exp('control','rot')">r* (Rotate)</a></li>
+          <li><a href="#control_change_dir" onclick="exp('control','change_dir')">cd (Change direction)</a></li>
+        </ul>
+      </DIV>
+      <DIV class="statement">
+        $td
+      </DIV>
+      <DIV class="outline">
+        (<U>T</U>arget <U>D</U>istance) Return the distance from the object to the target (usually player object).
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#sub_target" onclick="exp('sub','target');">t* (Set target)</a></li></ul>
+      </DIV>
+      <DIV class="statement">
+        $o, $o1, $o2,... $o9
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>ount <U>O</U>bject) Return the count of child objects with an object ID.
+      </DIV>
+      <DIV class="discription">
+        "$o1-$o9" returns the object count with specifyed ID, "$o" returns the total count of objects with ID.<br/>
+        For example, "n{}n1{}n1{}n2{}" creates 4 objects (and 3 objects are specifyed object ID) and "$o1" returns 2, "$o2" returns 1, and "$o" returns 3.<br/>
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#create_single" onclick="exp('create','single');">n* (Create new single object)</a></li></ul>
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        $p.x, $p.y, $p.sx, $p.sy, $p.v, $p.vx, $p.vy, $p.ho, $p.td, $p.o, $p.o1, ... $p.o9
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>arent) Refer the parents parameters.
+      </DIV>
+      <DIV class="discription">
+        To insert "p." after "$", you can refer the parents parameters.
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        $t.x, $t.y, $t.sx, $t.sy, $t.v, $t.vx, $t.vy, $t.ho, $t.td, $t.o, $t.o1, ... $t.o9
+      </DIV>
+      <DIV class="outline">
+        (<U>T</U>arget) Refer the target objects parameters.
+      </DIV>
+      <DIV class="discription">
+        To insert "t." after "$", you can refer the target objects parameters. "$t.td" always returns 0.
+      </DIV>
+      <DIV class="reference">
+        <ul><li><a href="#sub_target" onclick="exp('sub','target');">t* (Set target)</a></li></ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="form_assign">
+    <A id="expantion" href="#DUMMY" onclick="sw('assign');">
+      Formula (assign) (l)
+    </A>
+  </H4>
+  <DIV id="assign" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        l$r=, l$1=, l$2=, l$3=,... l$9= <i>[assignee number]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>L</U>et) Assign the number to the variable.
+      </DIV>
+      <DIV class="discription">
+        The 'l' command assigns a value on a variables ($1, $2, ... $9 and $r).<br/>
+        You can refer variables by <a href="#form_value" onclick="exp('form','value');">$1-$9 or $r</a>.
+      </DIV>
+    </DIV>
+    <DIV class="command">
+      <DIV class="statement">
+        l$1+=, l$1-=, l$1*=, l$1/= <i>[number]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>L</U>et) Assign the caluclation result.
+      </DIV>
+      <DIV class="discription">
+        You can also do assign with calculation.<br/>
+        For example, "l$1=0[p$1l$1+=10w5]" does start at 0, and move 10 pixels right for each 5 frames.<br/>
+        But, you <b>CANNOT</b> use these commands in an argument. So "l$1=0[pl$1+=10w5]" is <b>NOT AVAILABLE</b>.
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('exec');">
+    Sequence controling commands
+  </A>
+  <DIV class="discription">
+    Wait, Looping, If, Call, Create new fiber ...
+  </DIV>
+</H3>
+<DIV id="exec" class="close">
+  <H4 id="exec_wait">
+    <A id="expantion" href="#DUMMY" onclick="sw('wait');">
+      Wait (w)
+    </A>
+  </H4>
+  <DIV id="wait" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        w <i>[Frames]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>W</U>ait) Wait in specifyed frames.
+      </DIV>
+      <DIV class="discription">
+        [initial value]
+        <ul>
+          <li>w1</li>
+        </ul>
+        When you dont specifyed frames, wait same frame as specifyed previously. And when [Frames]=0, wait infinitly.
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        ~
+      </DIV>
+      <DIV class="outline">
+        (wait interval) Wait frames specifyed by i command.
+      </DIV>
+      <DIV class="discription">
+        This command has no arguments. Wait frames specifyed by i command. When i0, this command is skipped. 
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Changing term)</a></li>
+          <li><a href="#control_gravity" onclick="exp('control','gravity');">gp (Gravity)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        w? <i>[condition]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>W</U>ait <U>if</U>) Wait while the <i>[condition]</i> returns 1.
+      </DIV>
+      <DIV class="discription">
+        Wait until the <i>[condition]</i> returns 0.
+      </DIV>
+    </DIV>
+  </DIV>
+    
+    
+  <H4 id="exec_loop">
+    <A id="expantion" href="#DUMMY" onclick="sw('loop');">
+      Looping excution ([...])
+    </A>
+  </H4>
+  <DIV id="loop" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        [ <i>[Looping count]</i> <i>(sequence)</i> ] 
+      </DIV>
+      <DIV class="outline">
+        (loop) Execute sequence specifyed times.
+      </DIV>
+      <DIV class="discription">
+        The [Looping count] is caluculate only once when enter the loop. 
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="exec_branch">
+    <A id="expantion" href="#DUMMY" onclick="sw('branch');">
+      If branch ([?...])
+    </A>
+  </H4>
+  <DIV id="branch" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        [? <i>[condition]</i> <i>(sequence)</i> : <i>(sequence)</i> ]
+      </DIV>
+      <DIV class="outline">
+        (<U>if</U> ... else ...) Execute conditional execution by <i>[condition]</i>.
+      </DIV>
+      <DIV class="discription">
+        Execute before ":" when <i>[condition]</i>!=0, and execute after ":" when <i>[condition]</i>==0.
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        [s? <i>[condition]</i> <i>(sequence)</i> : <i>[case]</i> <i>(sequence)</i> : <i>[case]</i> <i>(sequence)</i> ... ] 
+      </DIV>
+      <DIV class="outline">
+        (<U>S</U>elect <U>if</U> ... grater than or equal to ...) Select the sequence by the <i>[condition]</i> value. 
+      </DIV>
+      <DIV class="discription">
+        When the <i>[condition]</i> value is greater than or equal to the <i>[case]</i>, the next <i>(sequence)</i> is executed. The <i>[case]</i> must be acsendant.<br/>
+        For example, "[s?$r seqA :0.3 seqB :0.6 seqC]" executes seqA, seqB or seqC when its $r<0.3, 0.3=<$r<0.6 or 0.6=<$r respectively.
+
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="exec_call">
+    <A id="expantion" href="#DUMMY" onclick="sw('call');">
+      Call sequence (&)
+    </A>
+  </H4>
+  <DIV id="call" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        & <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (call) Call sequence
+      </DIV>
+      <DIV class="discription">
+        Jump to another sequence, execute as <i>({(sequence)}|LABEL)</i> is there. 
+        All fiber parameters are copyed to the called sequence.
+        For example, "f4w10&{f}" and "#A{f} f4w10&A" is the same and fire 2 bullets with speed of 4, because the argument of f command is copyed.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_other"  onclick="exp('exec','other');">{.} (recall sequence)</a></li>
+          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (execute mirrored)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^& <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake call) Do nothing, but change the sequence refered by "&{.}" command.
+      </DIV>
+      <DIV class="discription">
+        Do nothing, Only change the sequence refered by "&{.}" command. 
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="exec_fiber">
+    <A id="expantion" href="#DUMMY" onclick="sw('fiber');">
+      Create new fiber (@*) 
+    </A>
+  </H4>
+  <DIV id="fiber" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        @ <i>[exclusive execution ID]</i> <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (execute) Execute the sequence on a new fiber.
+      </DIV>
+      <DIV class="discription">
+        Execute the sequence on a new fiber．'Fiber' is a kind of thread in some othor languages, the sequence is executed simultaniously.
+        For example, "&{[5f4w3]}a0.1" accelarates <u>after</u> firing 5 bullets, "@{[5f4w3]}a0.1" accelarates <u>with</u> firing 5 bullets.<br/><br/>
+        And you can omit "@0". If you write "{...}" or labels without f*, n*, & or @* command, "@0" is executed.<br/><br/>
+        When <i>[exclusive execution ID]</i> &gt;= 1 is specifyed, stop the other fiber with same ID and execute new fiber.<br/><br/>
+        Writing with a format of "{sequence}", All fiber parameters are copyed to the called sequence. On the other hand writing with a label, all fiber parameters are initialized.
+        For example, "f4w10@{f}" fires 2 bullets with speed of 4, "#A{f} f4w10@A" fires 2 bullets with speed of 4 and 1 respectively.
+      </DIV>
+      <DIV class="statement">
+        @o <i>[object ID]</i> (, <i>[object ID]</i> , ... )  <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (execute <U>O</U>bject) Execute a sequence with a new fiber on another objects created by n or f command with specifying <i>[Object ID]</i>.
+      </DIV>
+      <DIV class="discription">
+        When you create a new object by the 'n', 'nc', 'f' or 'fc' command with <i>[Object ID]</i>, the '@o' command executes the sequence on another objects that have specifyed <i>[Object ID]</i>.<br/>
+        If you specify plural <i>[Object ID]</i> in the arguments, the sequence is executed on grand-child object. For example, "@o1,2{...}" is same as "@o1{@o2{...}}"<br/>
+        In the '@o' command, all fiber parameters are always initialized and you cannot specify the <i>[exclusive execution ID]</i>.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_other" onclick="exp('exec','other');">{.} (Recall sequence)</a></li>
+          <li><a href="#exec_other" onclick="exp('exec','other');">kf (Kill fiber)</a></li>
+          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (Mirror execution)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        @ko <i>[end status]</i> <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (execute when <U>K</U>ill <U>O</U>bject) Execute sequence when the object is destroyed with specifyed <i>[end status]</i>.
+      </DIV>
+      <DIV class="discription">
+        Assign a sequence that execute when the object is destroyed. The sequence can be assigned each <i>[end status]</i>.
+        The <i>[end status]</i> is specifyed by ko command or CMLObject.destroy() in your program.<br/>
+        The sequence is executed only 1 frame and waiting command (like "w*" and "~") stops the execution.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#control_killobj" onclick="exp('control','killobj');">ko (Kill object)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^@ <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake execute) Do nothing, but change the sequence refered by "@*{.}" command.
+      </DIV>
+      <DIV class="discription">
+        Do nothing, but change the sequence refered by "@*{.}" command.
+      </DIV>
+    </DIV>
+  </DIV>
+  
+  <H4 id="exec_other">
+    <A id="expantion" href="#DUMMY" onclick="sw('other');">
+      Others
+    </A>
+  </H4>
+  <DIV id="other" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        {.}
+      </DIV>
+      <DIV class="outline">
+        Refer the sequence called before.
+      </DIV>
+      <DIV class="discription">
+        This statement is available after &, @*, f* or n* and you can refer the sequence you called previously. 
+        The sequences called before are memoryed in a fiber for each command &, @*, f* or n*.
+        For example, in "n{seqA} f{seqB} n{.} f{.}" the "n{.}" and "f{.}" refer seqA and seqB respectively.
+        And in the case of "f{seqC} @{f{.}}", the sequence called before is copyed to the new fiber and the "f{.}" refers seqC.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_call"   onclick="exp('exec','call');">& (Call sequence)</a></li>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        kf
+      </DIV>
+      <DIV class="outline">
+        (<U>K</U>ill all <U>F</U>ibers) Kill all fibers.
+      </DIV>
+      <DIV class="discription">
+        Kill all fibers that are created from the sequence. Killed fibers include anothor objects fiber created by @o command.
+        If you want to kill the fiber with <i>[exclusive execution ID]</i> &gt;= 1, overwrite with a sequence does nothing, for example "@1{}".
+        Only the way to kill the fiber with <i>[exclusive execution ID]</i> = 0 is kf command.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('sub');">
+    Sub commands
+  </A>
+  <DIV class="discription">
+    Commands used with anothor command. The arguments are refered from the other command and do nothing itself.
+  </DIV>
+</H3>
+<DIV id="sub" class="close">
+  <H4 id="sub_interval">
+    <A id="expantion" href="#DUMMY" onclick="sw('interval');">
+      Specify the changing term or interval (i)
+    </A>
+  </H4>
+  <DIV id="interval" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        i <i>[Frames]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>I</U>nterval) Specify the changing term/interval of the object parameters.
+      </DIV>
+      <DIV class="discription">
+        [see also]
+        <ul>
+          <li>
+            <a href="#control_pos" onclick="exp('control','pos')">p* (Set the position)</a>,
+            <a href="#control_vel" onclick="exp('control','vel')">v* (Set the velocity)</a>,
+            <a href="#control_rot" onclick="exp('control','rot')">r* (Rotate)</a>,
+            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd (Change direction)</a>,
+            <a href="#control_change_spd" onclick="exp('control','change_spd')">cs* (Change speed)</a>,
+            <a href="#exec_wait" onclick="exp('exec','wait')">~ (Wait interval)</a>.
+          </li>
+          <li>
+            <a href="#control_acc" onclick="exp('control','acc')">a* (set accelaration)</a>,
+            <a href="#control_gravity" onclick="exp('control','gravity')">gp (gravity)</a> <b>DOES NOT</b> refer i command．
+          </li>
+        </ul>
+        [default value]
+        <ul>
+          <li>i0</li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_fiber_pos">
+    <A id="expantion" href="#DUMMY" onclick="sw('fiber_pos');">
+      Specify the object creating point (q*)
+    </A>
+  </H4>
+  <DIV id="fiber_pos" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        q <i>[x value]</i> , <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (creating point) Set the object creating point. Set 0 by omitting arguments.
+      </DIV>
+      <DIV class="statement">
+        qx <i>[x value]</i>
+      </DIV>
+      <DIV class="outline">
+        (creating point <U>X</U>) Set the x value of the object creating point. The y value does not change.
+      </DIV>
+      <DIV class="statement">
+        qy <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (creating point <U>Y</U>) Set the y value of the object creating point. The x value does not change.
+      </DIV>
+
+      <DIV class="discription">
+        [see also]
+        <ul>
+          <li>
+            <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
+            Starting point of new objects is specifyed.
+          </li>
+          <li>
+            <a href="#sub_head" onclick="exp('sub','head')">ht (Specifyed the angle from the target direction)</a>
+            The origin of the angle calculation is specifyed.
+          </li>
+        </ul>
+        [default value]
+        <ul>
+          <li>q0,0</li>
+        </ul>
+        The values specifyed are based on the objects coordinate.
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_head">
+    <A id="expantion" href="#DUMMY" onclick="sw('head');">
+      Specify the angle (h*)
+    </A>
+  </H4>
+  <DIV id="head" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        ha <i>[Angle]</i><br/>
+        hax <i>[Angle]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead on <U>A</U>bsolute angle) Specify by the absolute angle on the screen.<br/>
+        (set <U>H</U>ead on <U>A</U>bsolute angle and fi<U>X</U>) Same as "ha" command.
+      </DIV>
+
+      <DIV class="statement">
+        ho <i>[Angle]</i><br/>
+        hox <i>[Angle]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead relative to <U>O</U>bject angle) Specify by the angle from the object angle.<br/>
+        (set <U>H</U>ead relative to <U>O</U>bject angle and fi<U>X</U>) And fix the angle.
+      </DIV>
+
+      <DIV class="statement">
+        hv <i>[Angle]</i><br/>
+        hvx <i>[Angle]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead on <U>V</U>elocity direction) Specify by the angle from the direction of velocity.<br/>
+        (set <U>H</U>ead on <U>V</U>elocity direction and fi<U>X</U>) And fix the angle.
+      </DIV>
+
+      <DIV class="statement">
+        hp <i>[Angle]</i><br/>
+        hpx <i>[Angle]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead relative to <U>P</U>arent object angle) Specify by the angle from the parent object angle.<br/>
+        (set <U>H</U>ead relative to <U>P</U>arent object angle and fi<U>X</U>) And fix the angle.
+      </DIV>
+
+      <DIV class="statement">
+        ht <i>[Angle]</i><br/>
+        htx <i>[Angle]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead to <U>T</U>arget) Specify by the angle from the target object direction.<br/>
+        (set <U>H</U>ead to <U>T</U>arget and fi<U>X</U>) And fix the angle.
+      </DIV>
+
+      <DIV class="statement">
+        hs <i>[Angle]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>H</U>ead <U>S</U>equencial) Specify by the angle from the angle specifyed before. The <i>[Angle]</i> is different for each command.
+        <ul>
+          <li>For f*(Create new multiple objects) command, the <i>[Angle]</i> is from the angle fired bullet before.</li>
+          <li>For r*(Rotate) and cd(Change direction) commands, the <i>[Angle]</i> is the rotation for 1 frame.</li>
+          <li>For pd(Set the position), vd(Set the velocity) and ad(set the accelaration) commands, the <i>[Angle]</i> is from the current direction.</li>
+        </ul>
+      </DIV>
+
+      <DIV class="discription">
+        [see also]
+        <ul>
+          <li>
+            <a href="#create_multi" onclick="exp('create','multi')">f* (Create new objects)</a>
+            The initial angle and direction of new objects are specifyed.
+          </li>
+          <li>
+            <a href="#control_rot" onclick="exp('control','rot')">r* (Rotate)</a>,
+            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd (Change direction)</a>
+            The last angle of the rotation is specifyed.
+          </li>
+          <li>
+            <a href="#control_pos" onclick="exp('control','pos')">pd (Set the position)</a>,
+            <a href="#control_vel" onclick="exp('control','vel')">vd (Set the velocity)</a>,
+            <a href="#control_acc" onclick="exp('control','acc')">ad (Set the accelaration)</a>
+            Direction for each parameters is specifyed.
+          </li>
+        </ul>
+        [default value]
+        <ul>
+          <li>ht0</li>
+        </ul>
+        The angle is specifyed by counterclockwise rotation.<br/><br/>
+        The base angle update always in command without postfix "x", and The base angle is fixed in command with postfix "x".<br/>
+        For example, "ht w30 f" fires bullet to the player, but "htx w30 f" fires bullet to "the position that the player was there 30 frames ago".<br/>
+        For another example in the case with <a href="#sub_barrage" onclick="exp('sub','barrage')">b* command</a>, 
+        "bs5,0,0,5 ht f" fires bullets continuously to the player 5 frames each, buts
+        "bs5,0,0,5 htx f" fires bullets continuously to the same position that the player was there at first.
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_barrage">
+    <A id="expantion" href="#DUMMY" onclick="sw('barrage');">
+      Specify the setting of multiple creation of f* command (b*)
+    </A>
+  </H4>
+  <DIV id="barrage" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        bm <i>[count]</i> , <i>[center angle]</i> , <i>[range of speed]</i> , <i>[time interval of automatic fire]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>B</U>arrage setting <U>M</U>ultiple) Specify the setting of f* command by <i>[center angle]</i> and <i>[range of speed]</i>.
+      </DIV>
+      <DIV class="statement">
+        bs <i>[count]</i> , <i>[increament of angle]</i> , <i>[increament of speed]</i> , <i>[time interval of automatic fire]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>B</U>arrage setting <U>S</U>equencial) Specify the setting of f* command by <i>[increament of angle]</i> and <i>[increament of speed]</i>.
+      </DIV>
+      <DIV class="statement">
+        br <i>[count]</i> , <i>[range of angle]</i> , <i>[range of speed]</i> , <i>[time interval of automatic fire]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>B</U>arrage setting <U>R</U>andom) Set random multiple creation to f* command.
+      </DIV>
+      <DIV class="discription">
+        [see also]
+        <ul>
+          <li>
+            <a href="#create_multi" onclick="exp('create','multi')">f* (Create new multiple objects)</a>
+            The initial direction and speed of new objects are specifyed.
+          </li>
+        </ul>
+        [default value]
+        <ul>
+          <li>bs1,0,0,0</li>
+        </ul>
+        After bm/bs/br command, you can create multiple objects by f* command. <br/>
+        Specifying <i>[center angle]</i>=-360 or 360 in bm command, the f* command creates all-round objects as the special case.
+        Specifying <i>[count]</i>=0 and <i>[time interval of automatic fire]</i>&gt;0 in bs/br command, the f* command creates objects infinitly.<br/><br/>
+        Calling bm/bs/br commands in one sequence, you can specify multiply.
+        For example, "bm3,30bm5,0,2 f" fires 3 bullet lines (constructed by 5 bullets) with center angle of 30[degree].
+        "br5,90,0,10bm4,10 f" fires 4way barrage in 5 times with a range of 90 degree randomly.
+      </DIV>
+    </DIV>
+
+    <DIV class="command">
+      <DIV class="statement">
+        bv <i>[Increament of speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (sequencial setting of <U>B</U>ullet <U>V</U>elocity) Specify the increament of speed for multiple creation.
+      </DIV>
+      <DIV class="discription">
+        [see also]
+        <ul>
+          <li>
+            <a href="#create_multi" onclick="exp('create','multi')">f* (Create new multiple objects)</a>
+            The initial speed of new objects is specifyed.
+          </li>
+        </ul>
+        [default value]
+        <ul>
+          <li>bv0</li>
+        </ul>
+        The bv command is a primitive command focused on the 3rd argument of bs command. By a conbination with <a href="#exec_loop" onclick="exp('exec','loop');">loop command</a>, you can write more complex barrage.<br/>
+        The f* command with no arguments fires bullets with a speed increaced by <i>[increament of speed]</i> from before.<br/>
+        The bv command <b>CANNOT</b> specify multiply as bm/bs/br command can.
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="sub_target">
+    <A id="expantion" href="#DUMMY" onclick="sw('target');">
+      Set target (t*)
+    </A>
+  </H4>
+  <DIV id="target" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        td
+      </DIV>
+      <DIV class="outline">
+        (set <U>T</U>arget to <U>D</U>efault) Set target to the default (usually player object).
+      </DIV>
+
+      <DIV class="statement">
+        tp
+      </DIV>
+      <DIV class="outline">
+        (set <U>T</U>arget to <U>P</U>arent) Set target to the parent object.
+      </DIV>
+
+      <DIV class="statement">
+        to <i>[object ID]</i>
+      </DIV>
+      <DIV class="outline">
+        (set <U>T</U>arget to another <U>O</U>bject) Set target to the object with specifyed <i>[object ID]</i>.
+      </DIV>
+
+      <DIV class="discription">
+        [see also]
+        <ul>
+          <li><a href="#sub_head" onclick="exp('sub','head')">ht (Specify the angle from the target direction)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');">n* (Create new object)</a></li>
+        </ul>
+        [default value]
+        <ul>
+          <li>td</li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+  
+  <H4 id="sub_mirror">
+    <A id="expantion" href="#DUMMY" onclick="sw('mirror');">
+      Execute mirrord (m)
+    </A>
+  </H4>
+  <DIV id="mirror" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        m <i>[Mirroring axis]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>M</U>irror) Mirroring next command.
+      </DIV>
+      <DIV class="discription">
+        [see also]
+        <ul>
+          <li>
+            <a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (Object creating point)</a>,
+            <a href="#control_pos" onclick="exp('control','pos')">p* (Set the position)</a>,
+            <a href="#control_vel" onclick="exp('control','vel')">v* (Set the velocity)</a>,
+            <a href="#control_acc" onclick="exp('control','acc')">a* (Set the accelaration)</a>
+            The values of x and y are mirrored.
+          </li>
+          <li>
+            <a href="#sub_head" onclick="exp('sub','head')">h*(Specify the angle)</a>,
+            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd*(Change direction)</a>
+            The angle is mirrored.
+          </li>
+          <li>
+            <a href="#exec_call"   onclick="exp('exec','call');">& (Call sequence)</a>,
+            <a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a>,
+            <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
+            All commands in the sequence are mirrored.
+          </li>
+        </ul>
+        [default value]
+        <ul>
+          <li>not mirrored</li>
+        </ul>
+        Differ from some other sub commands, <b>the m command mirror only the next command</b>.
+        The <i>[mirroring axis]</i> means 0=mirroring by axis holizontal with scrolling direction, 1=mirroring by axis vertical with scrolling direction，2=mirroring by x and y axis.
+        The m command before &, @*, n* or f* command mirror all commands in the sequence.<br/>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('create');">
+    Creating commands
+  </A>
+  <DIV class="discription">
+    Commands to create new object. There are 2 types, single creation and multiple creation.
+  </DIV>
+</H3>
+<DIV id="create" class="close">
+  <H4 id="create_single">
+    <A id="expantion" href="#DUMMY" onclick="sw('single');">
+      Create single object (n*)
+    </A>
+  </H4>
+  <DIV id="single" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        n <i>[Object ID]</i> <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>N</U>ew) Create single object.
+      </DIV>
+      <DIV class="discription">
+        The n command creates new object at the position specifyed by q command, with an initial speed of 0.<br/>
+        The <i>[Object ID]</i> is used to specify the object in @o, to and $co commands.
+        If you want to use these commands, specify <i>[Object ID]</i> &gt;= 1.
+        This command calls CMLObject.newObject() in your program.
+      </DIV>
+
+      <DIV class="statement">
+        nc <i>[Object ID]</i> <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>N</U>ew <U>C</U>hild) Create single object in parents coordinate.
+      </DIV>
+      <DIV class="discription">
+        The nc command creates new object at the position specifyed by q command, with an initial speed of 0.
+        The object created by nc command is always set in parents coordinate.<br/>
+        The <i>[Object ID]</i> is used to specify the object in @o, to and $co commands.
+        If you want to use these commands, specify <i>[Object ID]</i> &gt;= 1.
+        This command calls CMLObject.newObject() in your program.
+      </DIV>
+
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');"  >@o (Execute sequence on another object)</a></li>
+          <li><a href="#exec_other"  onclick="exp('exec','other');"  >{.} (Refer the sequence executed before)</a></li>
+          <li><a href="#sub_mirror"  onclick="exp('sub','mirror');"  >m (Mirror execution)</a></li>
+          <li><a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (Specify creating point)</a></li>
+          <li><a href="#sub_target"  onclick="exp('sub','target');"  >to (Set target object)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^n <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake <U>N</U>ew) Do nothing, but change the sequence refered by "n*{.}" command.
+      </DIV>
+      <DIV class="discription">
+        Do nothing, but change the sequence refered by "n*{.}" command.
+      </DIV>
+    </DIV>
+  </DIV>
+
+    
+  <H4 id="create_multi">
+    <A id="expantion" href="#DUMMY" onclick="sw('multi');">
+      Create multiple objects (f*)
+    </A>
+  </H4>
+  <DIV id="multi" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        f <i>[Initial speed]</i> , <i>[Object ID]</i> <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>F</U>ire) Create multiple objects with initial speed.
+      </DIV>
+
+      <DIV class="statement">
+        fc <i>[Initial speed]</i> , <i>[Object ID]</i> <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>F</U>ire <U>C</U>hild) Create multiple objects in parents coordinate with initial speed .
+      </DIV>
+
+      <DIV class="discription">
+        This command is similar to n* command, but its different in sevral points as,
+        <ul>
+          <li>Specifys the initial speed of a new object,</li>
+          <li>Creates plural objects simultaniously according to the b* (Specify a setting of the multiple creation) commands,</li>
+          <li>Possible to omit <i>{...} or LABEL</i>,</li>
+          <li>Calls CMLObject.fireObject() in your program.</li>
+        </ul>
+        When you omit <i>{...} or LABEL</i>, execute as "{.}" (Refer the sequence executed before).
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');"  >@o (Execute sequence on another object)</a></li>
+          <li><a href="#exec_other"  onclick="exp('exec','other');"  >{.} (Refer the sequence executed before)</a></li>
+          <li><a href="#sub_mirror"  onclick="exp('sub','mirror');"  >m (Mirror execution)</a></li>
+          <li><a href="#sub_barrage"   onclick="exp('sub','barrage');" >b* (Specify a setting of the multiple creation)</a></li>
+          <li><a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (Specify creating point)</a></li>
+          <li><a href="#sub_target"  onclick="exp('sub','target');"  >to (Set target object)</a></li>
+        </ul>
+      </DIV>
+
+      <DIV class="statement">
+        ^f <i>[Initial speed]</i> <i>({(sequence)}|LABEL)</i>
+      </DIV>
+      <DIV class="outline">
+        (fake <U>F</U>ire) Do nothing, but it behaves as one f command was done.
+      </DIV>
+      <DIV class="discription">
+        Do nothing, but it behaves as one f command was done as shown in below,
+        <ul>
+          <li>Changes the sequence refered by "f*{.}" command,</li>
+          <li>Increaments speed and angle according to the bv and hs commands.</li>
+        </ul>
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_head" onclick="exp('sub','head');">hs (Specify the angle)</a></li>
+          <li><a href="#sub_barrage" onclick="exp('exec','barrage');">bv ()</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('control');">
+    Controling commands
+  </A>
+  <DIV class="discription">
+    Commands to operate the object. Set position, speed, accelaration, rotation，gravity motion, destruction and so on.
+  </DIV>
+</H3>
+<DIV id="control" class="close">
+  <H4 id="control_pos">
+    <A id="expantion" href="#DUMMY" onclick="sw('pos');">
+      Set the position (p*)
+    </A>
+  </H4>
+  <DIV id="pos" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        p <i>[x value]</i> , <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition) Set the object position. Set 0 by omitting arguments.
+      </DIV>
+      <DIV class="statement">
+        px <i>[x value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition <U>X</U>) Set the x value of the object position. The y value does not change.
+      </DIV>
+      <DIV class="statement">
+        py <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition <U>Y</U>) Set the y value of the object position. The x value does not change.
+      </DIV>
+      <DIV class="statement">
+        pd <i>[distance]</i> , <i>[horizontal distance]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>P</U>osition for head <U>D</U>irection) Set the object position by the distance and the angle specifyed by h* command from the origin.
+      </DIV>
+      <DIV class="discription">
+        When the object is a part of its parent, the values are on a coordinate of the parent.
+        And in the other case, the values are on a coordinate of the screen (according to your program).<br/>
+        When you specifyed a parameter changing term by the i command before, the position will be interpolated while the specifyed time.
+        Or specifying "i0", the position is changed with no time.
+        If you set the velocity by v* command after this command, the interpolation considers the velocity as the goal value of it.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+          <li><a href="#control_vel" onclick="exp('control','vel');">v* (Set the velocity)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="control_vel">
+    <A id="expantion" href="#DUMMY" onclick="sw('vel');">
+      Set the velocity (v*)
+    </A>
+  </H4>
+  <DIV id="vel" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        v <i>[x value]</i> , <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity) Set the object velocity. Set 0 by omitting arguments.
+      </DIV>
+      <DIV class="statement">
+        vx <i>[x value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity <U>X</U>) Set the x value of the object velocity. The y value does not change.
+      </DIV>
+      <DIV class="statement">
+        vy <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity <U>Y</U>) Set the y value of the object velocity. The x value does not change.
+      </DIV>
+      <DIV class="statement">
+        vd <i>[speed]</i> , <i>[horizontal speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>V</U>elocity for head <U>D</U>irection) Set the object velocity by the speed and the angle specifyed by h* command.
+      </DIV>
+      <DIV class="discription">
+        Specifyed a velocity changing term by i command. When the changing term = 0, the velocity is changed with no time.<br/>
+        If the (i command)&gt;0 and set (p command) before in a same frame, the values are considered as the end values of <b>interpolation</b>.<br/>
+        If the (i command)&gt;0 and not set (p command) before in a same frame, the values are considered as the end values of <b>accelaration</b>.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+          <li><a href="#control_pos" onclick="exp('control','pos');">p* (Set the position)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+  <H4 id="control_acc">
+    <A id="expantion" href="#DUMMY" onclick="sw('acc');">
+      Set the accelaration (a*)
+    </A>
+  </H4>
+  <DIV id="acc" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        a <i>[x value]</i> , <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration) Set the object accelaraion. Set 0 by omitting arguments.
+      </DIV>
+      <DIV class="statement">
+        ax <i>[x value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration <U>X</U>) Set the x value of the object accelaraion. The y value does not change.
+      </DIV>
+      <DIV class="statement">
+        ay <i>[y value]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration <U>Y</U>) Set the y value of the object accelaraion. The x value does not change.
+      </DIV>
+      <DIV class="statement">
+        ad <i>[accelaration]</i> , <i>[horizontal accelaration]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>A</U>ccelaration for head <U>D</U>irection) Set by the accelaraion and the angle specifyed by h* command.
+      </DIV>
+      <DIV class="discription">
+        You <b>CANNOT</b> specify the changing term of accelaration by i command.
+        If you want to stop the accelaration, 
+        <ul>
+          <li>Set the accelaration as (0,0) (write "a0,0" or just "a"),</li>
+          <li>Call cd(Change direction), cs*(Chenge speed) or gp(Set gravity),</li>
+          <li>Call p*(Set the position), v*(Set the velocity) after specifyed (i command)>0.</li>
+        </ul>
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="control_change_dir">
+    <A id="expantion" href="#DUMMY" onclick="sw('change_dir');">
+      Change the direction (same as &lt;changeDirection&gt; in bulletML) (cd)
+    </A>
+  </H4>
+  <DIV id="change_dir" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        cd <i>[Maximum rotation speed in 1 frame]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>D</U>irection) Change the direction to the angle specifyed by h* command (same as &lt;changeDirection&gt; in bulletML).
+      </DIV>
+      <DIV class="discription">
+        The cd command changes the objects angle and the velocity direction together (the <a href="#control_rot" onclick="exp('control','rot')">r command</a> changes the objects angle only).
+        The starting angle is the objects angle at that time.<br/>
+        After this command, the objects angle (even changing by r* command) synchronizes with the velocity direction (this behavior calls "bml motion mode").
+        If you want to stop this behavior, specify p*, v*, a* or gp command.<br/><br/>
+        Specify the angle by h* command as &lt;direction&gt; and specify the changing term by i command as &lt;term&gt; in bulletML.
+        The ha, ho, ht and hs commands mean type="absolute", type="relative", type="aim" and type="sequence" in &lt;changeDirection&gt; respectively.<br/>
+        The argument assigns maximum rotation in 1 frame and the argument of 0 means not to specify the maximum rotation.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+    
+  <H4 id="control_change_spd">
+    <A id="expantion" href="#DUMMY" onclick="sw('change_spd');">
+      Change the speed (same as &lt;changeSpeed&gt; in bulletML) (cs*)
+    </A>
+  </H4>
+  <DIV id="change_spd" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        csa <i>[Speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>S</U>peed <U>A</U>bsolute) Change the speed to the specifyed value. (same as &lt;changeSpeed type="Absolute"&gt; in bulletML)
+      </DIV>
+
+      <DIV class="statement">
+        csr <i>[Speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>S</U>peed <U>R</U>elative) Change the speed by the specifyed difference. (same as &lt;changeSpeed type="Relative"&gt; in bulletML)
+      </DIV>
+
+      <DIV class="statement">
+        css <i>[Speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>C</U>hange <U>S</U>peed <U>S</U>equence) Change the speed by the specifyed value in 1 frame. (same as &lt;changeSpeed type="Sequence"&gt; in bulletML)
+      </DIV>
+      <DIV class="discription">
+        The cs* command changes the objects speed to the object angle(same as "hovd" sequence).
+        After this command, the objects angle (even changing by r* command) synchronizes with the velocity direction (this behavior calls "bml motion mode").
+        If you want to stop this behavior, specify p*, v*, a* or gp command.<br/><br/>
+        Specify the changing term by i command as &lt;term&gt; and specify the speed by the argument as &lt;speed&gt; in bulletML.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+    
+  <H4 id="control_gravity">
+    <A id="expantion" href="#DUMMY" onclick="sw('gravity');">
+      Set the gravity (gp)
+    </A>
+  </H4>
+  <DIV id="gravity" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        gp <i>[Gravity]</i> , <i>[Friction]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>G</U>ravity at the <U>P</U>osition) Set the gravity.
+      </DIV>
+      <DIV class="discription">
+        After this command, the object moves by the attracting force from the position specifyed by p* command (this behavior calls "gravity motion mode").
+        The motion is calculated by <br/><br/>
+        [Accelaration] = [Distance to specifyed position] * <i>[Gravity]</i> / 100 - [Velocity] * <i>[Friction]</i> / 100<br/><br/>
+        If you want to stop this behavior, specify "gp0,0", v*, a*, cd, cs* command or the p command after specifyed changing term by i command.<br/>
+        This command set the changing term to 0 (as specify "i0").<br/>
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#control_pos" onclick="exp('control','pos');">p (Set the position)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+
+
+  <H4 id="control_rot">
+    <A id="expantion" href="#DUMMY" onclick="sw('rot');">
+      Set the rotation (r*)
+    </A>
+  </H4>
+  <DIV id="rot" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        r <i>[First rotation speed]</i> , <i>[Final rotation speed]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>R</U>otate) Rotates the objects to the angle specifyed by h* command.
+      </DIV>
+      <DIV class="discription">
+        Specify the changing term by i command, and the angle by h* command.
+        The rotation is calculated by bezier spline interpolation with the specifyed values.<br/>
+        The <i>[First rotation speed]</i> and <i>[Final rotation speed]</i> are the relative values the speed of constant rotation as 1.<br/>
+        For example, the "r0,0" rotates accelarating first, top speed in the middle, and then decelerating to 0.<br/>
+        The "r1,1" rotates with constant speed.<br/>
+        The "r2,0" rotates with constant accelaration.<br/>
+        The "r-1,0" rotates oppsite direction first, and accelarating then decelerating, finaly the speed goes to 0.
+      </DIV>
+
+      <DIV class="statement">
+        rc <i>[Maximum rotation speed in 1 frame]</i> 
+      </DIV>
+      <DIV class="outline">
+        (<U>R</U>otate <U>C</U>onstant) Rotates the objects to the angle specifyed by h* command by constant speed.
+      </DIV>
+      <DIV class="discription">
+        Specify the changing term by i command, and the angle by h* command.
+        You can specify the maximum rotation speed in 1 frame.
+        The argument of 0 means no limitation in the rotation speed (and this is same as "r1,1").
+      </DIV>
+
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+    
+
+  <H4 id="control_killobj">
+    <A id="expantion" href="#DUMMY" onclick="sw('killobj');">
+      Kill object (ko)
+    </A>
+  </H4>
+  <DIV id="killobj" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        ko <i>[End status]</i>
+      </DIV>
+      <DIV class="outline">
+        (<U>K</U>ill <U>O</U>bject) Remove the object from the stage.
+      </DIV>
+      <DIV class="discription">
+        Destroy the object and stop the fiber. The sequence after this command does not execute.<br/>
+        The <i>[End status]</i> is refered by @ko command and CMLObject.onDestroy() in your program.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_fiber" onclick="exp('exec','fiber');">@ko (Specify destruction fiber)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('label');">
+    Label
+  </A>
+  <DIV class="discription">
+    Label a sequence and call the sequence after.
+  </DIV>
+</H3>
+<DIV id="label" class="close">
+  <H4 id="label_define">
+    <A id="expantion" href="#DUMMY" onclick="sw('define');">
+      Define the label
+    </A>
+  </H4>
+  <DIV id="define" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        #NAME {(sequence)} (NAME = [A-Z_][A-Z0-9_]*)
+      </DIV>
+      <DIV class="outline">
+        Label the sequence.
+      </DIV>
+      <DIV class="discription">
+        Label the sequence and call the sequence after. You can use upper cases, under bar ("_") and numbers as a labels name.<br/><br/>
+        When you define a label in another label, the outside label behaves as something like a name space.<br/>
+        For example in "#A{#C{seqA} &C} #B{#C{seqB} &C}", label C in label A refers {seqA} and label C in label B refers {seqB}.
+      </DIV>
+    </DIV>
+  </DIV>
+
+  <H4 id="label_lcall">
+    <A id="expantion" href="#DUMMY" onclick="sw('lcall');">
+      Refer the label
+    </A>
+  </H4>
+  <DIV id="lcall" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        NAME[.NAME]* <i>[Argument]</i> , <i>[Argument]</i> ... (NAME = [A-Z_][A-Z0-9_]*)
+      </DIV>
+      <DIV class="outline">
+        Refer the label
+      </DIV>
+      <DIV class="discription">
+        Specifying the label name in a sequence directly, the sequence of specifyed label is executed as it is there.<br/>
+        The label can be set after <a href="#exec_call" onclick="exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="exp('exec','fiber');">@* (Create new fiber)</a> and
+        <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
+        And if you specify the label without any command, the sequence of specifyed label is executed as "@0" command does.</br>
+        You can specify the arguments when you refer the label and you can get the arguments by "$1,$2..." in the labeled sequence.
+        But, because the numbers (0-9) can be used as the label name, a space is necessary between the label and number.<br/><br/>
+        Using the access operator ".", you can specify the name-space and label.
+        For example in "#A{&B.C &C} #B{#C{seqB} &C} #C{seqC}", the "&B.C" in sequence A refers {seqB}, the "&C" in sequence A refers {seqC} and the "&C" in sequence B refers {seqB}.
+      </DIV>
+      <DIV class="reference">
+        [see also]
+        <ul>
+          <li><a href="#exec_call"   onclick="exp('exec','call');">& (Call sequenece)</a></li>
+          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
+          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+        </ul>
+      </DIV>
+    </DIV>
+  </DIV>
+</DIV>
+
+  
+  
+
+<H3>
+  <A id="expantion" href="#DUMMY" onclick="sw('user');">
+    User defined commands
+  </A>
+  <DIV class="discription">
+    Commands to call the function in your program.
+  </DIV>
+</H3>
+<DIV id="user" class="close">
+    <DIV class="command">
+      <DIV class="statement">
+        &[a-z]+
+      </DIV>
+      <DIV class="outline">
+        Call the function in your program from a cml sequence.
+      </DIV>
+      <DIV class="discription">
+        You can call the function that is specifyed by CMLSequence.registerUserCommand() from your cml sequence.
+        <b>You cannot use "_"(under bar) in the command name.</b><br/>
+      </DIV>
+    </DIV>
+</DIV>
+
+
+
+</BODY>
+</HTML>
+
+
