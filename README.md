@@ -17,7 +17,7 @@ And [anthor cannonML script for whole stage](http://keim-at-si.blogspot.jp/2008/
 Coding style
 ----
 The CannonML library is already installed in Wonderfl. You can check some codes using CannonML.  
-[CannonML - Wonderfl build flash online](http://wonderfl.net/tag/cannonml)
-[CannonML v0.31 API Documentation](http://www.libspark.org/htdocs/as3/cml/).
+[CannonML - Wonderfl build flash online](http://wonderfl.net/tag/cannonml)  
+[CannonML v0.31 API Documentation](http://www.libspark.org/htdocs/as3/cml/)
 
 
