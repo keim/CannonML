@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<overviews>
+  <all-packages>
+    <description>Cannon Macro Language</description>
+  </all-packages>
+  <all-classes>
+    <description>Cannon Macro Language</description>
+  </all-classes>
+  <packages>
+      <package name="org.si.cml"><shortDescription>package for CannonML basic modules</shortDescription></package>
+  </packages>
+</overviews>

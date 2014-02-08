@@ -11,7 +11,7 @@ package org.si.cml.core {
     
 
     /** @private */
-    internal class CMLUserDefine extends CMLState
+    public class CMLUserDefine extends CMLState
     {
     // variables
     //------------------------------------------------------------

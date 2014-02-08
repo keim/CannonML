@@ -74,8 +74,8 @@ var newBullet:Bullet = bulletFactory.newInstance();
         /** create new Actor factory. 
          *  @param actorClass class to create new instance
          *  @param countMaxLimit maximum limit of instance count
-         *  @param evalIDNumber id nubmer for hitting evaluation. Must be >= 0. Negative value to apply number automatically.
-         *  @param drawPriority drawing priority number, young number drawing first. Must be >= 0. Negative value to apply number automatically.
+         *  @param evalIDNumber id nubmer for hitting evaluation. Must be &gt;= 0. Negative value to apply number automatically.
+         *  @param drawPriority drawing priority number, young number drawing first. Must be &gt;= 0. Negative value to apply number automatically.
          */
         function ActorFactory(actorClass:Class=null, countMaxLimit:int=0, evalIDNumber:int=-1, drawPriority:int=-1) 
         {

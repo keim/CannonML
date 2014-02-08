@@ -500,7 +500,7 @@ package org.si.cml.core {
             fbr.wcnt = fbr.bul.interval;
             
             // repeat
-            fbr._pointer = CMLFiber.seqRapid;
+            fbr._pointer = CMLSequence.rapid();
             
             return false;
         }
@@ -690,7 +690,7 @@ package org.si.cml.core {
                     }
                 } else {
                     // create new fiber and initialize
-                    var childFiber:CMLFiber = fbr._newChildFiber(CMLFiber.seqRapid, 0, _invert_flag, null, false);
+                    var childFiber:CMLFiber = fbr._newChildFiber(CMLSequence.rapid(), 0, _invert_flag, null, false);
 
                     // copy bullet setting and bullet multiplyer
                     childFiber.bul.copy(qrt_next);

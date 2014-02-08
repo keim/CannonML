@@ -12,7 +12,7 @@ package org.si.cml.core {
     
     
     /** @private */
-    internal class CMLFormulaLiteral extends CMLFormulaElem
+    public class CMLFormulaLiteral extends CMLFormulaElem
     {
         // Refer from CMLParser._userReferenceRegExp() to sort all reference names.
         static internal var defaultReferences:Array = [

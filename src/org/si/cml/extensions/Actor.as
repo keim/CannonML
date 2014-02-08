@@ -15,9 +15,9 @@ package org.si.cml.extensions {
      *  Actor.initialize() registers some user define commands as below,
      *  <ul>
      *  <li>$life; Refers the value of Actor.life.</li>
-     *  <li>&scon; Enables the available scope.</li>
-     *  <li>&scoff; Disables the available scope.</li>
-     *  <li>&prior; Changes the drawing priority. Specify the priority (posi/nega value) in argument.</li>
+     *  <li>&amp;scon; Enables the available scope.</li>
+     *  <li>&amp;scoff; Disables the available scope.</li>
+     *  <li>&amp;prior; Changes the drawing priority. Specify the priority (posi/nega value) in argument.</li>
      *  </ul>
      */
     public class Actor extends ScopeLimitObject

@@ -13,7 +13,7 @@ package org.si.cml.core {
     
     
     /** @private */
-    internal class CMLAssign extends CMLState
+    public class CMLAssign extends CMLState
     {
     // variables
     //------------------------------------------------------------

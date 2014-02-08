@@ -241,7 +241,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
         public function get rank() : Number { return globalRank; }
         public function set rank(r:Number) : void { globalRank = r; }
 
-        /** Destruction status. You can refer the argument of destroy() or the '@ko' command. Returns -1 when the object isn't destroyed.
+        /** Destruction status. You can refer the argument of destroy() or the '&#64;ko' command. Returns -1 when the object isn't destroyed.
          *  @see CMLObject#onDestroy()
          *  @see CMLObject#destroy()
          *  @see CMLObject#destroyAll()
@@ -376,7 +376,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
         
         /** Statement "n" calls this when it needs. Override this to define the new CMLObject created by "n" command.
          *  @param args The arguments of sequence.
-        *  @return The new CMLObject created by "n" command. You must not activate(call create()) returning CMLObject.
+         *  @return The new CMLObject created by "n" command. You must not activate(call create()) returning CMLObject.
          */
         public function onNewObject(args:Array) : CMLObject
         {
@@ -1068,7 +1068,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
         }
 
 
-        /** Rotate haed in 1 frame, if rotd > 0. The _motion() is a typical usage exapmle. @see CMLObject#_motion()*/
+        /** Rotate haed in 1 frame, if rotd &gt; 0. The _motion() is a typical usage exapmle. @see CMLObject#_motion()*/
         protected function rotateHead() : void
         {
             _rott += _rotd;

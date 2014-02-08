@@ -83,10 +83,10 @@ enemy.execute(motion);                                  // Execute sequence.
 var seqG:CMLSequence = new CMLSequence("#LABEL_G{...}");
 
 seqG.global = true;
-var seqA:CMLSequence = new CMLSequence("&LABEL_G");    // Success; you can refer the LABEL_G.
+var seqA:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Success; you can refer the LABEL_G.
 
 seqG.global = false;
-var seqB:CMLSequence = new CMLSequence("&LABEL_G");    // Error; you cannot refer the LABEL_G.
+var seqB:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Error; you cannot refer the LABEL_G.
 </listing>
          */
         public function get global() : Boolean { return _global; }
@@ -180,21 +180,21 @@ function referLife(fbr:CMLFiber) : Number
         }
 
 
-        /** Register user defined command "&[a-z_]+".
+        /** Register user defined command "&amp;[a-z_]+".
          *  <p>
          *  This function registers the command that can use in CML string. <br/>
          *  </p>
-         *  @param name The name of command that appears like "&name" in CML string.
+         *  @param name The name of command that appears like "&amp;name" in CML string.
          *  @param func The callback function when the command appears in sequence.<br/>
          *  The type of callback is <code>function(fbr:CMLFiber, args:Array):void</code>.
          *  The 1st argument gives a reference of the fiber that execute the sequence.
          *  And the 2nd argument gives the arguments of the command.
          *  @param argc The count of argument that this command requires.<br/>
-         *  @param requireSequence Specify true if this command require the sequence as the '&', '@' and 'n' commands.
+         *  @param requireSequence Specify true if this command require the sequence as the '&amp;', '&#64;' and 'n' commands.
          *  @see CMLFiber
 @example 
 <listing version="3.0">
-// In the cml-string, you can use "&sound[sound_index],[volume]" that plays sound.
+// In the cml-string, you can use "&amp;sound[sound_index],[volume]" that plays sound.
 CMLSequence.registerUserCommand("sound", playSound, 2);
 
 function playSound(fbr:CMLFiber, args:Array) : void
@@ -425,33 +425,39 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
 
         // default sequence do nothing. call from CMLFiber
         /** @private */ 
-        static internal function newDefaultSequence() : CMLSequence
+        static public function nop() : CMLSequence
         {
-            var seq:CMLSequence = new CMLSequence();
-            seq.next = new CMLState(CMLState.ST_END);
-            seq.next.prev = seq;
-            CMLState(seq.next).jump = seq;
-            seq._setCommand(null);
-            return seq;
+            if (_nop === null) {
+                _nop = new CMLSequence();
+                _nop.next = new CMLState(CMLState.ST_END);
+                _nop.next.prev = _nop;
+                CMLState(_nop.next).jump = _nop;
+                _nop._setCommand(null);
+            }
+            return _nop;
         }
+        static private var _nop:CMLSequence;
 
 
         // rapid sequence execute rapid sequence. call from CMLFiber
         /** @private */ 
-        static internal function newRapidSequence() : CMLSequence
+        static public function rapid() : CMLSequence
         {
-            var seq:CMLSequence = new CMLSequence();
-            seq.next = new CMLState(CMLState.ST_RAPID);
-            seq.next.prev = seq;
-            CMLState(seq.next).jump = seq;
-            seq._setCommand(null);
-            return seq;
+            if (_rapid === null) {
+                _rapid = new CMLSequence();
+                _rapid.next = new CMLState(CMLState.ST_RAPID);
+                _rapid.next.prev = _rapid;
+                CMLState(_rapid.next).jump = _rapid;
+                _rapid._setCommand(null);
+            }
+            return _rapid;
         }
+        static private var _rapid:CMLSequence;
 
 
         // sequence to wait for object destruction. call from CMLFiber
         /** @private */ 
-        static internal function newWaitDestuctionSequence() : CMLSequence
+        static public function newWaitDestruction() : CMLSequence
         {
             var seq:CMLSequence = new CMLSequence();
             seq.next = new CMLState(CMLState.ST_W4D);

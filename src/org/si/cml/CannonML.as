@@ -6,14 +6,9 @@
 
 
 package org.si.cml {
-    /** Cannon ML infomation */
+    /** Cannon Macro Langlage infomation */
     public class CannonML {
         /** Version information */
-        static public const VERSION:String = "0.3.1";
-        
-        
+        static public const VERSION:String = "0.3.2";
     }
 }
-
-
-

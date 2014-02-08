@@ -1,20 +1,16 @@
 //----------------------------------------------------------------------------------------------------
-// Element interface class of formula
+// Translator from BulletML to CannonML
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
 
 
 package org.si.cml.core {
-    import org.si.cml.CMLFiber;
-    
-    
     /** @private */
-    public class CMLFormulaElem
+    public class seqinfo
     {
-        public function CMLFormulaElem() { }
-        internal function calc(fbr:CMLFiber) : Number { return 0; }
+        internal var bseq:String = "nws";
+        internal var bv:String = "0";
+        function seqinfo() {}
     }
 }
-
-

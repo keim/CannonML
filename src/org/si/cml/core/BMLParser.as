@@ -50,7 +50,7 @@ package org.si.cml.core {
         
         /** Translate BulletML to CannonML. 
         * @param  bulletML XML of BulletML
-        * @return cannonML string. Returns "" when there are no <bulletml>s in XML.
+        * @return cannonML string. Returns "" when there are no &lt;bulletml&gt;s in XML.
         */
         static public function translate(bulletML:XML) : String
         {
@@ -591,12 +591,3 @@ package org.si.cml.core {
     }
 }
 
-
-
-
-class seqinfo
-{
-    internal var bseq:String = "nws";
-    internal var bv:String = "0";
-    function seqinfo() {}
-}

@@ -14,8 +14,8 @@ package org.si.cml.extensions {
      *  You have to call ScopeLimitObject.initialize() first, and you have to call CMLObject.update() for each frame.<br/>
      *  ScopeLimitObject.initialize() registers some user define commands as below,
      *  <ul>
-     *  <li>&scon; Enables the available scope.</li>
-     *  <li>&scoff; Disables the available scope.</li>
+     *  <li>&amp;scon; Enables the available scope.</li>
+     *  <li>&amp;scoff; Disables the available scope.</li>
      *  </ul>
      */
     public class ScopeLimitObject extends CMLObject

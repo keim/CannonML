@@ -11,7 +11,7 @@ package org.si.cml.core {
     
     
     /** @private statemant for formula calculation */
-    internal class CMLFormula extends CMLState
+    public class CMLFormula extends CMLState
     {
     // namespace
     //------------------------------------------------------------

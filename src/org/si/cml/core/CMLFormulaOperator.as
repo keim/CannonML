@@ -11,7 +11,7 @@ package org.si.cml.core {
     
     
     /** @private */
-    internal class CMLFormulaOperator extends CMLFormulaElem
+    public class CMLFormulaOperator extends CMLFormulaElem
     {
         static private  var sin:CMLSinTable = new CMLSinTable();
         

@@ -67,7 +67,7 @@ package org.si.b3.modules {
         
     // properties
     //----------------------------------------
-        /** get x input (-1 <-> +1).
+        /** get x input (-1 &lt;-&gt; +1).
          *  @return -1 for left, 1 for right
          */
         public function get x() : Number
@@ -76,7 +76,7 @@ package org.si.b3.modules {
         }
         
         
-        /** get y input (-1 <-> +1).
+        /** get y input (-1 &lt;-&gt; +1).
          *  @return -1 for up, 1 for down
          */
         public function get y() : Number
@@ -85,7 +85,7 @@ package org.si.b3.modules {
         }
         
         
-        /** get button status flag. you can get the pressing status by (flag >> [key enum]) & 1 for each key. */
+        /** get button status flag. you can get the pressing status by (flag &gt;&gt; [key enum]) &amp; 1 for each key. */
         public function get flag() : uint
         {
             return _flagPressed;

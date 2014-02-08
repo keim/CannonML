@@ -12,10 +12,11 @@ package org.si.cml.core {
     /** @private */
     public class CMLList
     {
-        private var term:CMLListElem = new CMLListElem();
+        private var term:CMLListElem;
         
         function CMLList()
         {
+            term = new CMLListElem();
             term.next = term;
             term.prev = term;
         }

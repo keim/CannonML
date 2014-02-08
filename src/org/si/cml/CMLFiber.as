@@ -11,7 +11,7 @@ package org.si.cml {
     import org.si.cml.namespaces._cml_fiber_internal;
 
     
-    /** Class for the fiber (Fiber is called as "micro thread" in some other languages). 
+    /** CMLFiber rewrites parameters of CMLObject according to CMLSequence (Fiber is called as "micro thread" in some other languages.)
      *  <p>
      *  USAGE<br/>
      *  1) Get the CMLFiber instance from CMLObject.execute().<br/>
@@ -36,23 +36,25 @@ package org.si.cml {
         
     // static variables
     //------------------------------------------------------------
-        /** @private */
-        static _cml_fiber_internal var _defaultTarget:CMLObject = null;        // default target instance
+        /** @private default target instance */
+        static _cml_fiber_internal var _defaultTarget:CMLObject = null;
         
         
         
         
     // variables
     //------------------------------------------------------------
-        private  var _id       :int       = 0;     // id
-        private  var _gene     :int       = 0;     // child generation
-        private  var _object   :CMLObject = null;  // running object
-        private  var _object_id:int       = 0;     // running object id
-        private  var _target   :CMLObject = null;  // target object
-        private  var _target_id:int       = 0;     // target object id
-        private  var _barrage:CMLBarrage  = new CMLBarrage();      // bullet multiplyer
-        /** @private */ _cml_fiber_internal var _pointer  :CMLState  = null;  // executing pointer
-        /** @private */ _cml_fiber_internal var _access_id:int       = 0;     // access id
+        private var _id:int             = 0;     // id
+        private var _gene:int           = 0;     // child generation
+        private var _object:CMLObject   = null;  // running object
+        private var _object_id:int      = 0;     // running object id
+        private var _target:CMLObject   = null;  // target object
+        private var _target_id:int      = 0;     // target object id
+        private var _barrage:CMLBarrage = new CMLBarrage(); // bullet multiplyer
+        private var _seqWaitDest:CMLSequence = null;        // sequence to wait for object destruction
+
+        /** @private */ _cml_fiber_internal var _pointer:CMLState = null; // executing pointer
+        /** @private */ _cml_fiber_internal var _access_id:int = 0;       // access id
         
         // children list
         private var _listChild:CMLList = new CMLList();
@@ -91,16 +93,7 @@ package org.si.cml {
         /** @private */ static _cml_fiber_internal const HO_REL:uint = 4;
         /** @private */ static _cml_fiber_internal const HO_VEL:uint = 5;
         /** @private */ static _cml_fiber_internal const HO_SEQ:uint = 6;
-        
-        // I know these are very nervous implementations ('A`)...
-        /** @private */ static private  var seqDefault:CMLSequence = CMLSequence.newDefaultSequence();   // default sequence
-        /** @private */ static _cml_fiber_internal var seqRapid  :CMLSequence = CMLSequence.newRapidSequence();     // rapid fire sequence
-        
-        // statement to wait for object destruction
-        /** @private */ private var _stateWaitDest:CMLSequence = null;
 
-        
-        
         
         // executable looping max limitation in 1 frame
         /** @private */ static _cml_fiber_internal var _loopmax:int = 1024;
@@ -144,7 +137,7 @@ package org.si.cml {
 
     // String comment after the user command in sequence.
     // In this sequence, you call _drawText('Hello World !!').
-    var seq:CMLSequence = new CMLSequence("&print'Hello World !!'");
+    var seq:CMLSequence = new CMLSequence("&amp;print'Hello World !!'");
 </listing>
          */
         public function get string()  : String { 
@@ -239,8 +232,8 @@ package org.si.cml {
         }
 
 
-        /** Find child fiber with specifyed id. @private */
-        _cml_fiber_internal function _destroyDestFiber(destructionStatus:int) : void
+        /** kill destruction fiber with specifyed id. @private */
+        private function _killDestFiber(destructionStatus:int) : void
         {
             if (hasDestFiber) {
                 var fbr:CMLFiber = CMLFiber(_firstDest);
@@ -363,10 +356,11 @@ package org.si.cml {
             vars.length = 0;
             varc.length = 0;
 
-            seqSub  = seqDefault;
-            seqExec = seqDefault;
-            seqNew  = seqDefault;
-            seqFire = seqDefault;
+            var nop:CMLSequence = CMLSequence.nop();
+            seqSub  = nop;
+            seqExec = nop;
+            seqNew  = nop;
+            seqFire = nop;
         }
 
 
@@ -430,9 +424,9 @@ package org.si.cml {
             }
             
             // run all children
-            var elem     :CMLListElem;
-            var elem_end :CMLListElem = _listChild.end;
-            for (elem=_listChild.begin; elem!=elem_end;) {
+            var elem    :CMLListElem = _listChild.begin,
+                elem_end:CMLListElem = _listChild.end;
+            while (elem!=elem_end) {
                 elem = CMLFiber(elem)._onUpdate();
             }
 
@@ -453,14 +447,14 @@ package org.si.cml {
         private function _destroyByObject(obj:CMLObject) : CMLListElem
         {
             // check all children
-            var elem     :CMLListElem;
-            var elem_end :CMLListElem = _listChild.end;
-            for (elem=_listChild.begin; elem!=elem_end;) {
+            var elem    :CMLListElem = _listChild.begin,
+                elem_end:CMLListElem = _listChild.end;
+            while (elem!=elem_end) {
                 elem = CMLFiber(elem)._destroyByObject(obj);
             }
 
             elem = next;
-            if (_object == obj) destroy();
+            if (_object === obj) destroy();
             return elem;
         }
         
@@ -608,7 +602,7 @@ package org.si.cml {
             return fbr;
         }
 
-        /** call only from the '@' command (CMLState._fiber()) @private */ 
+        /** call only from the '&#64;' command (CMLState._fiber()) @private */ 
         _cml_fiber_internal function _newChildFiber(seq:CMLSequence, id:int, invt_:uint, args_:Array, copyParam:Boolean) : CMLFiber
         {
             if (id != ID_NOT_SPECIFYED) destroyChild(id);                   // destroy old fiber, when id is obtained
@@ -622,26 +616,26 @@ package org.si.cml {
             return fbr;
         }
         
-        /** call only from the '@ko' command (CMLState._fiber_destruction()) @private */
+        /** call only from the '&#64;ko' command (CMLState._fiber_destruction()) @private */
         _cml_fiber_internal function _newDestFiber(seq:CMLSequence, id:int, invt_:uint, args_:Array) : CMLFiber
         {
-            _destroyDestFiber(id);                                          // destroy old fiber
+            _killDestFiber(id);                                          // destroy old fiber
             
             if (seq.isEmpty) return null;
             var fbr:CMLFiber = CMLFiber(_freeFibers.pop() || new CMLFiber());
             // set destruction sequence
-            fbr._stateWaitDest = fbr._stateWaitDest || CMLSequence.newWaitDestuctionSequence();
-            CMLState(fbr._stateWaitDest.next).jump = seq;
+            fbr._seqWaitDest = fbr._seqWaitDest || CMLSequence.newWaitDestruction();
+            CMLState(fbr._seqWaitDest.next).jump = seq;
             
             fbr.insert_before(_firstDest);                                  // child of this
             _firstDest = fbr;                                               // overwrite first destruction fiber
-            if (!fbr._initialize(this, _object, fbr._stateWaitDest, id, invt_, args_)) {
+            if (!fbr._initialize(this, _object, fbr._seqWaitDest, id, invt_, args_)) {
                 throw new Error("CML Exection error. The '@ko' command calls depper than stac limit.");
             }
             return fbr;
         }
 
-        /** call from the 'n', 'f' or '@o' command (search in CMLState) @private */ 
+        /** call from the 'n', 'f' or '&#64;o' command (search in CMLState) @private */ 
         _cml_fiber_internal function _newObjectFiber(obj:CMLObject, seq:CMLSequence, invt_:uint, args_:Array) : CMLFiber
         {
             if (seq.isEmpty) return null;

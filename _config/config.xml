@@ -1,0 +1,79 @@
+<flex-config>
+  <target-player>10.2</target-player>
+  <static-link-runtime-shared-libraries>true</static-link-runtime-shared-libraries>
+
+  <compiler>
+    <show-binding-warnings>true</show-binding-warnings>
+    <show-deprecation-warnings>true</show-deprecation-warnings>
+    <show-actionscript-warnings>true</show-actionscript-warnings>
+
+    <debug>false</debug>
+    <optimize>true</optimize>
+    <incremental>false</incremental>
+
+    <external-library-path>
+      <path-element>${flexlib}/libs/player/11.9/playerglobal.swc</path-element>
+    </external-library-path>
+    
+    <source-path>
+      <path-element>../src</path-element>
+    </source-path>
+  </compiler>
+
+  <metadata>
+    <title>cannonml</title>
+    <description>http://soundimpulse.sakura.ne.jp/</description>
+    <publisher>SolidImage</publisher>
+    <creator>keim_at_si</creator>
+    <language>ja-JP</language>
+  </metadata>
+
+  <output>../_release/cannonml.swc</output>
+
+  <!-- including binaries
+    <include-file>
+      <name>assets/test.ttf</name>
+      <path>./assets/test.ttf</path>
+    </include-file>
+  -->
+
+  <!-- all classes -->
+  <include-classes>
+    <class>org.si.b3.CMLMovieClip</class>
+    <class>org.si.b3.CMLMovieClipSprite</class>
+    <class>org.si.b3.CMLMovieClipTexture</class>
+    <class>org.si.b3.modules.CMLMovieClipControl</class>
+    <class>org.si.b3.modules.CMLMovieClipFPS</class>
+    <class>org.si.b3.modules.CMLMovieClipKeyLogger</class>
+    <class>org.si.b3.modules.CMLMovieClipScene</class>
+    <class>org.si.b3.modules._cmlmovieclip_internal</class>
+    <class>org.si.cml.CannonML</class>
+    <class>org.si.cml.CMLFiber</class>
+    <class>org.si.cml.CMLObject</class>
+    <class>org.si.cml.CMLSequence</class>
+    <class>org.si.cml.core.BMLParser</class>
+    <class>org.si.cml.core.CMLAssign</class>
+    <class>org.si.cml.core.CMLBarrage</class>
+    <class>org.si.cml.core.CMLBarrageElem</class>
+    <class>org.si.cml.core.CMLFormula</class>
+    <class>org.si.cml.core.CMLFormulaElem</class>
+    <class>org.si.cml.core.CMLFormulaLiteral</class>
+    <class>org.si.cml.core.CMLFormulaOperator</class>
+    <class>org.si.cml.core.CMLList</class>
+    <class>org.si.cml.core.CMLListElem</class>
+    <class>org.si.cml.core.CMLParser</class>
+    <class>org.si.cml.core.CMLRefer</class>
+    <class>org.si.cml.core.CMLRoot</class>
+    <class>org.si.cml.core.CMLSinTable</class>
+    <class>org.si.cml.core.CMLState</class>
+    <class>org.si.cml.core.CMLString</class>
+    <class>org.si.cml.core.CMLUserDefine</class>
+    <class>org.si.cml.core.interpolation</class>
+    <class>org.si.cml.extensions.Actor</class>
+    <class>org.si.cml.extensions.ActorFactory</class>
+    <class>org.si.cml.extensions.BulletRunner</class>
+    <class>org.si.cml.extensions.ScopeLimitObject</class>
+    <class>org.si.cml.namespaces._cml_fiber_internal</class>
+    <class>org.si.cml.namespaces._cml_internal</class>
+  </include-classes>
+</flex-config>
