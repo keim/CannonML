@@ -103,6 +103,8 @@ package org.si.cml.core {
         /** set command by key string @private */
         protected function _setCommand(cmd:String) : CMLState
         {
+            var idx:int;
+
             switch (cmd) {
             // waiting 
             case "w":
@@ -202,7 +204,7 @@ package org.si.cml.core {
             }
             
             // set undefined augments to 0.
-            for (var idx:int=0; idx<_args.length; idx++) {
+            for (idx=0; idx<_args.length; idx++) {
                 if (isNaN(_args[idx])) _args[idx] = 0;
             }
 
@@ -212,10 +214,10 @@ package org.si.cml.core {
         // set default arguments
         protected function _resetParameters(argc:int) : void
         {
-            var ibegin:int = _args.length;
+            var ibegin:int = _args.length, i:int;
             if (ibegin < argc) {
                 _args.length = argc;
-                for (var i:int=ibegin; i<argc; i++) {
+                for (i=ibegin; i<argc; i++) {
                     _args[i] = Number.NaN;
                 }
             }
@@ -679,24 +681,31 @@ package org.si.cml.core {
                 if (qrt_next.interval == 0) {
                     if (qrt_next.next == end) {
                         // create bullet
-                        for (qrt_next.init(qrt); !qrt_next.isEnd(); qrt_next.update()) {
+                        qrt_next.init(qrt);
+                        while (!qrt_next.isEnd()) {
                             __create_bullet(fbr.fang + qrt_next.angle, qrt_next.speed);
+                            qrt_next.update();
                         }
                     } else {
                         // reflexive call
-                        for (qrt_next.init(qrt); !qrt_next.isEnd(); qrt_next.update()) {
+                        qrt_next.init(qrt);
+                        while (!qrt_next.isEnd()) {
                             __reflexive_call(qrt_next, end);
+                            qrt_next.update();
                         }
                     }
                 } else {
                     // create new fiber and initialize
-                    var childFiber:CMLFiber = fbr._newChildFiber(CMLSequence.rapid(), 0, _invert_flag, null, false);
+                    var childFiber:CMLFiber = fbr._newChildFiber(CMLSequence.rapid(), 0, _invert_flag, null, false),
+                        elem:CMLListElem;
 
                     // copy bullet setting and bullet multiplyer
                     childFiber.bul.copy(qrt_next);
                     childFiber.bul.init(qrt);
-                    for (var elem:CMLListElem = qrt_next.next; elem!=end; elem=elem.next) {
+                    elem = qrt_next.next;
+                    while (elem != end) {
                         childFiber.barrage._appendElementCopyOf(CMLBarrageElem(elem));
+                        elem = elem.next
                     }
 
                     // copy other parameters

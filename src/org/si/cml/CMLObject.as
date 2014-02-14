@@ -404,9 +404,10 @@ if (target_object_id != target_object.id) { // if the id value is different,
          */
         static public function initialize(vertical_:Boolean=true) : CMLObject
         {
+            var i:int;
             if (!_root) _root = new CMLRoot();
             vertical = int(vertical_);
-            for (var i:int=0; i<_globalRank.length; i++) _globalRank[i] = 0;
+            for (i=0; i<_globalRank.length; i++) { _globalRank[i] = 0; }
             destroyAll(-1);
             CMLFiber._cml_fiber_internal::_deatroyAll();
             _root.create(0, 0, _root).setAsDefaultTarget();
@@ -445,13 +446,15 @@ if (target_object_id != target_object.id) { // if the id value is different,
          */
         static public function destroyAll(status:int) : void
         {
-            var elem     :CMLListElem, elem_next:CMLListElem, 
-                elem_end :CMLListElem = _activeObjects.end;
-            for (elem=_activeObjects.begin; elem!=elem_end; elem=elem_next) {
+            var elem     :CMLListElem = _activeObjects.begin, 
+                elem_end :CMLListElem = _activeObjects.end, 
+                elem_next:CMLListElem;
+            while (elem != elem_end) {
                 // CMLObject(elem).destroy(_destructionStatus);
                 elem_next= elem.next;
                 CMLObject(elem)._destructionStatus = status;
                 CMLObject(elem)._finalize();
+                elem = elem_next;
             }
         }
 

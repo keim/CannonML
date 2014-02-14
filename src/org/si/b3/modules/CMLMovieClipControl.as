@@ -117,7 +117,8 @@ package org.si.b3.modules {
          */
         public function initialize() : CMLMovieClipControl
         {
-            for(var i:int=0; i<KEY_MAX; ++i) _keyCode[i] = new Vector.<int>();
+            var i:int;
+            for(i=0; i<KEY_MAX; ++i) { _keyCode[i] = new Vector.<int>(); }
             _supportJoyServer = false;
             reset();
             return this;
@@ -129,8 +130,9 @@ package org.si.b3.modules {
          */
         public function reset() : CMLMovieClipControl
         {
+            var i:int;
             _flagPressed = 0;
-            for(var i:int=0; i<KEY_MAX; ++i) { _counter[i] = 0; }
+            for(i=0; i<KEY_MAX; ++i) { _counter[i] = 0; }
             return this;
         }
         
@@ -142,9 +144,9 @@ package org.si.b3.modules {
          */
         public function map(buttonNumber:int, ...args) : CMLMovieClipControl
         {
-            var codeList:Vector.<int> = _keyCode[buttonNumber];
+            var i:int, codeList:Vector.<int> = _keyCode[buttonNumber];
             if (args.length == 1 && args[0] is Array) args = args[0];
-            for (var i:int=0; i<args.length; i++) {
+            for (i=0; i<args.length; i++) {
                 if (args[i] is String) {
                     if (args[i] in _keycode_map) {
                         codeList.push(_keycode_map[args[i]]);

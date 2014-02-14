@@ -57,9 +57,10 @@ package org.si.cml.core {
          */
         public function appendCopyOf(src:CMLBarrage) : void
         {
-            var qrt:CMLListElem;
-            for (qrt=src.qrtList.begin; qrt!=src.qrtList.end; qrt=qrt.next) {
+            var qrt:CMLListElem = src.qrtList.begin;
+            while (qrt != src.qrtList.end) {
                 _appendElementCopyOf(CMLBarrageElem(qrt));
+                qrt = qrt.next;
             }
         }
         

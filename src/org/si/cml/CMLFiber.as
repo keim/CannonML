@@ -198,12 +198,13 @@ package org.si.cml {
         /** Stop all child fibers. */
         public function destroyAllChildren() : void
         {
-            var elem     :CMLListElem;
-            var elem_next:CMLListElem;
-            var elem_end :CMLListElem = _listChild.end;
-            for (elem=_listChild.begin; elem!=elem_end; elem=elem_next) {
+            var elem     :CMLListElem = _listChild.begin,
+                elem_end :CMLListElem = _listChild.end,
+                elem_next:CMLListElem;
+            while (elem != elem_end) {
                 elem_next = elem.next;
                 CMLFiber(elem).destroy();
+                elem = elem_next;
             }
         }
         
@@ -223,10 +224,11 @@ package org.si.cml {
         /** Find child fiber with specifyed id. */
         public function findChild(child_id:int) : CMLFiber
         {
-            var elem    :CMLListElem;
-            var elem_end:CMLListElem = _firstDest;
-            for (elem=_listChild.begin; elem!=elem_end; elem=elem.next) {
+            var elem    :CMLListElem = _listChild.begin,
+                elem_end:CMLListElem = _firstDest;
+            while (elem != elem_end) {
                 if (CMLFiber(elem)._access_id == child_id) return CMLFiber(elem);
+                elem = elem.next;
             }
             return null;
         }
@@ -242,12 +244,14 @@ package org.si.cml {
                     _firstDest = fbr.next;
                     fbr.destroy();
                 } else {
-                    var elem:CMLListElem, elem_end:CMLListElem = _listChild.end;
-                    for (elem=_firstDest.next; elem!=elem_end; elem=elem.next) {
+                    var elem    :CMLListElem = _firstDest.next, 
+                        elem_end:CMLListElem = _listChild.end;
+                    while (elem != elem_end) {
                         if (CMLFiber(elem)._access_id == destructionStatus) {
                             CMLFiber(elem).destroy();
                             return;
                         }
+                        elem = elem.next;
                     }
                 }
             }
@@ -464,7 +468,7 @@ package org.si.cml {
         /** @private */ 
         _cml_fiber_internal function _unshiftArguments(argCount:int=0, argArray:Array=null) : void
         {
-            var i:int;
+            var i:int, imax:int;
             
             if (argCount==0 && (argArray==null || argArray.length==0)) {
                 varc.unshift(0);
@@ -472,11 +476,16 @@ package org.si.cml {
                 if (argArray!=null) {
                     argCount = (argCount > argArray.length) ? argCount : argArray.length;
                     varc.unshift(argCount);
-                    for (i=argCount-1; i>=argArray.length; --i) { vars.unshift(0); }
-                    for (; i>=0; --i) { vars.unshift(argArray[i]); }
+                    imax = vars.length;
+                    vars.length = imax + argCount;
+                    for (i=0; i<imax; i++) { vars[i+argCount] = vars[i]; }
+                    for (i=0; i<argCount; i++) { vars[i] = (i < argArray.length) ? argArray[i] : 0; }
                 } else {
                     varc.unshift(argCount);
-                    for (i=argCount-1; i>=0; --i) { vars.unshift(0); }
+                    imax = vars.length;
+                    vars.length = imax + argCount;
+                    for (i=0; i<imax; i++) { vars[i+argCount] = vars[i]; }
+                    for (i=0; i<argCount; i++) { vars[i] = 0; }
                 }
             }
         }
@@ -566,12 +575,13 @@ package org.si.cml {
             var activeFibers:CMLList = _rootFiber._listChild;
             if (activeFibers.isEmpty()) return;
             
-            var elem    :CMLListElem;
-            var elem_end:CMLListElem = activeFibers.end;
-            for (elem=activeFibers.begin; elem!=elem_end;) {
-                var nextElem:CMLListElem = elem.next;
+            var elem     :CMLListElem = activeFibers.begin,
+                elem_end :CMLListElem = activeFibers.end,
+                elem_next:CMLListElem;
+            while (elem != elem_end) {
+                elem_next = elem.next;
                 CMLFiber(elem)._finalize();
-                elem = nextElem 
+                elem = elem_next 
             }
         }
         
@@ -583,9 +593,9 @@ package org.si.cml {
             var activeFibers:CMLList = _rootFiber._listChild;
             if (activeFibers.isEmpty()) return;
             
-            var elem    :CMLListElem;
-            var elem_end:CMLListElem = activeFibers.end;
-            for (elem=activeFibers.begin; elem!=elem_end;) {
+            var elem    :CMLListElem = activeFibers.begin,
+                elem_end:CMLListElem = activeFibers.end;
+            while (elem != elem_end) {
                 elem = CMLFiber(elem)._onUpdate();
             }
         }
@@ -653,9 +663,9 @@ package org.si.cml {
         static _cml_fiber_internal function _destroyAllFibers(obj:CMLObject) : void
         {
             var fibers  :CMLList = _rootFiber._listChild,
-                elem    :CMLListElem,
+                elem    :CMLListElem = fibers.begin,
                 elem_end:CMLListElem = fibers.end;
-            for (elem=fibers.begin; elem!=elem_end;) {
+            while (elem != elem_end) {
                 elem = CMLFiber(elem)._destroyByObject(obj);
             }
         }

@@ -414,11 +414,12 @@ package org.si.cml.core {
         
         static private function _getParam(xml:XML) : String
         {
-            var imax:int = xml.param.length();
+            var imax:int = xml.param.length(),
+                i:int, str:String;
             if (imax == 0) return null;
 
-            var str:String = _cmlArgument(xml.param[0]);
-            for (var i:int=1; i<imax; ++i) {
+            str = _cmlArgument(xml.param[0]);
+            for (i=1; i<imax; ++i) {
                 str += "," + _cmlArgument(xml.param[i]);
             }
             return str;
@@ -469,9 +470,10 @@ package org.si.cml.core {
     //--------------------------------------------------
         static private function _parseContentsSequencial(xml:XML, ...elements) : void
         {
-            var imax:int = elements.length;
-            for each (var elem:XML in xml.children()) {
-                for (var i:int=0; i<imax; ++i) {
+            var imax:int = elements.length,
+                elem:XML, i:int;
+            for each (elem in xml.children()) {
+                for (i=0; i<imax; ++i) {
                     if (elements[i](elem)) break;
                 }
                 if (i == imax) throw _errorElement(xml, elem.localName());
@@ -538,6 +540,7 @@ package org.si.cml.core {
                 if (argCount < idx) argCount = idx;
             }
             if (argCount == 0) return "";
+            
             var str:String = "$1";
             for (idx=1; idx<argCount; ++idx) { str+=",$"+String(idx+1); }
             return str;

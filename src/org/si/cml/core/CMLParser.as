@@ -459,8 +459,8 @@ package org.si.cml.core {
         // regular expression string of user command. call from _createCMLRegExp()
         static private function get _userCommandRegExp() : String
         {
-            var cmdlist:Array = new Array();
-            for (var cmd:String in mapUsrDefCmd) { cmdlist.push(cmd); }
+            var cmdlist:Array = new Array(), cmd:String;
+            for (cmd in mapUsrDefCmd) { cmdlist.push(cmd); }
             return cmdlist.sort(Array.DESCENDING).join('|');
         }
 
@@ -468,8 +468,8 @@ package org.si.cml.core {
         // regular expression string of user command. call from CMLFormula
         static internal function get _userReferenceRegExp() : String
         {
-            var reflist:Array = new Array();
-            for (var ref:String in mapUsrDefRef) { reflist.push(ref); }
+            var reflist:Array = new Array(), ref:String;
+            for (ref in mapUsrDefRef) { reflist.push(ref); }
             return reflist.concat(CMLFormulaLiteral.defaultReferences).sort(Array.DESCENDING).join('|').replace(/\./g, '\\.');
         }
 

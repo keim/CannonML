@@ -38,6 +38,7 @@ package org.si.b3 {
         /** true if you want to use CMLMovieClip.draw() */
         public function get drawable() : Boolean { return (cutoutBitmapData != null); }
         public function set drawable(b:Boolean) : void {
+            var i:int;
             if (cutoutBitmapData) {
                 cutoutBitmapData.dispose();
                 cutoutBitmapData = null;
@@ -47,7 +48,7 @@ package org.si.b3 {
                 cutoutBitmapData.copyPixels(bitmapData, rect, new Point(0, 0));
             }
             if (animationPattern && animationPattern.length > 1) {
-                for (var i:int=1; i<animationPattern.length; i++) {
+                for (i=1; i<animationPattern.length; i++) {
                     animationPattern[i].drawable = b;
                 }
             }
@@ -74,6 +75,8 @@ package org.si.b3 {
          */
         function CMLMovieClipTexture(bitmapData:BitmapData, texX:int=0, texY:int=0, texWidth:int=0, texHeight:int=0, drawable:Boolean=false, animationCount:int=1, areaWidth:int=0, areaHeight:int=0, columnPriority:Boolean=true) 
         {
+            var x:int, y:int, xmax:int, ymax:int, i:int;
+
             if (texWidth  == 0) texWidth  = bitmapData.width;
             if (texHeight == 0) texHeight = bitmapData.height;
             this.cutoutBitmapData = null;
@@ -87,11 +90,14 @@ package org.si.b3 {
                 animationPattern[0] = this;
                 
                 if (animationCount > 1) {
-                    var x:int = texX + texWidth, y:int = texY, xmax:int = texX + areaWidth - texWidth, ymax:int = texY + areaHeight - texHeight;
+                    x = texX + texWidth;
+                    y = texY;
+                    xmax = texX + areaWidth  - texWidth;
+                    ymax = texY + areaHeight - texHeight;
                     if (areaWidth == 0)  xmax = bitmapData.width  - texWidth;
                     if (areaHeight == 0) ymax = bitmapData.height - texHeight;
                     
-                    for (var i:int=1; i<animationCount; i++) {
+                    for (i=1; i<animationCount; i++) {
                         animationPattern[i] = new CMLMovieClipTexture(bitmapData, x, y, texWidth, texHeight, drawable, 0);
                         if (columnPriority) {
                             x += texWidth;
@@ -170,8 +176,9 @@ package org.si.b3 {
         {
             var i:int, step:Number = (maxAngle - minAngle) / animationCount, angle:Number = minAngle, patterns:Vector.<CMLMovieClipTexture>;
             patterns = new Vector.<CMLMovieClipTexture>(animationCount, true);
-            for (i=0; i<animationCount; i++, angle+=step) {
+            for (i=0; i<animationCount; i++) {
                 patterns[i] = _cutout(scaleX, scaleY, angle, colorTransform, backgroundColor, margin);
+                angle+=step;
             }
             patterns[0].animationPattern = patterns;
             return patterns[0];
@@ -184,11 +191,11 @@ package org.si.b3 {
          */
         public function createAlphaMap(fillColor:uint=0xffffffff) : CMLMovieClipTexture
         {
-            var alphaBitmap:BitmapData = new BitmapData(rect.width, rect.height, true, fillColor);
+            var i:int, alphaBitmap:BitmapData = new BitmapData(rect.width, rect.height, true, fillColor);
             alphaBitmap.copyChannel(bitmapData, rect, new Point(0, 0), BitmapDataChannel.ALPHA, BitmapDataChannel.ALPHA);
             alphaMap = new CMLMovieClipTexture(alphaBitmap, 0, 0, 0, 0, drawable);
             if (animationPattern && animationPattern.length > 1) {
-                for (var i:int=1; i<animationPattern.length; i++) {
+                for (i=1; i<animationPattern.length; i++) {
                     animationPattern[i].createAlphaMap(fillColor);
                 }
             }
@@ -223,11 +230,13 @@ package org.si.b3 {
             srcymin = rect.y;
             srcxmax = rect.x + rect.width;
             srcymax = rect.y + rect.height;
-            for (x=0; x<xmax; x++) for (y=0; y<ymax; y++) {
-                srcx = x * ma + y * mc + tx;
-                srcy = x * mb + y * md + ty;
-                if (srcx>=srcxmin && srcx<srcxmax && srcy>=srcymin && srcy<srcymax) {
-                    dst.setPixel32(x, y, bitmapData.getPixel32(int(srcx), int(srcy)));
+            for (x=0; x<xmax; x++) {
+                for (y=0; y<ymax; y++) {
+                    srcx = x * ma + y * mc + tx;
+                    srcy = x * mb + y * md + ty;
+                    if (srcx>=srcxmin && srcx<srcxmax && srcy>=srcymin && srcy<srcymax) {
+                        dst.setPixel32(x, y, bitmapData.getPixel32(int(srcx), int(srcy)));
+                    }
                 }
             }
             if (colt) dst.colorTransform(dst.rect, colt);

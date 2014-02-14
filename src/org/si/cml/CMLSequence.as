@@ -97,8 +97,8 @@ var seqB:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Error; you cannot 
             if (makeGlobal) {
                 globalSequences.unshift(this);
             } else {
-                var imax:int = globalSequences.length;
-                for (var i:int=0; i<imax; ++i) {
+                var i:int, imax:int = globalSequences.length;
+                for (i=0; i<imax; ++i) {
                     if (globalSequences[i] == this) {
                         globalSequences.splice(i, 1);
                         return;
@@ -111,7 +111,8 @@ var seqB:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Error; you cannot 
         /** Is this sequence empty ? */
         public function get isEmpty() : Boolean
         {
-            return (next==null || CMLState(next).type==ST_END);
+            var cmd:CMLState = next as CMLState;
+            return (next==null || cmd.type==ST_END);
         }
         
         
@@ -245,18 +246,22 @@ trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 1
          */
         override public function clear() : void
         {
+            var key:String;
+
             // remove from global list
             global = false;
             
             // disconnect all chains
-            var cmd:CMLState, cmd_next:CMLState;
-            for (cmd=CMLState(next); cmd!=null; cmd=cmd_next) {
-                cmd_next = CMLState(cmd.next);
+            var cmd:CMLState = next as CMLState,
+                cmd_next:CMLState;
+            while (cmd != null) {
+                cmd_next = cmd.next as CMLState;
                 cmd.clear();
+                cmd = cmd_next;
             }
             
             // clear children
-            for (var key:String in _childSequence) {
+            for (key in _childSequence) {
                 _childSequence[key].clear();
                 delete _childSequence[key];
             }
@@ -364,11 +369,15 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
         /** @private */ 
         _cml_internal function verify() : void
         {
-            var cmd:CMLState, cmd_next:CMLState, cmd_verify:CMLState, new_cmd:CMLState;
+            var cmd:CMLState, 
+                cmd_next:CMLState, 
+                cmd_verify:CMLState, 
+                new_cmd:CMLState;
             
             // verification
-            for (cmd=CMLState(next); cmd!=null; cmd=cmd_next) {
-                cmd_next = CMLState(cmd.next);
+            cmd = next as CMLState;
+            while (cmd != null) {
+                cmd_next = next as CMLState;
                 // solve named reference
                 if (cmd.type == CMLState.ST_REFER) {
                     if (CMLRefer(cmd).isLabelUnsolved()) {
@@ -384,7 +393,7 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
                     // skip formula command
                     cmd_verify = cmd_next;
                     while (cmd_verify.type == CMLState.ST_FORMULA) {
-                        cmd_verify = CMLState(cmd_verify.next);
+                        cmd_verify = cmd_verify.next as CMLState;
                     }
                     // if there are no references, ... 
                     if (cmd_verify.type != CMLState.ST_REFER) {
@@ -412,14 +421,17 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
                     // skip formula and barrage command
                     cmd_verify = cmd_next
                     while (cmd_verify.type == CMLState.ST_FORMULA || cmd_verify.type == CMLState.ST_BARRAGE) {
-                        cmd_verify = CMLState(cmd_verify.next)
+                        cmd_verify = cmd_verify.next as CMLState;
                     }
                     cmd_next = cmd_verify;
                 }
+
+                cmd = cmd_next;
             }
          
             // verify all child sequences
-            for each (var seq:CMLSequence in _childSequence) { seq.verify(); }
+            var seq:CMLSequence;
+            for each (seq in _childSequence) { seq.verify(); }
         }
 
 
@@ -428,10 +440,11 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
         static public function nop() : CMLSequence
         {
             if (_nop === null) {
+                var cmd:CMLState = new CMLState(CMLState.ST_END);
                 _nop = new CMLSequence();
-                _nop.next = new CMLState(CMLState.ST_END);
-                _nop.next.prev = _nop;
-                CMLState(_nop.next).jump = _nop;
+                _nop.next = cmd;
+                cmd.prev = _nop;
+                cmd.jump = _nop;
                 _nop._setCommand(null);
             }
             return _nop;
@@ -444,10 +457,11 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
         static public function rapid() : CMLSequence
         {
             if (_rapid === null) {
+                var rap:CMLState = new CMLState(CMLState.ST_RAPID);
                 _rapid = new CMLSequence();
-                _rapid.next = new CMLState(CMLState.ST_RAPID);
-                _rapid.next.prev = _rapid;
-                CMLState(_rapid.next).jump = _rapid;
+                _rapid.next = rap;
+                rap.prev = _rapid;
+                rap.jump = _rapid;
                 _rapid._setCommand(null);
             }
             return _rapid;
@@ -459,10 +473,11 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
         /** @private */ 
         static public function newWaitDestruction() : CMLSequence
         {
-            var seq:CMLSequence = new CMLSequence();
-            seq.next = new CMLState(CMLState.ST_W4D);
-            seq.next.prev = seq;
-            CMLState(seq.next).jump = seq;
+            var seq:CMLSequence = new CMLSequence(),
+                cmd:CMLState = new CMLState(CMLState.ST_W4D);
+            seq.next = cmd;
+            cmd.prev = seq;
+            cmd.jump = seq;
             return seq;
         }
     }

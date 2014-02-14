@@ -257,7 +257,11 @@ package org.si.cml.extensions {
             for (i=0; i<imax; i++) {
                 layer = _drawLayers[i];
                 if (layer) {
-                    for (act=layer._nextDraw;  act!=layer; act=act._nextDraw) act.onDraw();
+                    act = layer._nextDraw;
+                    while (act != layer) {
+                        act.onDraw();
+                        act = act._nextDraw;
+                    }
                 }
             }
         }
@@ -275,9 +279,11 @@ package org.si.cml.extensions {
                 list0:Actor = _evalLayers[evalID0],
                 list1:Actor = _evalLayers[evalID1];
 
-            for (act0=list0._nextEval; act0!=list0; act0=act0._nextEval) {
+            act0 = list0._nextEval;
+            while (act0 != list0) {
                 act0_id = act0.id;
-                for (act1=list1._nextEval; act1!=list1; act1=act1._nextEval) {
+                act1 = list1._nextEval;
+                while (act1 != list1) {
                     dx = act0.x - act1.x;
                     dy = act0.y - act1.y;
                     dot = -dx * act1.vx - dy * act1.vy;
@@ -295,7 +301,11 @@ package org.si.cml.extensions {
                     act0.onHit(act1);
                     act1.onHit(act0);
                     if (act0_id != act0.id) break;
+
+                    act1 = act1._nextEval;
                 }
+
+                act0 = act0._nextEval;
             }
         }
         
@@ -311,9 +321,11 @@ package org.si.cml.extensions {
                 list0:Actor = _evalLayers[evalID0],
                 list1:Actor = _evalLayers[evalID1];
 
-            for (act0=list0._nextEval; act0!=list0; act0=act0._nextEval) {
+            act0 = list0._nextEval;
+            while (act0!=list0) {
                 act0_id = act0.id;
-                for (act1=list1._nextEval; act1!=list1; act1=act1._nextEval) {
+                act1 = list1._nextEval;
+                while (act1!=list1) {
 /*
                     dx = (act0.x < act1.x) ? (act1.x - act0.x) : (act0.x - act1.x);
                     dy = (act0.y < act1.y) ? (act1.y - act0.y) : (act0.y - act1.y);
@@ -328,7 +340,11 @@ package org.si.cml.extensions {
                         act1.onHit(act0);
                         if (act0_id != act0.id) break;
                     }
+
+                    act1 = act1._nextEval;
                 }
+
+                act0 = act0._nextEval;
             }
         }
         
@@ -337,7 +353,11 @@ package org.si.cml.extensions {
         static public function eval(evalID:int, func:Function) : void
         {
             var act:Actor, list:Actor = _evalLayers[evalID];
-            for (act=list._nextEval; act!=list; act=act._nextEval) func(act);
+            act = list._nextEval;
+            while (act != list) {
+                func(act);
+                act = act._nextEval;
+            }
         }
     }
 }
