@@ -128,17 +128,17 @@ package org.si.cml.core {
             // interval
             case "i":   func = _i;  _resetParameters(1); break;
             // position
-            case "p":   func = _p;  _resetParameters(2); break;
+            case "p":   func = _p;  _resetParameters(3); break;
             case "px":  func = _px; _resetParameters(1); break;
             case "py":  func = _py; _resetParameters(1); break;
             case "pd":  func = _pd; _resetParameters(2); break;
             // velocity
-            case "v":   func = _v;  _resetParameters(2); break;
+            case "v":   func = _v;  _resetParameters(3); break;
             case "vx":  func = _vx; _resetParameters(1); break;
             case "vy":  func = _vy; _resetParameters(1); break;
             case "vd":  func = _vd; _resetParameters(2); break;
             // accelaration
-            case "a":   func = _a;  _resetParameters(2); break;
+            case "a":   func = _a;  _resetParameters(3); break;
             case "ax":  func = _ax; _resetParameters(1); break;
             case "ay":  func = _ay; _resetParameters(1); break;
             case "ad":  func = _ad; _resetParameters(2); break;
@@ -308,23 +308,25 @@ package org.si.cml.core {
         private function _qy(fbr:CMLFiber) : Boolean { fbr.fy=_invertY(_args[0]); return true; }
 
         // position
-        private function _p(fbr:CMLFiber)  : Boolean { fbr.object.setPosition(_invertX(_args[0]), _invertY(_args[1]), fbr.chgt); return true; }
-        private function _px(fbr:CMLFiber) : Boolean { fbr.object.setPosition(_invertX(_args[0]), fbr.object._getY(), fbr.chgt); return true; }
-        private function _py(fbr:CMLFiber) : Boolean { fbr.object.setPosition(fbr.object._getX(), _invertY(_args[0]), fbr.chgt); return true; }
+        private function _p(fbr:CMLFiber)  : Boolean { fbr.object.setPosition(_invertX(_args[0]), _invertY(_args[1]), _args[2], fbr.chgt); return true; }
+        private function _px(fbr:CMLFiber) : Boolean { fbr.object.setPosition(_invertX(_args[0]), fbr.object._getY(), fbr.object._getZ(), fbr.chgt); return true; }
+        private function _py(fbr:CMLFiber) : Boolean { fbr.object.setPosition(fbr.object._getX(), _invertY(_args[0]), fbr.object._getZ(), fbr.chgt); return true; }
+        private function _pz(fbr:CMLFiber) : Boolean { fbr.object.setPosition(fbr.object._getX(), fbr.object._getY(), _args[0], fbr.chgt); return true; }
         private function _pd(fbr:CMLFiber) : Boolean {
             var iang:int;
             if (fbr.hopt != CMLFiber.HO_SEQ) iang = sin.index(fbr._getAngleForRotationCommand()+CMLObject.scrollAngle);
             else                             iang = sin.index(fbr.object.anglePosition-fbr._getAngleForRotationCommand());
             var c:Number = sin[iang+sin.cos_shift],
                 s:Number = sin[iang];
-            fbr.object.setPosition(c*_args[0]-s*_args[1], s*_args[0]+c*_args[1], fbr.chgt);
+            fbr.object.setPosition(c*_args[0]-s*_args[1], s*_args[0]+c*_args[1], fbr.object._getZ(), fbr.chgt);
             return true;
         }
 
         // velocity
-        private function _v(fbr:CMLFiber)  : Boolean { fbr.object.setVelocity(_invertX(_args[0]*_speed_ratio), _invertY(_args[1]*_speed_ratio), fbr.chgt); return true; }
-        private function _vx(fbr:CMLFiber) : Boolean { fbr.object.setVelocity(_invertX(_args[0]*_speed_ratio), fbr.object.vy,                   fbr.chgt); return true; }
-        private function _vy(fbr:CMLFiber) : Boolean { fbr.object.setVelocity(fbr.object.vx,                   _invertY(_args[0]*_speed_ratio), fbr.chgt); return true; }
+        private function _v(fbr:CMLFiber)  : Boolean { fbr.object.setVelocity(_invertX(_args[0]*_speed_ratio), _invertY(_args[1]*_speed_ratio), _args[2]*_speed_ratio, fbr.chgt); return true; }
+        private function _vx(fbr:CMLFiber) : Boolean { fbr.object.setVelocity(_invertX(_args[0]*_speed_ratio), fbr.object.vy,                   fbr.object.vz,         fbr.chgt); return true; }
+        private function _vy(fbr:CMLFiber) : Boolean { fbr.object.setVelocity(fbr.object.vx,                   _invertY(_args[0]*_speed_ratio), fbr.object.vz,         fbr.chgt); return true; }
+        private function _vz(fbr:CMLFiber) : Boolean { fbr.object.setVelocity(fbr.object.vx,                   fbr.object.vy,                   _args[0]*_speed_ratio, fbr.chgt); return true; }
         private function _vd(fbr:CMLFiber) : Boolean {
             var iang:int;
             if (fbr.hopt != CMLFiber.HO_SEQ) iang = sin.index(fbr._getAngleForRotationCommand()+CMLObject.scrollAngle);
@@ -333,14 +335,15 @@ package org.si.cml.core {
                 s:Number = sin[iang],
                 h:Number = _args[0] * _speed_ratio,
                 v:Number = _args[1] * _speed_ratio;
-            fbr.object.setVelocity(c*h-s*v, s*h+c*v, fbr.chgt);
+            fbr.object.setVelocity(c*h-s*v, s*h+c*v, fbr.object.vz, fbr.chgt);
             return true;
         }
 
         // acceleration
-        private function _a(fbr:CMLFiber)  : Boolean { fbr.object.setAccelaration(_invertX(_args[0]*_speed_ratio), _invertY(_args[1]*_speed_ratio), 0); return true; }
-        private function _ax(fbr:CMLFiber) : Boolean { fbr.object.setAccelaration(_invertX(_args[0]*_speed_ratio), fbr.object._getAy(),            0); return true; }
-        private function _ay(fbr:CMLFiber) : Boolean { fbr.object.setAccelaration(fbr.object._getAx(),            _invertY(_args[0]*_speed_ratio), 0); return true; }
+        private function _a(fbr:CMLFiber)  : Boolean { fbr.object.setAccelaration(_invertX(_args[0]*_speed_ratio), _invertY(_args[1]*_speed_ratio), _args[1]*_speed_ratio, 0); return true; }
+        private function _ax(fbr:CMLFiber) : Boolean { fbr.object.setAccelaration(_invertX(_args[0]*_speed_ratio), fbr.object._getAy(),             fbr.object._getAz(),   0); return true; }
+        private function _ay(fbr:CMLFiber) : Boolean { fbr.object.setAccelaration(fbr.object._getAx(),             _invertY(_args[0]*_speed_ratio), fbr.object._getAz(),   0); return true; }
+        private function _az(fbr:CMLFiber) : Boolean { fbr.object.setAccelaration(fbr.object._getAx(),             fbr.object._getAy(),             _args[0]*_speed_ratio, 0); return true; }
         private function _ad(fbr:CMLFiber) : Boolean {
             var iang:int;
             if (fbr.hopt != CMLFiber.HO_SEQ) iang = sin.index(fbr._getAngleForRotationCommand()+CMLObject.scrollAngle);
@@ -349,7 +352,7 @@ package org.si.cml.core {
                 s:Number = sin[iang],
                 h:Number = _args[0] * _speed_ratio,
                 v:Number = _args[1] * _speed_ratio;
-            fbr.object.setAccelaration(c*h-s*v, s*h+c*v, 0);
+            fbr.object.setAccelaration(c*h-s*v, s*h+c*v, fbr.object._getAz(), 0);
             return true;
         }
 

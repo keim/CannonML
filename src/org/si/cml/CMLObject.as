@@ -160,10 +160,14 @@ function _onEnterFrame(event:Event) : void {
         public var x:Number = 0;
         /** Y value of position. */
         public var y:Number = 0;
+        /** Z value of position. */
+        public var z:Number = 0;
         /** X value of velocity. */
         public var vx:Number = 0;
         /** Y value of velocity. */
         public var vy:Number = 0;
+        /** Z value of velocity. */
+        public var vz:Number = 0;
 
 
 
@@ -253,6 +257,8 @@ if (target_object_id != target_object.id) { // if the id value is different,
         public function get relatedX() : Number { return (_motion_type & MT_PART_FLAG) ? _rx : x; }
         /** The y value of position parent related */
         public function get relatedY() : Number { return (_motion_type & MT_PART_FLAG) ? _ry : y; }
+        /** The z value of position parent related */
+        public function get relatedZ() : Number { return (_motion_type & MT_PART_FLAG) ? _rz : z; }
 
 
         // velocity
@@ -313,10 +319,13 @@ if (target_object_id != target_object.id) { // if the id value is different,
         // motion parameters
         private var _rx:Number = 0;       // relative position
         private var _ry:Number = 0;
+        private var _rz:Number = 0;
         private var _ax:Number = 0;       // accelaration
         private var _ay:Number = 0;
+        private var _az:Number = 0;
         private var _bx:Number = 0;       // differential of accelaration
         private var _by:Number = 0;
+        private var _bz:Number = 0;
         private var _ac:int    = 0;       // accelaration counter
         private var _motion_type:uint = MT_CONST;  // motion type
         
@@ -507,11 +516,11 @@ if (target_object_id != target_object.id) { // if the id value is different,
         
         /** Reset position, velocity, accelaration, interpolation, motion type and rotation.
          */
-        public function reset(x_:Number, y_:Number) : CMLObject
+        public function reset(x_:Number, y_:Number, z_:Number=0) : CMLObject
         {
             _motion_type = MT_CONST | (_motion_type & MT_PART_FLAG);
-            setPosition(x_, y_);
-            _bx = _by = _ax = _ay = vx = vy = 0;
+            setPosition(x_, y_, z_);
+            _bx = _by = _bz = _ax = _ay = _az = vx = vy = vz = 0;
             _ac = 0;
             _head_offset = _head = 0;
             _rotd = 0;
@@ -638,41 +647,49 @@ if (target_object_id != target_object.id) { // if the id value is different,
         /** Set position.
          *  @param x_ X value of position.
          *  @param y_ Y value of position.
+         *  @param z_ Z value of position.
          *  @param term_ Frames for tweening with bezier interpolation.
          *  @return this object
          */
-        public function setPosition(x_:Number, y_:Number, term_:int=0) : CMLObject
+        public function setPosition(x_:Number, y_:Number, z_:Number=0, term_:int=0) : CMLObject
         {
             if (term_ == 0) {
                 if (_motion_type == MT_GRAVITY) {
                     _rx = x_;
                     _ry = y_;
+                    _rz = z_;
                 } else {
                     if (isPart) {
                         _rx = x_;
                         _ry = y_;
+                        _rz = z_;
                         calcAbsPosition();
                     } else {
                         x = x_;
                         y = y_;
+                        z = z_;
                     }
                     _motion_type = MT_CONST | (_motion_type & MT_PART_FLAG);
                 }
             } else {
                 // interlopation
                 var t:Number = 1 / term_;
-                var dx:Number, dy:Number;
+                var dx:Number, dy:Number, dz:Number;
                 if (isPart) {
                     dx = x_ - _rx;
                     dy = y_ - _ry;
+                    dz = z_ - _rz;
                 } else {
                     dx = x_ - x;
                     dy = y_ - y;
+                    dz = z_ - z;
                 }
                 _ax = (dx * t * 3 - vx * 2) * t * 2;
                 _ay = (dy * t * 3 - vy * 2) * t * 2;
+                _az = (dz * t * 3 - vz * 2) * t * 2;
                 _bx = (dx * t *-2 + vx) * t * t * 6;
                 _by = (dy * t *-2 + vy) * t * t * 6;
+                _bz = (dz * t *-2 + vz) * t * t * 6;
                 _ac = term_;
                 _motion_type = MT_INTERPOL | (_motion_type & MT_PART_FLAG);
             }
@@ -683,14 +700,16 @@ if (target_object_id != target_object.id) { // if the id value is different,
         /** Set velocity.
          *  @param vx_ X value of velocity.
          *  @param vy_ Y value of velocity.
+         *  @param vz_ Z value of velocity.
          *  @param term_ Frames for tweening with bezier interpolation.
          *  @return this object
          */
-        public function setVelocity(vx_:Number, vy_:Number, term_:int=0) : CMLObject
+        public function setVelocity(vx_:Number, vy_:Number, vz_:Number=0, term_:int=0) : CMLObject
         {
             if (term_ == 0) {
                 vx = vx_;
                 vy = vy_;
+                vz = vz_;
                 _motion_type = MT_CONST | (_motion_type & MT_PART_FLAG);
             } else {
                 var t:Number = 1 / term_;
@@ -698,14 +717,17 @@ if (target_object_id != target_object.id) { // if the id value is different,
                     // interlopation
                     _ax -= vx_ * t * 2;
                     _ay -= vy_ * t * 2;
+                    _az -= vz_ * t * 2;
                     _bx += vx_ * t * t * 6;
                     _by += vy_ * t * t * 6;
+                    _bz += vz_ * t * t * 6;
                     _ac = term_;
                     _motion_type = MT_INTERPOL | (_motion_type & MT_PART_FLAG);
                 } else {
                     // accelaration
                     _ax = (vx_ - vx) * t;
                     _ay = (vy_ - vy) * t;
+                    _az = (vz_ - vz) * t;
                     _ac = term_;
                     _motion_type = MT_ACCEL | (_motion_type & MT_PART_FLAG);
                 }
@@ -717,13 +739,15 @@ if (target_object_id != target_object.id) { // if the id value is different,
         /** Set accelaration.
          *  @param ax_ X value of accelaration.
          *  @param ay_ Y value of accelaration.
+         *  @param az_ Z value of accelaration.
          *  @param time_ Frames to stop accelarate. 0 means not to stop.
          *  @return this object
          */
-        public function setAccelaration(ax_:Number, ay_:Number, time_:int=0) : CMLObject
+        public function setAccelaration(ax_:Number, ay_:Number, az_:Number, time_:int=0) : CMLObject
         {
             _ax = ax_;
             _ay = ay_;
+            _az = az_;
             _ac = time_;
             if (_ax==0 && _ay==0) {
                 _motion_type = MT_CONST | (_motion_type & MT_PART_FLAG);
@@ -738,40 +762,49 @@ if (target_object_id != target_object.id) { // if the id value is different,
         /** Set interpolating motion.
          *  @param x_ X value of position.
          *  @param y_ Y value of position.
+         *  @param z_ Z value of position.
          *  @param vx_ X value of velocity.
          *  @param vy_ Y value of velocity.
+         *  @param vz_ Z value of velocity.
          *  @param term_ Frames for tweening with bezier interpolation.
          *  @return this object
          */
-        public function setInterpolation(x_:Number, y_:Number, vx_:Number, vy_:Number, term_:int=0) : CMLObject
+        public function setInterpolation(x_:Number, y_:Number, z_:Number, vx_:Number, vy_:Number, vz_:Number, term_:int=0) : CMLObject
         {
             if (term_ == 0) {
                 vx = vx_;
                 vy = vy_;
+                vz = vz_;
                 if (isPart) {
                     _rx = x_;
                     _ry = y_;
+                    _rz = z_;
                     calcAbsPosition();
                 } else {
                     x = x_;
                     y = y_;
+                    z = z_;
                 }
                 _motion_type = MT_CONST | (_motion_type & MT_PART_FLAG);
             } else {
                 // 3rd dimensional motion
                 var t:Number = 1 / term_;
-                var dx:Number, dy:Number;
+                var dx:Number, dy:Number, dz:Number;
                 if (isPart) {
                     dx = x_ - _rx;
                     dy = y_ - _ry;
+                    dz = z_ - _rz;
                 } else {
                     dx = x_ - x;
                     dy = y_ - y;
+                    dz = z_ - z;
                 }
                 _ax = (dx * t * 3 - vx * 2 - vx_) * t * 2;
                 _ay = (dy * t * 3 - vy * 2 - vy_) * t * 2;
+                _az = (dz * t * 3 - vz * 2 - vz_) * t * 2;
                 _bx = (dx * t *-2 + vx + vx_) * t * t * 6;
                 _by = (dy * t *-2 + vy + vy_) * t * t * 6;
+                _bz = (dz * t *-2 + vz + vz_) * t * t * 6;
                 _ac = term_;
                 _motion_type = MT_INTERPOL | (_motion_type & MT_PART_FLAG);
             }
@@ -859,8 +892,10 @@ if (target_object_id != target_object.id) { // if the id value is different,
                 // stop attraction
                 _ax = 0;
                 _ay = 0;
+                _az = 0;
                 _bx = 0;
                 _by = 0;
+                _bz = 0;
                 _ac = 0;
                 _motion_type = MT_CONST;
             } else {
@@ -870,6 +905,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
                 _ac = term;
                 _rx = x;
                 _ry = y;
+                _rz = z;
                 _motion_type = MT_GRAVITY;
             }
             return this;
@@ -1045,9 +1081,11 @@ if (target_object_id != target_object.id) { // if the id value is different,
                     cang:int = sang + sin.cos_shift;
                 x = _parent.x + sin[cang]*_rx - sin[sang]*_ry;
                 y = _parent.y + sin[sang]*_rx + sin[cang]*_ry;
+                z = _parent.z + _rz;
             } else {
                 x = _parent.x + _rx;
                 y = _parent.y + _ry;
+                z = _parent.z + _rz;
             }
         }
 
@@ -1061,12 +1099,15 @@ if (target_object_id != target_object.id) { // if the id value is different,
                 var sang:int = sin.index(-parent_angle),
                     cang:int = sang + sin.cos_shift,
                     dx:Number = x - _parent.x,
-                    dy:Number = y - _parent.y;
+                    dy:Number = y - _parent.y,
+                    dz:Number = z - _parent.z;
                 _rx = sin[cang]*dx - sin[sang]*dy;
                 _ry = sin[sang]*dx + sin[cang]*dy;
+                _rz = dz;
             } else {
                 _rx = x - _parent.x;
                 _ry = y - _parent.y;
+                _rz = z - _parent.z;
             }
         }
 
@@ -1141,6 +1182,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
         // back door ...
         /** @private */ _cml_internal function _getX() : Number { return (_motion_type & MT_PART_FLAG) ? _rx : x; }
         /** @private */ _cml_internal function _getY() : Number { return (_motion_type & MT_PART_FLAG) ? _ry : y; }
+        /** @private */ _cml_internal function _getZ() : Number { return (_motion_type & MT_PART_FLAG) ? _rz : z; }
         /** @private */ _cml_internal function _getAx() : Number {
             var filterd_mt:uint = _motion_type & MT_PART_FILTER;
             return (filterd_mt == MT_CONST || filterd_mt == MT_BULLETML) ? 0 : _ax;
@@ -1148,6 +1190,10 @@ if (target_object_id != target_object.id) { // if the id value is different,
         /** @private */ _cml_internal function _getAy() : Number {
             var filterd_mt:uint = _motion_type & MT_PART_FILTER;
             return (filterd_mt == MT_CONST || filterd_mt == MT_BULLETML) ? 0 : _ay;
+        }
+        /** @private */ _cml_internal function _getAz() : Number {
+            var filterd_mt:uint = _motion_type & MT_PART_FILTER;
+            return (filterd_mt == MT_CONST || filterd_mt == MT_BULLETML) ? 0 : _az;
         }
 
 
@@ -1161,6 +1207,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
             // clear some parameters
             vx = vx_;
             vy = vy_;
+            vz = 0;
             _head = head_;
             _head_offset = 0;
             _rotd = 0;
@@ -1183,11 +1230,13 @@ if (target_object_id != target_object.id) { // if the id value is different,
                 _parent._partChildren.push(this);
                 _rx = x_;
                 _ry = y_;
+                _rz = 0;
                 calcAbsPosition();
                 _motion_type = MT_PART_CONST;
             } else {
                 x = x_;
                 y = y_;
+                z = 0;
                 _motion_type = MT_CONST;
             }
             _activeObjects.push(this);
@@ -1243,23 +1292,29 @@ if (target_object_id != target_object.id) { // if the id value is different,
             case MT_CONST: {
                    x += vx;
                    y += vy;
+                   z += vz;
                    break;
                }
             case MT_ACCEL: {
                     x += vx + _ax*0.5;
                     y += vy + _ay*0.5;
+                    z += vz + _az*0.5;
                     vx += _ax;
                     vy += _ay;
+                    vz += _az;
                     if (--_ac == 0) _motion_type = MT_CONST;
                     break;
                 }
             case MT_INTERPOL: {
                     x += vx + _ax*0.5 + _bx*0.16666666666666667;
                     y += vy + _ay*0.5 + _by*0.16666666666666667;
+                    z += vz + _az*0.5 + _bz*0.16666666666666667;
                     vx += _ax + _bx*0.5;
                     vy += _ay + _by*0.5;
+                    vz += _az + _bz*0.5;
                     _ax += _bx;
                     _ay += _by;
+                    _az += _bz;
                     if (--_ac == 0) _motion_type = MT_CONST;
                     break;
                 }
@@ -1271,6 +1326,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
                     _ax += _bx;
                     x += vx;
                     y += vy;
+                    z += vz;
                     if (--_ac == 0) _bx=0;
                     if (_rotd == 0 && _bx == 0) _motion_type = MT_CONST;
                     break;
@@ -1278,24 +1334,30 @@ if (target_object_id != target_object.id) { // if the id value is different,
             case MT_GRAVITY: {
                     _ax = (_rx - x) * _bx - vx * _by,
                     _ay = (_ry - y) * _bx - vy * _by;
+                    _az = (_rz - z) * _bx - vz * _by;
                     x += vx + _ax*0.5;
                     y += vy + _ay*0.5;
+                    z += vz + _az*0.5;
                     vx += _ax;
                     vy += _ay;
+                    vz += _az;
                     if (--_ac == 0) _motion_type = MT_CONST;
                     break;
                 }
             case MT_PART_CONST: {
                     _rx += vx;
                     _ry += vy;
+                    _rz += vz;
                     calcAbsPosition();
                     break;
                 }
             case MT_PART_ACCEL: {
                     _rx += vx + _ax*0.5;
                     _ry += vy + _ay*0.5;
+                    _rz += vz + _az*0.5;
                     vx += _ax;
                     vy += _ay;
+                    vz += _az;
                     calcAbsPosition();
                     if (--_ac == 0) _motion_type = MT_PART_CONST;
                     break;
@@ -1303,10 +1365,13 @@ if (target_object_id != target_object.id) { // if the id value is different,
             case MT_PART_INTERPOL: {
                     _rx += vx + _ax*0.5 + _bx*0.16666666666666667;
                     _ry += vy + _ay*0.5 + _by*0.16666666666666667;
+                    _rz += vz + _az*0.5 + _bz*0.16666666666666667;
                     vx += _ax + _bx*0.5;
                     vy += _ay + _by*0.5;
+                    vz += _az + _bz*0.5;
                     _ax += _bx;
                     _ay += _by;
+                    _az += _bz;
                     calcAbsPosition();
                     if (--_ac == 0) _motion_type = MT_PART_CONST;
                     break;
@@ -1319,6 +1384,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
                     _ax += _bx;
                     _rx += vx;
                     _ry += vy;
+                    _rz += vz;
                     calcAbsPosition();
                     if (--_ac == 0) _bx=0;
                     if (_rotd == 0 && _bx == 0) _motion_type = MT_PART_CONST;
