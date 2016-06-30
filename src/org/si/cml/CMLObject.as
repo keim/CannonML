@@ -168,7 +168,8 @@ function _onEnterFrame(event:Event) : void {
         public var vy:Number = 0;
         /** Z value of velocity. */
         public var vz:Number = 0;
-
+		/** Random generator with seeding capability */
+        public static var random:Random = new Random();
 
 
 
@@ -189,7 +190,7 @@ function _onEnterFrame(event:Event) : void {
         static public function get frameRateRatio() : Number { return CMLState.speedRatio; }
         static public function set frameRateRatio(n:Number) : void { CMLState.speedRatio = n; }
         
-        /** Function for "$?/$??" variable, The type is function():Number. @default Math.random() */
+        /** Function for "$?/$??" variable, The type is function():Number. */
         static public function get funcRand() : Function { return _funcRand; }
         static public function set funcRand(func:Function) : void { _funcRand = func; }
 
@@ -299,7 +300,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
         // statics
         static private  var _activeObjects:CMLList = new CMLList();     // active object list
         static private  var _root:CMLRoot = null;                       // root object instance
-        static private  var _funcRand:Function = Math.random;           // random function
+		static private  var _funcRand:Function = random.nextNumber;  	// random function with seeding
         static private  var _globalRankRangeMin:Number = 0;             // the range of globalRank
         static private  var _globalRankRangeMax:Number = 1;             // the range of globalRank
         /** @private */
