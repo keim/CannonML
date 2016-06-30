@@ -300,7 +300,7 @@ if (target_object_id != target_object.id) { // if the id value is different,
         // statics
         static private  var _activeObjects:CMLList = new CMLList();     // active object list
         static private  var _root:CMLRoot = null;                       // root object instance
-		static private  var _funcRand:Function = random.nextNumber;  	// random function with seeding
+		static private  var _funcRand:Function = random.nextNumber;  	// random function with seeding capability
         static private  var _globalRankRangeMin:Number = 0;             // the range of globalRank
         static private  var _globalRankRangeMax:Number = 1;             // the range of globalRank
         /** @private */
