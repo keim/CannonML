@@ -41,7 +41,7 @@ package org.si.cml.extensions {
         public var life:Number = 1;
         /** Size to use in hit test */
         public var size:Number = 0;
-		//Convenience object counter
+        //Convenience object counter
         static public var renderobjectcount:uint = 0; 
         
         /** @private */
@@ -212,7 +212,7 @@ package org.si.cml.extensions {
             _nextDraw = drawLayer;
             _prevDraw._nextDraw = this;
             _nextDraw._prevDraw = this;
-			++renderobjectcount;
+            ++renderobjectcount;
         }
 
         
@@ -231,7 +231,7 @@ package org.si.cml.extensions {
                 _prevEval._nextEval = this;
                 _nextEval._prevEval = this;
             }
-			--renderobjectcount;
+            --renderobjectcount;
         }
 
 
