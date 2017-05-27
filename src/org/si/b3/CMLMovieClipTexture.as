@@ -92,8 +92,8 @@ package org.si.b3 {
                 if (animationCount > 1) {
                     x = texX + texWidth;
                     y = texY;
-                    xmax = texX + areaWidth  - texWidth;
-                    ymax = texY + areaHeight - texHeight;
+                    xmax = x + areaWidth  - texWidth;
+                    ymax = y + areaHeight - texHeight;
                     if (areaWidth == 0)  xmax = bitmapData.width  - texWidth;
                     if (areaHeight == 0) ymax = bitmapData.height - texHeight;
                     

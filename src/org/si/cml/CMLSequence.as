@@ -377,7 +377,7 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
             // verification
             cmd = next as CMLState;
             while (cmd != null) {
-                cmd_next = next as CMLState;
+                cmd_next = cmd.next as CMLState;
                 // solve named reference
                 if (cmd.type == CMLState.ST_REFER) {
                     if (CMLRefer(cmd).isLabelUnsolved()) {
