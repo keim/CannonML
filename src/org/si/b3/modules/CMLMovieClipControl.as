@@ -45,7 +45,7 @@ package org.si.b3.modules {
             "CONTROL":Keyboard.CONTROL, "SHIFT":Keyboard.SHIFT, "ENTER":Keyboard.ENTER, "SPACE":Keyboard.SPACE,
             "BACKSPACE":Keyboard.BACKSPACE, "DELETE":Keyboard.DELETE, "INSERT":Keyboard.INSERT,
             "END":Keyboard.END, "HOME":Keyboard.HOME, "PAGE_DOWN":Keyboard.PAGE_DOWN, "PAGE_UP":Keyboard.PAGE_UP, 
-            "UP":Keyboard.UP, "DOWN":Keyboard.DOWN, "LEFT":Keyboard.LEFT, "RIGHT":Keyboard.RIGHT
+            "UP":Keyboard.UP, "DOWN":Keyboard.DOWN, "LEFT":Keyboard.LEFT, "RIGHT":Keyboard.RIGHT, "ESCAPE":Keyboard.ESCAPE
         };        
         
         
@@ -62,7 +62,8 @@ package org.si.b3.modules {
         private var _keyCode:Vector.<Vector.<int>> = new Vector.<Vector.<int>>(KEY_MAX); // key code
         private var _counter:Vector.<int> = new Vector.<int>(KEY_MAX);                   // key counter
         
-        
+        private var _keylogger:CMLMovieClipKeyLogger;
+        public var playerPressedKey:Boolean;
         
         
     // properties
@@ -105,6 +106,8 @@ package org.si.b3.modules {
             mapWSAD();
             mapButtons(["Z","N","CONTROL"], ["X","M","SHIFT"], ["C",","], ["V","."]);
             instance = this;
+            _keylogger = new CMLMovieClipKeyLogger;
+            playerPressedKey = false;
         }
         
         
@@ -249,7 +252,61 @@ package org.si.b3.modules {
             return _counter[buttonNumber];
         }
         
+        /** Start recording 
+         *  
+         */
+        public function startRecording() : void
+        {
+            _keylogger.initialize();
+        }
         
+        /** Stop recording 
+         *  
+         */
+        public function stopRecording() : void
+        {
+            _keylogger.reset(0)
+        }
+		
+        /** Playback recording
+         *  
+         */
+        public function playRecording() : void
+        {
+            _keylogger.reset(2);
+        }
+		
+	    /** Get recording status
+         *  @return status of current recording (0=stopped, 1=recording, 2=replaying  see CMLMovieClipKeyLogger)
+         */
+        public function get recodingStatus() : int
+        {
+            return _keylogger.status;
+        }
+		
+		/* Print replay buffer for debugging (trace)
+         *  
+         */
+        public function TraceReplay() : void
+        {
+            var bytes:ByteArray = new ByteArray();
+            bytes.writeObject(_keylogger.getReplay);
+            trace(Base64.encode(bytes));
+        }
+		
+		/** Set replay buffer to a new string
+         *  @param replay input string
+         *  
+         */
+        public function setReplay(str:String) : void
+        {
+            var bytes:ByteArray = new ByteArray();
+            var log:Vector.<uint> = new Vector.<uint>;
+            bytes = Base64.decode(str);
+            bytes.position = 0;
+            log = bytes.readObject();
+            _keylogger.initialize(log);
+        }
         
         
     // event handlers
@@ -259,6 +316,7 @@ package org.si.b3.modules {
         {
             var i:int, j:int, jmax:int, kc:Vector.<int>,
                 targetCode:int = event.keyCode;
+            playerPressedKey = true;
             for (i=0; i<KEY_MAX; ++i) {
                 kc = _keyCode[i];
                 jmax = kc.length;
@@ -302,13 +360,19 @@ package org.si.b3.modules {
                 flag >>= 1;
             }
         }
-        
+		
+        /** @private call from Event.EXIT_FRAME */
+        internal function _logger(e:Event) : void
+        {
+            _flagPressed = _keylogger._record(_flagPressed);
+        }
         
         /** @private call from Event.ADDED_TO_STAGE */
         _cmlmovieclip_internal function _onAddedToStage(e:Event) : void
         {
             e.target.stage.addEventListener(KeyboardEvent.KEY_DOWN, _onKeyDown);
             e.target.stage.addEventListener(KeyboardEvent.KEY_UP,   _onKeyUp);
+            e.target.stage.addEventListener(Event.EXIT_FRAME, _logger);
         }
     }
 }

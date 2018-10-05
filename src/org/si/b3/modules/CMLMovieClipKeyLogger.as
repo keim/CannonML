@@ -8,9 +8,10 @@ package org.si.b3.modules {
     public class CMLMovieClipKeyLogger
     {
     // variables
-    //----------------------------------------
-        static public const RECORD:uint = 0;
-        static public const REPLAY:uint = 1;
+    //----------------------------------------    
+        static public const STOP:uint = 0;
+        static public const RECORD:uint = 1;
+        static public const REPLAY:uint = 2;
         
         
         
@@ -18,15 +19,14 @@ package org.si.b3.modules {
     // variables
     //----------------------------------------
         private var _log:Vector.<uint>;
-        private var _pointer:int;
+        private var _pointer:int, _pointerEnd:int;
         private var _frameCount:int;
         private var _currentState:int;
-        private var _status:uint;
+        private var _status:uint = 0;
         
         
         /** recording status, CMLMovieClip.RECORD or CMLMovieClip.REPLAY */
         public function get status() : int { return _status; } 
-        
         
         
         
@@ -35,6 +35,7 @@ package org.si.b3.modules {
         /** @private constructor */
         function CMLMovieClipKeyLogger()
         {
+            _log = new Vector.<uint>();
         }
         
         
@@ -42,12 +43,24 @@ package org.si.b3.modules {
         
     // operations
     //----------------------------------------
+        /** getReplay 
+         */
+        public function get getReplay() : Vector.<uint> 
+        {
+            return _log;
+        }    
+	
         /** initialize 
          */
-        public function initialize() : void 
+        public function initialize(log:Vector.<uint>=null) : void 
         {
-            _log = new Vector.<uint>();
-            reset();
+            if (log) {
+                _log = log;
+                reset(0);
+            } else {
+                _log = new Vector.<uint>();
+                reset(1);
+            }
         }
         
         
@@ -61,13 +74,13 @@ package org.si.b3.modules {
                 // RECORD
                 _log.length = 0;
                 _frameCount = 0;
-                _currentState = -1;
+                _currentState = 0;
                 _pointer = 0;
-            } else {
+            } else if (_status == REPLAY && _log.length !=0) {
                 // REPLAY
                 _frameCount = (_log[0] >> 16);
                 _currentState = _log[0] & 0xffff;
-                _pointer = 1;
+                _pointer = 0;
             }
         }
         
@@ -79,22 +92,26 @@ package org.si.b3.modules {
             var data:int;
             if (_status == RECORD) {
                 // RECORD
-                _frameCount++;
                 if (_currentState != flag) {
-                    data = (_frameCount<<16) | flag;
+                    data = (g.mc.fps.totalFrame<<16) | flag;
                     _log.push(data);
                     _currentState = flag;
                 }
-            } else {
+            } else if (_status == REPLAY && _log.length !=0) {
                 // REPLAY
-                --_frameCount;
-                if (_frameCount < 0) {
+                if (_pointer == _log.length -1) {
+                    _status = STOP ;
+                    _currentState = 0;
+                } else {
                     data = _log[_pointer];
                     _frameCount = data >> 16;
-                    _currentState = data & 0xffff;
-                    _pointer++;
+                    if (_frameCount <= g.mc.fps.totalFrame) {
+                        if (g.mc.fps.totalFrame - _frameCount != 0) trace("replay desync by ", g.mc.fps.totalFrame - _frameCount, " frames.");
+                        _currentState = data & 0xffff;
+                        _pointer++;
+                    }
                 }
-            }
+            } else _currentState = flag;
             return _currentState;
         }
     }
