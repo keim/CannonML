@@ -3,10 +3,10 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLState from "./CMLState";
-import CMLFormulaElem from "./CMLFormulaElem";
-import CMLFormulaLiteral from "./CMLFormulaLiteral";
-import CMLFormulaOperator from "./CMLFormulaOperator";
+import CMLState from "./CMLState.js";
+import CMLFormulaElem from "./CMLFormulaElem.js";
+import CMLFormulaLiteral from "./CMLFormulaLiteral.js";
+import CMLFormulaOperator from "./CMLFormulaOperator.js";
 /** @private statemant for formula calculation */
 export default class CMLFormula extends CMLState {
     // functions

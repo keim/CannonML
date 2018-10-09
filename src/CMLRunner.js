@@ -3,8 +3,8 @@
 //  Copyright (c) 2016 kei mesuda(keim) ALL RIGHTS RESERVED.
 //  This code is under BSD-style(license.txt) licenses.
 //----------------------------------------------------------------------------------------------------
-import CMLObject from "./core/CMLObject";
-import CMLFiber from "./CMLFiber";
+import CMLObject from "./core/CMLObject.js";
+import CMLFiber from "./CMLFiber.js";
 /** */
 export default class CMLRunner extends CMLObject {
     // constructor
@@ -13,7 +13,7 @@ export default class CMLRunner extends CMLObject {
     constructor(core_) {
         super();
         /** what "this" means in callback function */
-        this.avater = null;
+        this.avatar = null;
         // CannonML instance that this runner belongs to
         this._core = null;
         // executing sequence
@@ -35,8 +35,8 @@ export default class CMLRunner extends CMLObject {
     /** which command has been called to create this insatance, true="f" command, false="n" command. */
     get isCreatedByFireCommand() { return this._isCreatedByFireCommand; }
     /** @private */
-    _internalInit(avater_, createdby_, sequence_, isCreatedByFireCommand_) {
-        this.avater = avater_;
+    _internalInit(avatar_, createdby_, sequence_, isCreatedByFireCommand_) {
+        this.avatar = avatar_;
         this._createdby = createdby_;
         this._sequence = sequence_;
         this._isCreatedByFireCommand = isCreatedByFireCommand_;
@@ -82,27 +82,27 @@ export default class CMLRunner extends CMLObject {
     onCreate() {
         var parent = this._createdby;
         if (parent._onCreateNewRunner) {
-            parent._onCreateNewRunner.call(parent.avater || this, this);
+            parent._onCreateNewRunner.call(parent.avatar || this, this);
         }
     }
     /** @private */
     onDestroy() {
         if (this._onDestroy) {
-            this._onDestroy.call(this.avater || this, this);
+            this._onDestroy.call(this.avatar || this, this);
         }
     }
     /** @private */
     onUpdate() {
         if (this._onUpdate) {
-            this._onUpdate.call(this.avater || this, this);
+            this._onUpdate.call(this.avatar || this, this);
         }
     }
     /** @private */
     onNewObject(seq) {
-        return this._core._newCMLRunner()._internalInit(this.avater, this, seq, false);
+        return this._core._newCMLRunner()._internalInit(this.avatar, this, seq, false);
     }
     /** @private */
     onFireObject(seq) {
-        return this._core._newCMLRunner()._internalInit(this.avater, this, seq, true);
+        return this._core._newCMLRunner()._internalInit(this.avatar, this, seq, true);
     }
 }

@@ -3,9 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLParser from "./core/CMLParser";
-import CMLRefer from "./core/CMLRefer";
-import CMLState from "./core/CMLState";
+import CMLParser from "./core/CMLParser.js";
+import CMLRefer from "./core/CMLRefer.js";
+import CMLState from "./core/CMLState.js";
 /** Class for the sequences created from the cannonML or the bulletML.
  *  <p>
  *  USAGE<br/>

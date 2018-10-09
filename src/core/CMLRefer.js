@@ -3,7 +3,7 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLState from "./CMLState";
+import CMLState from "./CMLState.js";
 /** @private */
 export default class CMLRefer extends CMLState {
     // meaning of reference

@@ -3,9 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLFiber from "../CMLFiber";
-import CMLSequence from "../CMLSequence";
-import CMLListElem from "./CMLListElem";
+import CMLFiber from "../CMLFiber.js";
+import CMLSequence from "../CMLSequence.js";
+import CMLListElem from "./CMLListElem.js";
 /** @private */
 export default class CMLState extends CMLListElem {
     // functions

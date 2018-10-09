@@ -3,14 +3,14 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLList from "./CMLList";
-import CMLState from "./CMLState";
-import CMLRefer from "./CMLRefer";
-import CMLAssign from "./CMLAssign";
-import CMLString from "./CMLString";
-import CMLFormula from "./CMLFormula";
-import CMLUserDefine from "./CMLUserDefine";
-import CMLFormulaLiteral from "./CMLFormulaLiteral";
+import CMLList from "./CMLList.js";
+import CMLState from "./CMLState.js";
+import CMLRefer from "./CMLRefer.js";
+import CMLAssign from "./CMLAssign.js";
+import CMLString from "./CMLString.js";
+import CMLFormula from "./CMLFormula.js";
+import CMLUserDefine from "./CMLUserDefine.js";
+import CMLFormulaLiteral from "./CMLFormulaLiteral.js";
 /** @private */
 export default class CMLParser {
     // constructor

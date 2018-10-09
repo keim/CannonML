@@ -3,9 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLList from "./CMLList";
-import CMLListElem from "./CMLListElem";
-import interpolation from "./interpolation";
+import CMLList from "./CMLList.js";
+import CMLListElem from "./CMLListElem.js";
+import interpolation from "./interpolation.js";
 /** <b>Basic class for all objects.</b>
  * @see CMLObject#initialize()
  * @see CMLObject#update()

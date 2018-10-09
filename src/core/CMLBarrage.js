@@ -3,8 +3,8 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLList from "./CMLList";
-import CMLBarrageElem from "./CMLBarrageElem";
+import CMLList from "./CMLList.js";
+import CMLBarrageElem from "./CMLBarrageElem.js";
 /** The implement of bm/bs/br commands.
  *  <p>
  *  USAGE<br/>

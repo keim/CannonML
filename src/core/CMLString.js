@@ -6,7 +6,7 @@
 /*
 public function get string():String
 */
-import CMLState from "./CMLState";
+import CMLState from "./CMLState.js";
 /** @private */
 export default class CMLString extends CMLState {
     // functions

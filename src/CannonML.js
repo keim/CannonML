@@ -3,14 +3,14 @@
 //  Copyright (c) 2016 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLFiber from "./CMLFiber";
-import CMLSequence from "./CMLSequence";
-import CMLRunner from "./CMLRunner";
-import CMLObject from "./core/CMLObject";
-import CMLState from "./core/CMLState";
-import CMLFormula from "./core/CMLFormula";
-import CMLBarrage from "./core/CMLBarrage";
-import CMLGlobal from "./core/CMLGlobal";
+import CMLFiber from "./CMLFiber.js";
+import CMLSequence from "./CMLSequence.js";
+import CMLRunner from "./CMLRunner.js";
+import CMLObject from "./core/CMLObject.js";
+import CMLState from "./core/CMLState.js";
+import CMLFormula from "./core/CMLFormula.js";
+import CMLBarrage from "./core/CMLBarrage.js";
+import CMLGlobal from "./core/CMLGlobal.js";
 /** Cannon Macro Langlage */
 export default class CannonML extends CMLGlobal {
     // constructor

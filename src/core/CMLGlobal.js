@@ -3,8 +3,8 @@
 //  Copyright (c) 2016 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import RangeLimitNumber from "./RangeLimitNumber";
-import CMLSinTable from "./CMLSinTable";
+import RangeLimitNumber from "./RangeLimitNumber.js";
+import CMLSinTable from "./CMLSinTable.js";
 /** @private Global variables, accessable from all classes. */
 export default class CMLGlobal {
     // constructor

@@ -3,12 +3,12 @@
 //  Copyright (c) 2007 kei mesuda(keim) ALL RIGHTS RESERVED.
 //  This code is under BSD-style(license.txt) licenses.
 //----------------------------------------------------------------------------------------------------
-import CMLSequence from "./CMLSequence";
-import CMLBarrage from "./core/CMLBarrage";
-import CMLBarrageElem from "./core/CMLBarrageElem";
-import CMLList from "./core/CMLList";
-import CMLListElem from "./core/CMLListElem";
-import CMLState from "./core/CMLState";
+import CMLSequence from "./CMLSequence.js";
+import CMLBarrage from "./core/CMLBarrage.js";
+import CMLBarrageElem from "./core/CMLBarrageElem.js";
+import CMLList from "./core/CMLList.js";
+import CMLListElem from "./core/CMLListElem.js";
+import CMLState from "./core/CMLState.js";
 /** CMLFiber rewrites parameters of CMLObject according to CMLSequence (Fiber is called as "micro thread" in some other languages.)
  *  <p>
  *  USAGE<br/>

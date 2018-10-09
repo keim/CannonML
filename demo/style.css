@@ -1,0 +1,7 @@
+html,body {height:100%;}
+body {
+  background-color: #000;
+  margin: 0;
+  overflow: hidden;
+  position: relative;
+}

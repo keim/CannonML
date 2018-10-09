@@ -3,7 +3,7 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLFormulaElem from "./CMLFormulaElem";
+import CMLFormulaElem from "./CMLFormulaElem.js";
 /** @private */
 export default class CMLFormulaLiteral extends CMLFormulaElem {
     constructor() {
