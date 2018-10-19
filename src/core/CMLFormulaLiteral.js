@@ -3,9 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLFormulaElem from "./CMLFormulaElem.js";
+//import CML.FormulaElem from "./CML.FormulaElem.js";
 /** @private */
-export default class CMLFormulaLiteral extends CMLFormulaElem {
+CML.FormulaLiteral = class extends CML.FormulaElem {
     constructor() {
         super();
         this.func = null;
@@ -144,7 +144,7 @@ export default class CMLFormulaLiteral extends CMLFormulaElem {
                 this.func = (this.num == 0) ? this.tgt_cnta : this.tgt_cntc;
                 break;
             default:
-                this.func = CMLFormulaElem._globalVariables._mapUsrDefRef[opr.substr(1)];
+                this.func = CML.FormulaElem._globalVariables._mapUsrDefRef[opr.substr(1)];
                 if (this.func == null)
                     throw Error(opr + " ?");
         }
@@ -154,10 +154,10 @@ export default class CMLFormulaLiteral extends CMLFormulaElem {
         return this.func(fbr);
     }
     ltrl(fbr) { return this.num; }
-    rand(fbr) { return CMLFormulaElem._globalVariables.rand(); }
-    rands(fbr) { return CMLFormulaElem._globalVariables.rand() * 2 - 1; }
+    rand(fbr) { return CML.FormulaElem._globalVariables.rand(); }
+    rands(fbr) { return CML.FormulaElem._globalVariables.rand() * 2 - 1; }
     rank(fbr) { return fbr.object.rank; }
-    rankg(fbr) { return CMLFormulaElem._globalVariables.getRank(this.num); }
+    rankg(fbr) { return CML.FormulaElem._globalVariables.getRank(this.num); }
     vars(fbr) { return fbr.getVeriable(this.num); }
     loop(fbr) { return fbr.getLoopCounter(this.num); }
     posx(fbr) { return fbr.object.x; }
@@ -194,8 +194,8 @@ export default class CMLFormulaLiteral extends CMLFormulaElem {
     tgt_cntc(fbr) { return fbr.target.countIDedChildren(this.num); }
     refer_i(fbr) { return fbr.getInterval(); }
 }
-// Refer from CMLParser._userReferenceRegExp() to sort all reference names.
-CMLFormulaLiteral.defaultReferences = [
+// Refer from CML.Parser._userReferenceRegExp() to sort all reference names.
+CML.FormulaLiteral.defaultReferences = [
     'i', 'r', 'l', 'x', 'y', 'sx', 'sy', 'v', 'vx', 'vy', 'ho', 'td', 'o',
     'p.x', 'p.y', 'p.sx', 'p.sy', 'p.v', 'p.vx', 'p.vy', 'p.ho', 'p.td', 'p.o',
     't.x', 't.y', 't.sx', 't.sy', 't.v', 't.vx', 't.vy', 't.ho', 't.td', 't.o'

@@ -6,13 +6,13 @@
 /*
 public function get string():String
 */
-import CMLState from "./CMLState.js";
+//import CML.State from "./CML.State.js";
 /** @private */
-export default class CMLString extends CMLState {
+CML.String = class extends CML.State {
     // functions
     //------------------------------------------------------------
     constructor(str) {
-        super(CMLState.ST_STRING);
+        super(CML.State.ST_STRING);
         this._string = str;
     }
     _setCommand(cmd) {

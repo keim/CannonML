@@ -3,31 +3,31 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLParser from "./core/CMLParser.js";
-import CMLRefer from "./core/CMLRefer.js";
-import CMLState from "./core/CMLState.js";
+//import CML.Parser from "./core/CML.Parser.js";
+//import CML.Refer from "./core/CML.Refer.js";
+//import CML.State from "./core/CML.State.js";
 /** Class for the sequences created from the cannonML or the bulletML.
  *  <p>
  *  USAGE<br/>
- *  1) CMLSequence(cannonML_String or bulletML_XML); creates a new sequence from certain cannonML/bulletML.<br/>
- *  2) CMLObject.execute(CMLSequence); apply sequence to CMLObject.<br/>
- *  3) CMLSequence.global; makes it global. You can access the child sequences of global sequence from everywhere.<br/>
- *  4) CMLSequence.findSequence(); finds labeled sequence in cannonML/bulletML.<br/>
- *  5) CMLSequence.getParameter(); accesses parameters of sequence.<br/>
- *  6) CMLSequence.registerUserCommand(); registers the function called from cannonML.<br/>
- *  7) CMLSequence.registerUserVariable(); registers the function refered by cannonML.<br/>
+ *  1) CML.Sequence(cannonML_String or bulletML_XML); creates a new sequence from certain cannonML/bulletML.<br/>
+ *  2) CML.Object.execute(CML.Sequence); apply sequence to CML.Object.<br/>
+ *  3) CML.Sequence.global; makes it global. You can access the child sequences of global sequence from everywhere.<br/>
+ *  4) CML.Sequence.findSequence(); finds labeled sequence in cannonML/bulletML.<br/>
+ *  5) CML.Sequence.getParameter(); accesses parameters of sequence.<br/>
+ *  6) CML.Sequence.registerUserCommand(); registers the function called from cannonML.<br/>
+ *  7) CML.Sequence.registerUserVariable(); registers the function refered by cannonML.<br/>
  *  </p>
- * @see CMLObject#execute()
- * @see CMLSequence#CMLSequence()
- * @see CMLSequence#global
- * @see CMLSequence#findSequence()
- * @see CMLSequence#getParameter()
- * @see CMLSequence#registerUserCommand()
- * @see CMLSequence#registerUserVariable()
+ * @see CML.Object#execute()
+ * @see CML.Sequence#CML.Sequence()
+ * @see CML.Sequence#global
+ * @see CML.Sequence#findSequence()
+ * @see CML.Sequence#getParameter()
+ * @see CML.Sequence#registerUserCommand()
+ * @see CML.Sequence#registerUserVariable()
 @example Typical usage.
 <listing version="3.0">
 // Create enemys sequence from "String of cannonML" or "XML of bulletML".
-var motion:CMLSequence = new CMLSequence(String or XML);
+var motion:CML.Sequence = new CML.Sequence(String or XML);
 
 ...
 
@@ -35,7 +35,7 @@ enemy.create(x, y);                                     // Create enemy on the s
 enemy.execute(motion);                                  // Execute sequence.
 </listing>
  */
-export default class CMLSequence extends CMLState {
+CML.Sequence = class extends CML.State {
     // functions
     //------------------------------------------------------------
     /** Construct new sequence by a String of cannonML or an XML of bulletML.
@@ -43,7 +43,7 @@ export default class CMLSequence extends CMLState {
      *  @param globalSequence Flag of global sequence.
      */
     constructor(data = null, globalSequence = false) {
-        super(CMLState.ST_NO_LABEL);
+        super(CML.State.ST_NO_LABEL);
         // variables
         //------------------------------------------------------------
         this._label = null;
@@ -61,7 +61,7 @@ export default class CMLSequence extends CMLState {
         this._global = false;
         this.global = globalSequence;
         if (data != null) {
-            CMLSequence._parser._parse(this, data);
+            CML.Sequence._parser._parse(this, data);
         }
     }
     // properties
@@ -76,13 +76,13 @@ export default class CMLSequence extends CMLState {
      *  </p>
 @example
 <listing version="3.0">
-var seqG:CMLSequence = new CMLSequence("#LABEL_G{...}");
+var seqG:CML.Sequence = new CML.Sequence("#LABEL_G{...}");
 
 seqG.global = true;
-var seqA:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Success; you can refer the LABEL_G.
+var seqA:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Success; you can refer the LABEL_G.
 
 seqG.global = false;
-var seqB:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Error; you cannot refer the LABEL_G.
+var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you cannot refer the LABEL_G.
 </listing>
      */
     get global() { return this._global; }
@@ -91,13 +91,13 @@ var seqB:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Error; you cannot 
             return;
         this._global = makeGlobal;
         if (makeGlobal) {
-            CMLSequence.globalSequences.unshift(this);
+            CML.Sequence.globalSequences.unshift(this);
         }
         else {
-            var i, imax = CMLSequence.globalSequences.length;
+            var i, imax = CML.Sequence.globalSequences.length;
             for (i = 0; i < imax; ++i) {
-                if (CMLSequence.globalSequences[i] == this) {
-                    CMLSequence.globalSequences.splice(i, 1);
+                if (CML.Sequence.globalSequences[i] == this) {
+                    CML.Sequence.globalSequences.splice(i, 1);
                     return;
                 }
             }
@@ -106,18 +106,18 @@ var seqB:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Error; you cannot 
     /** Is this sequence empty ? */
     get isEmpty() {
         var cmd = this.next;
-        return (this.next == null || cmd.type == CMLState.ST_END);
+        return (this.next == null || cmd.type == CML.State.ST_END);
     }
     /** @private */
     _setCommand(cmd) {
-        //_resetParameters(CMLObject._argumentCountOfNew);
+        //_resetParameters(CML.Object._argumentCountOfNew);
         return this;
     }
     // static functions
     //------------------------------------------------------------
     /** @private */
     static _initialize(globalValiables_) {
-        CMLSequence._parser = new CMLParser(globalValiables_);
+        CML.Sequence._parser = new CML.Parser(globalValiables_);
     }
     // references
     //------------------------------------------------------------
@@ -130,8 +130,8 @@ var seqB:CMLSequence = new CMLSequence("&amp;LABEL_G");    // Error; you cannot 
      *  @return Value of argument.
 @example
 <listing version='3.0'>
-var seq:CMLSequence = new CMLSequence("#A{10,20 v0,2[w30f3]}");
-var seqA:CMLSequence = seq.findSequence("A");
+var seq:CML.Sequence = new CML.Sequence("#A{10,20 v0,2[w30f3]}");
+var seqA:CML.Sequence = seq.findSequence("A");
 trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 10, 20, 0
 </listing>
      */
@@ -169,7 +169,7 @@ trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 1
      */
     parse(data) {
         this.clear();
-        CMLSequence._parser._parse(this, data);
+        CML.Sequence._parser._parse(this, data);
     }
     /** Find child sequence that has specifyed label.
      *  @param Label to find.
@@ -177,13 +177,13 @@ trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 1
 @example
 <listing version="3.0">
 // You can access the child sequence.
-var seq:CMLSequence = new CMLSequence("#A{v0,2[w30f3]}");
-var seqA:CMLSequence = seq.findSequence("A");       // seqA is "v0,2[w30f]".
+var seq:CML.Sequence = new CML.Sequence("#A{v0,2[w30f3]}");
+var seqA:CML.Sequence = seq.findSequence("A");       // seqA is "v0,2[w30f]".
 
 // You can use the access operator.
-var seq:CMLSequence = new CMLSequence("#A{ #B{v0,2[w30f4]} #C{v0,4[w10f2]} }");
-var seqAB:CMLSequence = seq.findSequence("A.B");    // seqAB is "v0,2[w30f4]". Same as seq.findSequence("A").findSequence("B")
-var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". Same as seq.findSequence("A").findSequence("C")
+var seq:CML.Sequence = new CML.Sequence("#A{ #B{v0,2[w30f4]} #C{v0,4[w10f2]} }");
+var seqAB:CML.Sequence = seq.findSequence("A.B");    // seqAB is "v0,2[w30f4]". Same as seq.findSequence("A").findSequence("B")
+var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". Same as seq.findSequence("A").findSequence("C")
 </listing>
      */
     findSequence(label_) {
@@ -215,8 +215,8 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
     // seek in global sequence
     _findGlobalSequence(label_) {
         var key;
-        for (key in CMLSequence.globalSequences) {
-            var seq = CMLSequence.globalSequences[key];
+        for (key in CML.Sequence.globalSequences) {
+            var seq = CML.Sequence.globalSequences[key];
             var findseq = seq.findSequence(label_);
             if (findseq != null)
                 return findseq;
@@ -228,8 +228,8 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
     // create new child sequence
     /** @private _cml_internal */
     newChildSequence(label_) {
-        var seq = new CMLSequence();
-        seq.type = (label_ == null) ? CMLState.ST_NO_LABEL : CMLState.ST_LABEL;
+        var seq = new CML.Sequence();
+        seq.type = (label_ == null) ? CML.State.ST_NO_LABEL : CML.State.ST_LABEL;
         seq._label = label_;
         this._addChild(seq);
         return seq;
@@ -255,7 +255,7 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
         while (cmd != null) {
             cmd_next = cmd.next;
             // solve named reference
-            if (cmd.type == CMLState.ST_REFER) {
+            if (cmd.type == CML.State.ST_REFER) {
                 if (cmd.isLabelUnsolved()) {
                     cmd.jump = this.findSequence(cmd._label);
                     if (cmd.jump == null) {
@@ -266,22 +266,22 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
                 }
             }
             else 
-            // check a sequence after CMLState.STF_CALLREF (&,@,f and n commands).
-            if ((cmd.type & CMLState.STF_CALLREF) != 0) {
+            // check a sequence after CML.State.STF_CALLREF (&,@,f and n commands).
+            if ((cmd.type & CML.State.STF_CALLREF) != 0) {
                 // skip formula command
                 cmd_verify = cmd_next;
-                while (cmd_verify.type == CMLState.ST_FORMULA) {
+                while (cmd_verify.type == CML.State.ST_FORMULA) {
                     cmd_verify = cmd_verify.next;
                 }
                 // if there are no references, ... 
-                if (cmd_verify.type != CMLState.ST_REFER) {
-                    if ((cmd.type & CMLState.ST_RESTRICT) != 0) {
+                if (cmd_verify.type != CML.State.ST_REFER) {
+                    if ((cmd.type & CML.State.ST_RESTRICT) != 0) {
                         // throw error
                         throw Error("No sequences after &/@/n ?");
                     }
                     else {
                         // insert reference after call command.
-                        new_cmd = new CMLRefer();
+                        new_cmd = new CML.Refer();
                         new_cmd.insert_after(cmd);
                     }
                 }
@@ -295,13 +295,13 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
             }
             else 
             // verify barrage commands
-            if (cmd.type == CMLState.ST_BARRAGE) {
+            if (cmd.type == CML.State.ST_BARRAGE) {
                 // insert barrage initialize command first
-                new_cmd = new CMLState(CMLState.ST_BARRAGE);
+                new_cmd = new CML.State(CML.State.ST_BARRAGE);
                 new_cmd.insert_before(cmd);
                 // skip formula and barrage command
                 cmd_verify = cmd_next;
-                while (cmd_verify.type == CMLState.ST_FORMULA || cmd_verify.type == CMLState.ST_BARRAGE) {
+                while (cmd_verify.type == CML.State.ST_FORMULA || cmd_verify.type == CML.State.ST_BARRAGE) {
                     cmd_verify = cmd_verify.next;
                 }
                 cmd_next = cmd_verify;
@@ -315,36 +315,36 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
             seq.verify();
         }
     }
-    // default sequence do nothing. call from CMLFiber
+    // default sequence do nothing. call from CML.Fiber
     /** @private */
     static nop() {
-        if (CMLSequence._nop === null) {
-            var cmd = new CMLState(CMLState.ST_END);
-            CMLSequence._nop = new CMLSequence();
-            CMLSequence._nop.next = cmd;
-            cmd.prev = CMLSequence._nop;
-            cmd.jump = CMLSequence._nop;
-            CMLSequence._nop._setCommand(null);
+        if (CML.Sequence._nop === null) {
+            var cmd = new CML.State(CML.State.ST_END);
+            CML.Sequence._nop = new CML.Sequence();
+            CML.Sequence._nop.next = cmd;
+            cmd.prev = CML.Sequence._nop;
+            cmd.jump = CML.Sequence._nop;
+            CML.Sequence._nop._setCommand(null);
         }
-        return CMLSequence._nop;
+        return CML.Sequence._nop;
     }
-    // rapid sequence execute rapid sequence. call from CMLFiber
+    // rapid sequence execute rapid sequence. call from CML.Fiber
     /** @private */
     static rapid() {
-        if (CMLSequence._rapid === null) {
-            var rap = new CMLState(CMLState.ST_RAPID);
-            CMLSequence._rapid = new CMLSequence();
-            CMLSequence._rapid.next = rap;
-            rap.prev = CMLSequence._rapid;
-            rap.jump = CMLSequence._rapid;
-            CMLSequence._rapid._setCommand(null);
+        if (CML.Sequence._rapid === null) {
+            var rap = new CML.State(CML.State.ST_RAPID);
+            CML.Sequence._rapid = new CML.Sequence();
+            CML.Sequence._rapid.next = rap;
+            rap.prev = CML.Sequence._rapid;
+            rap.jump = CML.Sequence._rapid;
+            CML.Sequence._rapid._setCommand(null);
         }
-        return CMLSequence._rapid;
+        return CML.Sequence._rapid;
     }
-    // sequence to wait for object destruction. call from CMLFiber
+    // sequence to wait for object destruction. call from CML.Fiber
     /** @private */
     static newWaitDestruction() {
-        var seq = new CMLSequence(), cmd = new CMLState(CMLState.ST_W4D);
+        var seq = new CML.Sequence(), cmd = new CML.State(CML.State.ST_W4D);
         seq.next = cmd;
         cmd.prev = seq;
         cmd.jump = seq;
@@ -352,6 +352,6 @@ var seqAC:CMLSequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". S
     }
 }
 // Cannon ML Parser
-CMLSequence._parser = null;
+CML.Sequence._parser = null;
 // global sequence
-CMLSequence.globalSequences = new Array();
+CML.Sequence.globalSequences = new Array();

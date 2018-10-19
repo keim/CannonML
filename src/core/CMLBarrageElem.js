@@ -3,9 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLListElem from "./CMLListElem.js";
+//import CML.ListElem from "./CML.ListElem.js";
 /** @private */
-export default class CMLBarrageElem extends CMLListElem {
+CML.BarrageElem = class extends CML.ListElem {
     constructor() {
         super();
         // Quartarnion
@@ -118,8 +118,8 @@ export default class CMLBarrageElem extends CMLListElem {
         this.counter = this.count;
         this.angle_offset = parent.angle - this.angle_step * 0.5;
         this.speed_offset = parent.speed - this.speed_step * 0.5;
-        this.angle = this.angle_offset + this.angle_step * CMLBarrageElem._globalVariables.rand();
-        this.speed = this.speed_offset + this.speed_step * CMLBarrageElem._globalVariables.rand();
+        this.angle = this.angle_offset + this.angle_step * CML.BarrageElem._globalVariables.rand();
+        this.speed = this.speed_offset + this.speed_step * CML.BarrageElem._globalVariables.rand();
     }
     /** @private update */
     _update() {
@@ -129,10 +129,10 @@ export default class CMLBarrageElem extends CMLListElem {
     }
     /** @private update random */
     _update_random() {
-        this.angle = this.angle_offset + this.angle_step * CMLBarrageElem._globalVariables.rand();
-        this.speed = this.speed_offset + this.speed_step * CMLBarrageElem._globalVariables.rand();
+        this.angle = this.angle_offset + this.angle_step * CML.BarrageElem._globalVariables.rand();
+        this.speed = this.speed_offset + this.speed_step * CML.BarrageElem._globalVariables.rand();
         --this.counter;
     }
 }
 // global variables
-CMLBarrageElem._globalVariables = null;
+CML.BarrageElem._globalVariables = null;

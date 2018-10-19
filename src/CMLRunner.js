@@ -3,30 +3,27 @@
 //  Copyright (c) 2016 kei mesuda(keim) ALL RIGHTS RESERVED.
 //  This code is under BSD-style(license.txt) licenses.
 //----------------------------------------------------------------------------------------------------
-import CMLObject from "./core/CMLObject.js";
-import CMLFiber from "./CMLFiber.js";
-/** */
-export default class CMLRunner extends CMLObject {
+//import CMLObject from "./core/CMLObject.js";
+//import CMLFiber from "./CMLFiber.js";
+/** CML.Runner provides CML.Object with Fiber and Sequence  */
+CML.Runner = class extends CML.Object {
     // constructor
     //------------------------------------------------------------
     /** @private constractor call in CannonML._newCMLRunner() */
-    constructor(core_) {
+    constructor(createdby_, sequence_, isCreatedByFireCommand_) {
         super();
-        /** what "this" means in callback function */
-        this.avatar = null;
-        // CannonML instance that this runner belongs to
-        this._core = null;
         // executing sequence
-        this._sequence = null;
+        this._sequence = sequence_;
         // which command has been called to create this insatance, true="f" command, false="n" command.
-        this._isCreatedByFireCommand = false;
+        this._isCreatedByFireCommand = isCreatedByFireCommand_;
         // created by
-        this._createdby = null;
+        this._createdby = createdby_;
         // callback functions
-        this._onCreateNewRunner = null;
-        this._onDestroy = null;
-        this._onUpdate = null;
-        this._core = core_;
+        this._onCreateNewRunner = createdby_ && createdby_._onCreateNewRunner;
+        this._onDestroy = createdby_ && createdby_._onDestroy;
+        this._onUpdate = createdby_ && createdby_._onUpdate;
+        // CannonML instance that this runner belongs to
+        this._core = CannonML._mutex;
     }
     // variables
     //------------------------------------------------------------
@@ -34,19 +31,8 @@ export default class CMLRunner extends CMLObject {
     get sequence() { return this._sequence; }
     /** which command has been called to create this insatance, true="f" command, false="n" command. */
     get isCreatedByFireCommand() { return this._isCreatedByFireCommand; }
-    /** @private */
-    _internalInit(avatar_, createdby_, sequence_, isCreatedByFireCommand_) {
-        this.avatar = avatar_;
-        this._createdby = createdby_;
-        this._sequence = sequence_;
-        this._isCreatedByFireCommand = isCreatedByFireCommand_;
-        this._onCreateNewRunner = null;
-        this._onDestroy = null;
-        this._onUpdate = null;
-        return this;
-    }
     /** set callback functions
-     *  @param hash Hash indludes callback functions 'onCreateNewRunner', 'onDestroy' and 'onUpdate'. The callback functions give the CMLRunnner insatnace to move your object.
+     *  @param hash Hash indludes callback functions 'onCreateNewRunner', 'onDestroy' and 'onUpdate'. The callback functions give the CML.Runnner insatnace to move your object.
      */
     setCallbackFunctions(hash) {
         if (hash.onCreateNewRunner)
@@ -65,44 +51,43 @@ export default class CMLRunner extends CMLObject {
      *  @return Instance of fiber that execute the sequence.
      */
     execute(seq, args = null, invertFlag = 0) {
-        return CMLFiber._newRootFiber(this, seq, args, invertFlag);
+        return CML.Fiber._newRootFiber(this, seq, args, invertFlag);
     }
     /** Stop all fibers of object. This function is slow.
-     *  If you want to execute faster, keep returned CMLFiber of CMLObject.execute() and call CMLFiber.destroy() wherever possible.
+     *  If you want to execute faster, keep returned CML.Fiber of CML.Object.execute() and call CML.Fiber.destroy() wherever possible.
      *  @param obj object to halt motion sequence.
-     *  @see CMLRunner#execute()
-     *  @see CMLFiber#destroy()
+     *  @see CML.Runner#execute()
+     *  @see CML.Fiber#destroy()
      */
     halt() {
-        CMLFiber._destroyAllFibers(this);
+        CML.Fiber._destroyAllFibers(this);
     }
     // callback functions
     //------------------------------------------------------------
     /** @private */
     onCreate() {
-        var parent = this._createdby;
-        if (parent._onCreateNewRunner) {
-            parent._onCreateNewRunner.call(parent.avatar || this, this);
+        if (this._createdby && this._createdby._onCreateNewRunner) {
+            this._createdby._onCreateNewRunner(this);
         }
     }
     /** @private */
     onDestroy() {
         if (this._onDestroy) {
-            this._onDestroy.call(this.avatar || this, this);
+            this._onDestroy(this);
         }
     }
     /** @private */
     onUpdate() {
         if (this._onUpdate) {
-            this._onUpdate.call(this.avatar || this, this);
+            this._onUpdate(this);
         }
     }
     /** @private */
     onNewObject(seq) {
-        return this._core._newCMLRunner()._internalInit(this.avatar, this, seq, false);
+        return new CML.Runner(this, seq, false);
     }
     /** @private */
     onFireObject(seq) {
-        return this._core._newCMLRunner()._internalInit(this.avatar, this, seq, true);
+        return new CML.Runner(this, seq, true);
     }
 }

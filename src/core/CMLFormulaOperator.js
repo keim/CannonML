@@ -3,9 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLFormulaElem from "./CMLFormulaElem.js";
+//import CML.FormulaElem from "./CML.FormulaElem.js";
 /** @private */
-export default class CMLFormulaOperator extends CMLFormulaElem {
+CML.FormulaOperator = class extends CML.FormulaElem {
     constructor(opr = "", isSingle = false) {
         super();
         this.priorL = 0;
@@ -29,67 +29,67 @@ export default class CMLFormulaOperator extends CMLFormulaElem {
                 this.priorR = 1;
             }
             else if (opr == "-") {
-                this.func = CMLFormulaOperator.neg;
+                this.func = CML.FormulaOperator.neg;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "!") {
-                this.func = CMLFormulaOperator.bnt;
+                this.func = CML.FormulaOperator.bnt;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$sin") {
-                this.func = CMLFormulaOperator.snd;
+                this.func = CML.FormulaOperator.snd;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$cos") {
-                this.func = CMLFormulaOperator.csd;
+                this.func = CML.FormulaOperator.csd;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$tan") {
-                this.func = CMLFormulaOperator.tnd;
+                this.func = CML.FormulaOperator.tnd;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$asn") {
-                this.func = CMLFormulaOperator.asn;
+                this.func = CML.FormulaOperator.asn;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$acs") {
-                this.func = CMLFormulaOperator.acs;
+                this.func = CML.FormulaOperator.acs;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$atn") {
-                this.func = CMLFormulaOperator.atn;
+                this.func = CML.FormulaOperator.atn;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$sqr") {
-                this.func = CMLFormulaOperator.sqr;
+                this.func = CML.FormulaOperator.sqr;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$int") {
-                this.func = CMLFormulaOperator.ind;
+                this.func = CML.FormulaOperator.ind;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$abs") {
-                this.func = CMLFormulaOperator.abb;
+                this.func = CML.FormulaOperator.abb;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$i?") {
-                this.func = CMLFormulaOperator.ird;
+                this.func = CML.FormulaOperator.ird;
                 this.priorL = 10;
                 this.priorR = 11;
             }
             else if (opr == "$i??") {
-                this.func = CMLFormulaOperator.srd;
+                this.func = CML.FormulaOperator.srd;
                 this.priorL = 10;
                 this.priorR = 11;
             }
@@ -97,57 +97,57 @@ export default class CMLFormulaOperator extends CMLFormulaElem {
         else {
             this.oprcnt = 2;
             if (opr == "+") {
-                this.func = CMLFormulaOperator.adb;
+                this.func = CML.FormulaOperator.adb;
                 this.priorL = 7;
                 this.priorR = 6;
             }
             else if (opr == "-") {
-                this.func = CMLFormulaOperator.sub;
+                this.func = CML.FormulaOperator.sub;
                 this.priorL = 7;
                 this.priorR = 6;
             }
             else if (opr == "*") {
-                this.func = CMLFormulaOperator.mul;
+                this.func = CML.FormulaOperator.mul;
                 this.priorL = 9;
                 this.priorR = 8;
             }
             else if (opr == "/") {
-                this.func = CMLFormulaOperator.div;
+                this.func = CML.FormulaOperator.div;
                 this.priorL = 9;
                 this.priorR = 8;
             }
             else if (opr == "%") {
-                this.func = CMLFormulaOperator.sup;
+                this.func = CML.FormulaOperator.sup;
                 this.priorL = 9;
                 this.priorR = 8;
             }
             else if (opr == ">") {
-                this.func = CMLFormulaOperator.grt;
+                this.func = CML.FormulaOperator.grt;
                 this.priorL = 5;
                 this.priorR = 4;
             }
             else if (opr == ">=") {
-                this.func = CMLFormulaOperator.geq;
+                this.func = CML.FormulaOperator.geq;
                 this.priorL = 5;
                 this.priorR = 4;
             }
             else if (opr == "<") {
-                this.func = CMLFormulaOperator.les;
+                this.func = CML.FormulaOperator.les;
                 this.priorL = 5;
                 this.priorR = 4;
             }
             else if (opr == "<=") {
-                this.func = CMLFormulaOperator.leq;
+                this.func = CML.FormulaOperator.leq;
                 this.priorL = 5;
                 this.priorR = 4;
             }
             else if (opr == "==") {
-                this.func = CMLFormulaOperator.eqr;
+                this.func = CML.FormulaOperator.eqr;
                 this.priorL = 5;
                 this.priorR = 4;
             }
             else if (opr == "!=") {
-                this.func = CMLFormulaOperator.neq;
+                this.func = CML.FormulaOperator.neq;
                 this.priorL = 5;
                 this.priorR = 4;
             }
@@ -164,11 +164,11 @@ export default class CMLFormulaOperator extends CMLFormulaElem {
     static neg(r0, r1) { return -r0; }
     static bnt(r0, r1) { return (r0 == 0) ? 1 : 0; }
     static snd(r0, r1) {
-        var st = CMLFormulaElem._globalVariables._sin;
+        var st = CML.FormulaElem._globalVariables._sin;
         return st[st.index(r0)];
     }
     static csd(r0, r1) {
-        var st = CMLFormulaElem._globalVariables._sin;
+        var st = CML.FormulaElem._globalVariables._sin;
         return st[st.index(r0) + st.cos_shift];
     }
     static tnd(r0, r1) { return Math.tan(r0 * 0.017453292519943295); }
@@ -178,8 +178,8 @@ export default class CMLFormulaOperator extends CMLFormulaElem {
     static sqr(r0, r1) { return Math.sqrt(r0); }
     static ind(r0, r1) { return Number(Math.floor(r0)); }
     static abb(r0, r1) { return (r0 < 0) ? (-r0) : (r0); }
-    static ird(r0, r1) { return Number(Math.floor(CMLFormulaElem._globalVariables.rand() * r0)); }
-    static srd(r0, r1) { return Number(Math.floor(CMLFormulaElem._globalVariables.rand() * (r0 * 2 + 1)) - r0); }
+    static ird(r0, r1) { return Number(Math.floor(CML.FormulaElem._globalVariables.rand() * r0)); }
+    static srd(r0, r1) { return Number(Math.floor(CML.FormulaElem._globalVariables.rand() * (r0 * 2 + 1)) - r0); }
     static grt(r0, r1) { return (r0 > r1) ? 1 : 0; }
     static geq(r0, r1) { return (r0 >= r1) ? 1 : 0; }
     static les(r0, r1) { return (r0 < r1) ? 1 : 0; }
@@ -187,5 +187,5 @@ export default class CMLFormulaOperator extends CMLFormulaElem {
     static neq(r0, r1) { return (r0 != r1) ? 1 : 0; }
     static eqr(r0, r1) { return (r0 == r1) ? 1 : 0; }
 }
-CMLFormulaOperator.prefix_rex = "([-!(]|\\$sin|\\$cos|\\$tan|\\$asn|\\$acs|\\$atn|\\$sqr|\\$i\\?|\\$i\\?\\?|\\$int|\\$abs)";
-CMLFormulaOperator.postfix_rex = "(\\))";
+CML.FormulaOperator.prefix_rex = "([-!(]|\\$sin|\\$cos|\\$tan|\\$asn|\\$acs|\\$atn|\\$sqr|\\$i\\?|\\$i\\?\\?|\\$int|\\$abs)";
+CML.FormulaOperator.postfix_rex = "(\\))";

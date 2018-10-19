@@ -3,11 +3,11 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLListElem from "./CMLListElem.js";
+//import CML.ListElem from "./CML.ListElem.js";
 /** @private */
-export default class CMLList {
+CML.List = class {
     constructor() {
-        this.term = new CMLListElem();
+        this.term = new CML.ListElem();
         this.term.next = this.term;
         this.term.prev = this.term;
     }

@@ -1,5 +1,5 @@
 /** @private */
-export default class CMLSinTable extends Array {
+CML.SinTable = class extends Array {
     constructor(table_size = 4096) {
         super();
         this.cos_shift = table_size >> 2;

@@ -1,5 +1,5 @@
 /** interpolating calculation @private */
-export default class interpolation {
+CML.interpolation = class {
     // constructor
     //--------------------------------------------------
     constructor() {

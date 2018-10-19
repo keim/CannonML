@@ -4,7 +4,7 @@
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
 /** @private */
-export default class RangeLimitNumber {
+CML.RangeLimitNumber = class {
     constructor(val = 0, min = 0, max = 0) {
         this._val = val;
         this.min = min;

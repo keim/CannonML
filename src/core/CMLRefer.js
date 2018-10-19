@@ -3,9 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLState from "./CMLState.js";
+//import CML.State from "./CML.State.js";
 /** @private */
-export default class CMLRefer extends CMLState {
+CML.Refer = class extends CML.State {
     // meaning of reference
     // label=null,   jump=null   means previous call "{.}"
     // label=null,   jump=define means non-labeled call
@@ -14,7 +14,7 @@ export default class CMLRefer extends CMLState {
     // functions
     //------------------------------------------------------------
     constructor(pointer = null, label_ = null) {
-        super(CMLState.ST_REFER);
+        super(CML.State.ST_REFER);
         // variables
         //------------------------------------------------------------
         this._label = null;

@@ -3,18 +3,18 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLState from "./CMLState.js";
+//import CML.State from "./CML.State.js";
 /** @private */
-export default class CMLUserDefine extends CMLState {
+CML.UserDefine = class extends CML.State {
     // functions
     //------------------------------------------------------------
     constructor(obj) {
-        super(CMLState.ST_NORMAL);
+        super(CML.State.ST_NORMAL);
         this._funcUserDefine = obj.func;
         this._argumentCount = obj.argc;
         this._requireSequence = obj.reqseq;
         if (this._requireSequence)
-            this.type = CMLState.ST_RESTRICT | CMLState.STF_CALLREF;
+            this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
         this.func = this._call;
     }
     _setCommand(cmd) {

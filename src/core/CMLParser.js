@@ -3,31 +3,31 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLList from "./CMLList.js";
-import CMLState from "./CMLState.js";
-import CMLRefer from "./CMLRefer.js";
-import CMLAssign from "./CMLAssign.js";
-import CMLString from "./CMLString.js";
-import CMLFormula from "./CMLFormula.js";
-import CMLUserDefine from "./CMLUserDefine.js";
-import CMLFormulaLiteral from "./CMLFormulaLiteral.js";
+//import CML.List from "./CML.List.js";
+//import CML.State from "./CML.State.js";
+//import CML.Refer from "./CML.Refer.js";
+//import CML.Assign from "./CML.Assign.js";
+//import CML.String from "./CML.String.js";
+//import CML.Formula from "./CML.Formula.js";
+//import CML.UserDefine from "./CML.UserDefine.js";
+//import CML.FormulaLiteral from "./CML.FormulaLiteral.js";
 /** @private */
-export default class CMLParser {
+CML.Parser = class {
     // constructor
     //------------------------------------------------------------
     // constructor
     constructor(globalVariables_) {
         // variables
         //------------------------------------------------------------
-        this.listState = new CMLList(); // statement chain
+        this.listState = new CML.List(); // statement chain
         this.loopstac = new Array(); // loop stac
         this.childstac = new Array(); // child cast "{}" stac
         this.cmdKey = ""; // current parsing key
         this.cmdTemp = null; // current parsing statement
         this.fmlTemp = null; // current parsing formula
         this._globalVariables = null;
-        // functor for allocate CMLState instance.
-        this.newCMLState = function () { return new CMLState(); };
+        // functor for allocate CML.State instance.
+        this.newCMLState = function () { return new CML.State(); };
         // private functions
         //------------------------------------------------------------
         // regular expression indexes
@@ -47,7 +47,7 @@ export default class CMLParser {
         this.REX_ERROR = 19; // error
         this._regexp = null; // regular expression
         this._globalVariables = globalVariables_;
-        CMLFormula._initialize(globalVariables_);
+        CML.Formula._initialize(globalVariables_);
     }
     // parsing
     //------------------------------------------------------------
@@ -126,7 +126,7 @@ export default class CMLParser {
         this.cmdTemp = null;
     }
     _terminate() {
-        var terminator = new CMLState(CMLState.ST_END);
+        var terminator = new CML.State(CML.State.ST_END);
         this._append_statement(terminator);
         this.listState.cut(this.listState.head, this.listState.tail);
     }
@@ -142,7 +142,7 @@ export default class CMLParser {
         }
         else { // + - * / % ( )
             if (this.fmlTemp == null)
-                this.fmlTemp = new CMLFormula(this.cmdTemp, true); // new formula
+                this.fmlTemp = new CML.Formula(this.cmdTemp, true); // new formula
             if (!this.fmlTemp.pushOperator(res[this.REX_FORMULA], false))
                 throw Error("in formula " + res[1]);
             this.fmlTemp.pushPrefix(res[this.REX_ARG_PREFIX], true);
@@ -181,7 +181,7 @@ export default class CMLParser {
                 var seq = this._cut_sequence(this.childstac.shift(), this.cmdTemp);
                 this.cmdKey = "";
                 // non-labeled sequence is exchenged into reference
-                this.cmdTemp = (seq.type == CMLState.ST_NO_LABEL) ? this._new_reference(seq, null) : null;
+                this.cmdTemp = (seq.type == CML.State.ST_NO_LABEL) ? this._new_reference(seq, null) : null;
                 break;
         }
         // push new argument
@@ -237,7 +237,7 @@ export default class CMLParser {
     _parseString(res) {
         if (res[this.REX_STRING] == undefined)
             return false;
-        this.cmdTemp = new CMLString(res[this.REX_STRING]); // new string
+        this.cmdTemp = new CML.String(res[this.REX_STRING]); // new string
         return true;
     }
     _parseComment(res) {
@@ -249,15 +249,15 @@ export default class CMLParser {
     _createCMLRegExp() {
         if (this._globalVariables._requestUpdateRegExp) {
             var literalRegExpString = "(0x[0-9a-f]{1,8}|\\d+\\.?\\d*|\\$(\\?\\?|\\?|" + this._userReferenceRegExp + ")[0-9]?)";
-            var operandRegExpString = CMLFormula._createOperandRegExpString(literalRegExpString);
+            var operandRegExpString = CML.Formula._createOperandRegExpString(literalRegExpString);
             // oonstruct regexp string
             var rexstr = "(//[^\\n]*$|/\\*.*?\\*/)"; // comment (res[1])
             rexstr += "|'(.*?)'"; // string (res[2])
             rexstr += "|(("; // ---all--- (res[3,4])
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula and arguments (res[5])
             rexstr += "|&(" + this._userCommandRegExp + ")"; // user define commands (res[6])
-            rexstr += "|" + CMLState.command_rex; // normal commands (res[7])
-            rexstr += "|" + CMLAssign.assign_rex; // assign (res[8])
+            rexstr += "|" + CML.State.command_rex; // normal commands (res[7])
+            rexstr += "|" + CML.Assign.assign_rex; // assign (res[8])
             rexstr += "|([A-Z_.][A-Z0-9_.]*)"; // call sequence (res[9])
             rexstr += "|(\\{\\.\\})"; // previous reference (res[10])
             rexstr += "|#([A-Z_][A-Z0-9_]*)[ \t]*\\{"; // labeled sequence definition (res[11])
@@ -299,21 +299,21 @@ export default class CMLParser {
     // (null, define) means label call "ABC"
     _new_reference(seq, name) {
         // append "@" command, when previous command isn't STF_CALLREF.
-        if ((this.listState.tail.type & CMLState.STF_CALLREF) == 0) {
-            this._append_statement((new CMLState()).setCommand("@"));
+        if ((this.listState.tail.type & CML.State.STF_CALLREF) == 0) {
+            this._append_statement((new CML.State()).setCommand("@"));
         }
         // create reference
-        return new CMLRefer(seq, name);
+        return new CML.Refer(seq, name);
     }
     // create new user defined command
     _new_user_defined(str) {
         if (!(str in this._globalVariables._mapUsrDefCmd))
             throw Error("&" + str + " ?"); // not defined
-        return new CMLUserDefine(this._globalVariables._mapUsrDefCmd[str]);
+        return new CML.UserDefine(this._globalVariables._mapUsrDefCmd[str]);
     }
     // create new assign command
     _new_assign(str) {
-        var asg = new CMLAssign(str);
+        var asg = new CML.Assign(str);
         this._update_max_reference(asg.max_reference);
         return asg;
     }
@@ -359,7 +359,7 @@ export default class CMLParser {
             }
             // set formula when this argument is variable
             state._args.push(0);
-            fml = new CMLFormula(state, false);
+            fml = new CML.Formula(state, false);
             fml.pushPrefix(prefix, true);
             fml.pushLiteral(literal);
             fml.pushPostfix(postfix, true);
@@ -381,13 +381,13 @@ export default class CMLParser {
             return (a > b) ? -1 : (a < b) ? 1 : 0;
         }).join('|');
     }
-    // regular expression string of user command. call from CMLFormula
+    // regular expression string of user command. call from CML.Formula
     get _userReferenceRegExp() {
         var reflist = new Array(), ref;
         for (ref in this._globalVariables._mapUsrDefRef) {
             reflist.push(ref);
         }
-        return reflist.concat(CMLFormulaLiteral.defaultReferences).sort(function (a, b) {
+        return reflist.concat(CML.FormulaLiteral.defaultReferences).sort(function (a, b) {
             return (a > b) ? -1 : (a < b) ? 1 : 0;
         }).join('|').replace(/\./g, '\\.');
     }

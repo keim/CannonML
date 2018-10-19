@@ -3,10 +3,10 @@
 //  Copyright (c) 2016 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import RangeLimitNumber from "./RangeLimitNumber.js";
-import CMLSinTable from "./CMLSinTable.js";
+//import RangeLimitNumber from "./RangeLimitNumber.js";
+//import CMLSinTable from "./CMLSinTable.js";
 /** @private Global variables, accessable from all classes. */
-export default class CMLGlobal {
+CML.Global = class {
     // constructor
     //------------------------------------------------------------
     /** Global variables, accessable from all classes.
@@ -14,17 +14,16 @@ export default class CMLGlobal {
      *  @param speedRatio_ Value of (frame rate to calculate speed) / (updating frame rate).
      */
     constructor(vertical_, speedRatio_) {
-        /** @private user defined variables refer from CMLParser */
+        /** @private user defined variables refer from CML.Parser */
         this._mapUsrDefRef = {};
-        /** @private user defined commands refer from CMLParser */
+        /** @private user defined commands refer from CML.Parser */
         this._mapUsrDefCmd = {};
-        var i;
         this._globalRank = new Array(10);
-        for (i = 0; i < this._globalRank.length; i++) {
-            this._globalRank[i] = new RangeLimitNumber();
+        for (let i=0; i<this._globalRank.length; i++) {
+            this._globalRank[i] = new CML.RangeLimitNumber();
         }
         this._globalRank[0].max = 1;
-        this._sin = new CMLSinTable();
+        this._sin = new CML.SinTable();
         this._funcRand = Math.random;
         this._requestUpdateRegExp = true;
         this._speedRatio = speedRatio_;
@@ -55,7 +54,7 @@ export default class CMLGlobal {
     setRank(index, value) { this._globalRank[index].val = value; }
     /** Set the range of globalRank. The global rank value is limited in this range. */
     setGlobalRankRange(index, min, max) {
-        var rank = this._globalRank[index];
+        const rank = this._globalRank[index];
         rank.min = min;
         rank.max = max;
         rank.val = rank.val;
@@ -66,16 +65,16 @@ export default class CMLGlobal {
      *  </p>
      *  @param name The name of variable that appears like "$name" in CML-string.
      *  @param func The callback function when the reference appears in sequence.<br/>
-     *  The type of callback is <code>function(fbr:CMLFiber):Number</code>. The argument gives a fiber that execute the sequence.
-     *  @see CMLFiber
+     *  The type of callback is <code>function(fbr:CML.Fiber):Number</code>. The argument gives a fiber that execute the sequence.
+     *  @see CML.Fiber
 @example
 <listing version="3.0">
 // In the cml-string, you can use "$life" that returns Enemy's life.
-CMLSequence.registerUserValiable("life", referLife);
+CML.Sequence.registerUserValiable("life", referLife);
 
-function referLife(fbr:CMLFiber) : Number
+function referLife(fbr:CML.Fiber) : Number
 {
-// Enemy class is your extention of CMLObject.
+// Enemy class is your extention of CML.Object.
 return Enemy(fbr.object).life;
 }
 </listing>
@@ -90,18 +89,18 @@ return Enemy(fbr.object).life;
      *  </p>
      *  @param name The name of command that appears like "&amp;name" in CML string.
      *  @param func The callback function when the command appears in sequence.<br/>
-     *  The type of callback is <code>function(fbr:CMLFiber, args:Array):void</code>.
+     *  The type of callback is <code>function(fbr:CML.Fiber, args:Array):void</code>.
      *  The 1st argument gives a reference of the fiber that execute the sequence.
      *  And the 2nd argument gives the arguments of the command.
      *  @param argc The count of argument that this command requires.<br/>
      *  @param requireSequence Specify true if this command require the sequence as the '&amp;', '&#64;' and 'n' commands.
-     *  @see CMLFiber
+     *  @see CML.Fiber
 @example
 <listing version="3.0">
 // In the cml-string, you can use "&amp;sound[sound_index],[volume]" that plays sound.
-CMLSequence.registerUserCommand("sound", playSound, 2);
+CML.Sequence.registerUserCommand("sound", playSound, 2);
 
-function playSound(fbr:CMLFiber, args:Array) : void
+function playSound(fbr:CML.Fiber, args:Array) : void
 {
 // function _playSound(index, volume) plays sound.
 if (args.length >= 2) _playSound(args[0], args[1]);

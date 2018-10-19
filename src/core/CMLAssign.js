@@ -3,13 +3,13 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-import CMLState from "./CMLState.js";
+//import CML.State from "./CML.State.js";
 /** @private */
-export default class CMLAssign extends CMLState {
+CML.Assign = class extends CML.State {
     // functions
     //------------------------------------------------------------
     constructor(str) {
-        super(CMLState.ST_NORMAL);
+        super(CML.State.ST_NORMAL);
         // variables
         //------------------------------------------------------------
         this._index = 0;
@@ -47,11 +47,11 @@ export default class CMLAssign extends CMLState {
     _setCommand(cmd) {
         return this;
     }
-    _asgrg(fbr) { CMLState._globalVariables.setRank(this._index, this._args[0]); return true; }
-    _addrg(fbr) { CMLState._globalVariables.setRank(this._index, CMLState._globalVariables.getRank(this._index) + this._args[0]); return true; }
-    _subrg(fbr) { CMLState._globalVariables.setRank(this._index, CMLState._globalVariables.getRank(this._index) - this._args[0]); return true; }
-    _mulrg(fbr) { CMLState._globalVariables.setRank(this._index, CMLState._globalVariables.getRank(this._index) * this._args[0]); return true; }
-    _divrg(fbr) { CMLState._globalVariables.setRank(this._index, CMLState._globalVariables.getRank(this._index) / this._args[0]); return true; }
+    _asgrg(fbr) { CML.State._globalVariables.setRank(this._index, this._args[0]); return true; }
+    _addrg(fbr) { CML.State._globalVariables.setRank(this._index, CML.State._globalVariables.getRank(this._index) + this._args[0]); return true; }
+    _subrg(fbr) { CML.State._globalVariables.setRank(this._index, CML.State._globalVariables.getRank(this._index) - this._args[0]); return true; }
+    _mulrg(fbr) { CML.State._globalVariables.setRank(this._index, CML.State._globalVariables.getRank(this._index) * this._args[0]); return true; }
+    _divrg(fbr) { CML.State._globalVariables.setRank(this._index, CML.State._globalVariables.getRank(this._index) / this._args[0]); return true; }
     _asgr(fbr) { fbr.object.rank = this._args[0]; return true; }
     _addr(fbr) { fbr.object.rank += this._args[0]; return true; }
     _subr(fbr) { fbr.object.rank -= this._args[0]; return true; }
@@ -63,4 +63,4 @@ export default class CMLAssign extends CMLState {
     _mul(fbr) { fbr.vars[this._index] *= this._args[0]; return true; }
     _div(fbr) { fbr.vars[this._index] /= this._args[0]; return true; }
 }
-CMLAssign.assign_rex = "l\\$([1-9r][+\\-*/]?)=";
+CML.Assign.assign_rex = "l\\$([1-9r][+\\-*/]?)=";

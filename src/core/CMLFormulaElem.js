@@ -4,8 +4,8 @@
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
 /** @private */
-export default class CMLFormulaElem {
+CML.FormulaElem = class {
     constructor() { }
     calc(fbr) { return 0; }
 }
-CMLFormulaElem._globalVariables = null;
+CML.FormulaElem._globalVariables = null;
