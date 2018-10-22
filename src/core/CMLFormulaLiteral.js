@@ -58,11 +58,17 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
             case "$y":
                 this.func = this.posy;
                 break;
+            case "$z":
+                this.func = this.posz;
+                break;
             case "$sx":
                 this.func = this.sgnx;
                 break;
             case "$sy":
                 this.func = this.sgny;
+                break;
+            case "$sz":
+                this.func = this.sgnz;
                 break;
             case "$v":
                 this.func = this.vell;
@@ -72,6 +78,9 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
                 break;
             case "$vy":
                 this.func = this.vely;
+                break;
+            case "$vz":
+                this.func = this.velz;
                 break;
             case "$ho":
                 this.func = this.objh;
@@ -88,11 +97,17 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
             case "$p.y":
                 this.func = this.prt_posy;
                 break;
+            case "$p.z":
+                this.func = this.prt_posz;
+                break;
             case "$p.sx":
                 this.func = this.prt_sgnx;
                 break;
             case "$p.sy":
                 this.func = this.prt_sgny;
+                break;
+            case "$p.sz":
+                this.func = this.prt_sgnz;
                 break;
             case "$p.v":
                 this.func = this.prt_vell;
@@ -102,6 +117,9 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
                 break;
             case "$p.vy":
                 this.func = this.prt_vely;
+                break;
+            case "$p.vz":
+                this.func = this.prt_velz;
                 break;
             case "$p.ho":
                 this.func = this.prt_objh;
@@ -118,11 +136,17 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
             case "$t.y":
                 this.func = this.tgt_posy;
                 break;
+            case "$t.z":
+                this.func = this.tgt_posz;
+                break;
             case "$t.sx":
                 this.func = this.tgt_sgnx;
                 break;
             case "$t.sy":
                 this.func = this.tgt_sgny;
+                break;
+            case "$t.sz":
+                this.func = this.tgt_sgnz;
                 break;
             case "$t.v":
                 this.func = this.tgt_vell;
@@ -132,6 +156,9 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
                 break;
             case "$t.vy":
                 this.func = this.tgt_vely;
+                break;
+            case "$t.vz":
+                this.func = this.tgt_velz;
                 break;
             case "$t.ho":
                 this.func = this.tgt_objh;
@@ -162,10 +189,13 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     loop(fbr) { return fbr.getLoopCounter(this.num); }
     posx(fbr) { return fbr.object.x; }
     posy(fbr) { return fbr.object.y; }
+    posz(fbr) { return fbr.object.z; }
     sgnx(fbr) { return (fbr.object.x < 0) ? -1 : 1; }
     sgny(fbr) { return (fbr.object.y < 0) ? -1 : 1; }
+    sgnz(fbr) { return (fbr.object.z < 0) ? -1 : 1; }
     velx(fbr) { return fbr.object.vx; }
     vely(fbr) { return fbr.object.vy; }
+    velz(fbr) { return fbr.object.vz; }
     vell(fbr) { return fbr.object.velocity; }
     objh(fbr) { return fbr.object.angleOnStage; }
     dist(fbr) { return fbr.object.getDistance(fbr.target); }
@@ -173,10 +203,13 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     cntc(fbr) { return fbr.object.countIDedChildren(this.num); }
     prt_posx(fbr) { return fbr.object.parent.x; }
     prt_posy(fbr) { return fbr.object.parent.y; }
+    prt_posz(fbr) { return fbr.object.parent.z; }
     prt_sgnx(fbr) { return (fbr.object.parent.x < 0) ? -1 : 1; }
     prt_sgny(fbr) { return (fbr.object.parent.y < 0) ? -1 : 1; }
+    prt_sgnz(fbr) { return (fbr.object.parent.z < 0) ? -1 : 1; }
     prt_velx(fbr) { return fbr.object.parent.vx; }
     prt_vely(fbr) { return fbr.object.parent.vy; }
+    prt_velz(fbr) { return fbr.object.parent.vz; }
     prt_vell(fbr) { return fbr.object.parent.velocity; }
     prt_objh(fbr) { return fbr.object.parent.angleOnStage; }
     prt_dist(fbr) { return fbr.object.parent.getDistance(fbr.target); }
@@ -184,10 +217,13 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     prt_cntc(fbr) { return fbr.object.parent.countIDedChildren(this.num); }
     tgt_posx(fbr) { return fbr.target.x; }
     tgt_posy(fbr) { return fbr.target.y; }
+    tgt_posz(fbr) { return fbr.target.z; }
     tgt_sgnx(fbr) { return (fbr.target.x < 0) ? -1 : 1; }
     tgt_sgny(fbr) { return (fbr.target.y < 0) ? -1 : 1; }
+    tgt_sgnz(fbr) { return (fbr.target.z < 0) ? -1 : 1; }
     tgt_velx(fbr) { return fbr.target.vx; }
     tgt_vely(fbr) { return fbr.target.vy; }
+    tgt_velz(fbr) { return fbr.target.vz; }
     tgt_vell(fbr) { return fbr.target.velocity; }
     tgt_objh(fbr) { return fbr.target.angleOnStage; }
     tgt_cnta(fbr) { return fbr.target.countAllIDedChildren(); }
@@ -196,7 +232,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
 }
 // Refer from CML.Parser._userReferenceRegExp() to sort all reference names.
 CML.FormulaLiteral.defaultReferences = [
-    'i', 'r', 'l', 'x', 'y', 'sx', 'sy', 'v', 'vx', 'vy', 'ho', 'td', 'o',
-    'p.x', 'p.y', 'p.sx', 'p.sy', 'p.v', 'p.vx', 'p.vy', 'p.ho', 'p.td', 'p.o',
-    't.x', 't.y', 't.sx', 't.sy', 't.v', 't.vx', 't.vy', 't.ho', 't.td', 't.o'
+    'i', 'r', 'l', 'x', 'y', 'z', 'sx', 'sy', 'sz', 'v', 'vx', 'vy', 'vz', 'ho', 'td', 'o',
+    'p.x', 'p.y', 'p.z', 'p.sx', 'p.sy', 'p.sz', 'p.v', 'p.vx', 'p.vy', 'p.vz', 'p.ho', 'p.td', 'p.o',
+    't.x', 't.y', 't.z', 't.sx', 't.sy', 't.sz', 't.v', 't.vx', 't.vy', 't.vz', 't.ho', 't.td', 't.o'
 ];

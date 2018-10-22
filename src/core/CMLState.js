@@ -116,6 +116,10 @@ CML.State = class extends CML.ListElem {
                 this.func = this._py;
                 this._resetParameters(1);
                 break;
+            case "pz":
+                this.func = this._pz;
+                this._resetParameters(1);
+                break;
             case "pd":
                 this.func = this._pd;
                 this._resetParameters(2);
@@ -133,6 +137,10 @@ CML.State = class extends CML.ListElem {
                 this.func = this._vy;
                 this._resetParameters(1);
                 break;
+            case "vz":
+                this.func = this._vz;
+                this._resetParameters(1);
+                break;
             case "vd":
                 this.func = this._vd;
                 this._resetParameters(2);
@@ -148,6 +156,10 @@ CML.State = class extends CML.ListElem {
                 break;
             case "ay":
                 this.func = this._ay;
+                this._resetParameters(1);
+                break;
+            case "az":
+                this.func = this._az;
                 this._resetParameters(1);
                 break;
             case "ad":
@@ -836,6 +848,6 @@ CML.State._invert_flag = 0;
 // speed ratio
 CML.State._speed_ratio = 1;
 // command regular expressions
-CML.State.command_rex = "(\\[s\\?|\\[\\?|\\[|\\]|\\}|:|\\^&|&|w\\?|w|~|pd|px|py|p|vd|vx|vy|v|ad|ax|ay|a|gp|gt|rc|r|ko|i|m|cd|csa|csr|css|\\^@|@ko|@o|@|\\^n|nc|n|\\^f|fc|f|qx|qy|q|bm|bs|br|bv|hax|ha|hox|ho|hpx|hp|htx|ht|hvx|hv|hs|td|tp|to|kf)";
+CML.State.command_rex = "(\\[s\\?|\\[\\?|\\[|\\]|\\}|:|\\^&|&|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|ko|i|m|cd|csa|csr|css|\\^@|@ko|@o|@|\\^n|nc|n|\\^f|fc|f|qx|qy|q|bm|bs|br|bv|hax|ha|hox|ho|hpx|hp|htx|ht|hvx|hv|hs|td|tp|to|kf)";
 // global variables
 CML.State._globalVariables = null;

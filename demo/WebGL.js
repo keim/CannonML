@@ -1,50 +1,70 @@
 class WebGL {
-  constructor(container) {
+  constructor(width, height) {
     // member valiables
     this.paused = false;
     this.prevtime = 0;
     
     // create basic instance
-    this.camera   = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 1, 10000 );
+    this.camera   = new THREE.PerspectiveCamera(30, 1, 0.1, 10000);
     this.scene    = new THREE.Scene();
     this.renderer = new THREE.WebGLRenderer();
 
-    // dom and event
-    container.appendChild(this.renderer.domElement);
-    container.addEventListener('mousemove', e=>{
-      //this.uniforms.mouse.value.x = e.clientX / this.renderer.domElement.width;
-      //this.uniforms.mouse.value.y = 1-e.clientY / this.renderer.domElement.height;
-    });
-    window.addEventListener('resize', e=>this.adjustScreen());
+    // other
+    this.screenCenter = new THREE.Vector3();
+    this.cameraDistance = 0;
 
     // start
-    this.adjustScreen();
+    this.setSize(width, height);
     this.prevtime = performance.now();
-    this.init();
+    this.setup();
     this._loop();
+  }
+
+  get domElement() {
+    return this.renderer.domElement;
   }
 
   _loop() {
     const now = performance.now();
-    if (!this.paused) this.update((now - this.prevtime) / 1000);
+    if (!this.paused) this.draw((now - this.prevtime) / 1000);
     this.prevtime = now;
-    requestAnimationFrame(this._loop.bind(this));
+    this.renderer.setAnimationLoop(this._loop.bind(this));
   }
 
-  adjustScreen() {
-    this.camera.aspect = window.innerWidth / window.innerHeight;
+  setSize(width, height) {
+    this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
-    this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.renderer.setPixelRatio(window.devicePixelRatio);
-    //this.uniforms.resolution.value.x = this.renderer.domElement.width;
-    //this.uniforms.resolution.value.y = this.renderer.domElement.height;
+    this.renderer.setSize(width, height);
   }
 
-  init() {
+  getSize() { return this.renderer.getSize(); }
 
+  setup() {
+    this.renderer.gammaOutput = true;
+    this.renderer.physicallyCorrectLights = true;
+    this.renderer.sortObjects = false;
+    this.renderer.shadowMap.enabled = false;
+
+    this.cameraDistance = this.renderer.getSize().height * 0.5 / Math.tan(this.camera.fov * 0.5 * Math.PI / 180);
+
+    this.light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    this.scene.add(this.light);
+    this.scene.add(this.light.target);
+
+    const geom = new THREE.BoxBufferGeometry(10, 10, 10);
+    const mat  = new THREE.MeshStandardMaterial({color:0xffff00});
+    const mesh = new THREE.Mesh(geom, mat);
+
+    this.scene.add(this.camera);
+    this.scene.add(mesh);
+
+    this.camera.position.set(0, 0, -this.cameraDistance);
+    this.camera.lookAt(this.screenCenter);
+
+    this.light.position.set(0, 0, -1);
   }
 
-  update(deltaTime) {
+  draw(deltaTime) {
     this.renderer.render(this.scene, this.camera);
   }
 }
