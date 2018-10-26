@@ -318,7 +318,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     // default sequence do nothing. call from CML.Fiber
     /** @private */
     static nop() {
-        if (CML.Sequence._nop === null) {
+        if (!CML.Sequence._nop) {
             var cmd = new CML.State(CML.State.ST_END);
             CML.Sequence._nop = new CML.Sequence();
             CML.Sequence._nop.next = cmd;
@@ -331,7 +331,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     // rapid sequence execute rapid sequence. call from CML.Fiber
     /** @private */
     static rapid() {
-        if (CML.Sequence._rapid === null) {
+        if (!CML.Sequence._rapid) {
             var rap = new CML.State(CML.State.ST_RAPID);
             CML.Sequence._rapid = new CML.Sequence();
             CML.Sequence._rapid.next = rap;

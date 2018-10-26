@@ -149,6 +149,9 @@ target_object = null;                   // target object was destroyed.
     get angleVelocity() { return ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_BULLETML) ? (this.angleOnStage) : (Math.atan2(this.vy, this.vx) * 57.29577951308232 - CML.Object._globalVariables.scrollAngle); }
     /** Calculate direction of accelaration. */
     get angleAccel() { return ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_BULLETML) ? (this.angleOnStage) : (Math.atan2(this._ay, this._ax) * 57.29577951308232 - CML.Object._globalVariables.scrollAngle); }
+    /**  */
+    get pitch() {return this._pitch;}
+    get bank() {return this._bank;}
     // callback functions
     //------------------------------------------------------------
     /** Callback function on create. Override this to initialize.*/
