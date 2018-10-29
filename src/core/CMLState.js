@@ -76,17 +76,9 @@ CML.State = class extends CML.ListElem {
                 this.type = CML.State.ST_LOOP;
                 this._resetParameters(1);
                 break;
-            case "[?":
+            case "?":
                 this.func = this._if_start;
                 this.type = CML.State.ST_IF;
-                if (this._args.length == 0)
-                    throw Error("no arguments in [?");
-                break;
-            case "[s?":
-                this.func = this._level_start;
-                this.type = CML.State.ST_SELECT;
-                if (this._args.length == 0)
-                    throw Error("no arguments in [s?");
                 break;
             case ":":
                 this.func = this._else_start;
@@ -387,26 +379,27 @@ CML.State = class extends CML.ListElem {
     _nop(fbr) { return true; }
     // looping, branching
     _loop_start(fbr) {
-        fbr.lcnt.unshift(0);
+        /**/
+        if (this.jump.type == CML.State.ST_IF)
+            if (this._args[0] == 0) 
+                fbr._pointer = this.jump.jump;
+            else
+                fbr._pointer = this.jump; 
+        else 
+            fbr.lcnt.unshift(0);
         return true;
     }
     _if_start(fbr) {
-        if (this._args[0] == 0)
-            fbr._pointer = this.jump;
-        return true;
-    }
-    _level_start(fbr) {
-        while (fbr._pointer.jump.type == CML.State.ST_ELSE) {
-            if (this._args[0] < fbr._pointer.jump._args[0])
-                return true;
-            fbr._pointer = fbr._pointer.jump;
-        }
+        /**/
         return true;
     }
     _else_start(fbr) {
-        do {
-            fbr._pointer = fbr._pointer.jump;
-        } while (fbr._pointer.type == CML.State.ST_ELSE);
+        /**/
+        if (this.jump.type == CML.State.ST_IF)
+            if (this._args[0] == 0) 
+                fbr._pointer = this.jump.jump;
+            else
+                fbr._pointer = this.jump; 
         return true;
     }
     _block_end(fbr) {
@@ -824,9 +817,8 @@ CML.State = class extends CML.ListElem {
 /** @private */ CML.State.ST_NO_LABEL = 3; // non-labeled sequence define "{...}"
 /** @private */ CML.State.ST_RESTRICT = 4; // restrict to put reference after this command ("&","@*","n*")
 /** @private */ CML.State.ST_LOOP = 5; // loop "["
-/** @private */ CML.State.ST_IF = 6; // if "[?"
+/** @private */ CML.State.ST_IF = 6; // if "?"
 /** @private */ CML.State.ST_ELSE = 7; // else ":"
-/** @private */ CML.State.ST_SELECT = 8; // select "[s?"
 /** @private */ CML.State.ST_BLOCKEND = 9; // block end "]"
 /** @private */ CML.State.ST_FORMULA = 10; // formula 
 /** @private */ CML.State.ST_STRING = 11; // string
@@ -848,6 +840,6 @@ CML.State._invert_flag = 0;
 // speed ratio
 CML.State._speed_ratio = 1;
 // command regular expressions
-CML.State.command_rex = "(\\[s\\?|\\[\\?|\\[|\\]|\\}|:|\\^&|&|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|ko|i|m|cd|csa|csr|css|\\^@|@ko|@o|@|\\^n|nc|n|\\^f|fc|f|qx|qy|q|bm|bs|br|bv|hax|ha|hox|ho|hpx|hp|htx|ht|hvx|hv|hs|td|tp|to|kf)";
+CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|\\^&|&|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|ko|i|m|cd|csa|csr|css|\\^@|@ko|@o|@|\\^n|nc|n|\\^f|fc|f|qx|qy|q|bm|bs|br|bv|hax|ha|hox|ho|hpx|hp|htx|ht|hvx|hv|hs|td|tp|to|kf)";
 // global variables
 CML.State._globalVariables = null;

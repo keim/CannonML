@@ -47,17 +47,18 @@ class Ptolemy {
     this.renderer.physicallyCorrectLights = true;
     this.renderer.shadowMap.enabled = true;
 
-    this.light = new THREE.SpotLight( 0xffffff, 0.5 );
+    this.light = new THREE.SpotLight( 0xffffff, 1, 1000, Math.PI/3, 0.3, 2);
     this.light.castShadow = true; 
 //    this.light.shadow.camera.near = this.light.shadow.camera.left  = this.light.shadow.camera.bottom = -240;
 //    this.light.shadow.camera.far  = this.light.shadow.camera.right = this.light.shadow.camera.top = 240;
 
-    this.light.shadow.camera.near = 10;
-    this.light.shadow.camera.far = 500;
+    this.light.shadow.camera.near = 200;
+    this.light.shadow.camera.far = 400;
     this.light.shadow.camera.updateProjectionMatrix();
-    this.light.position.set(0, 100, 100);
+    this.light.position.set(0, 300, 300);
+    this.light.target.position.set(0,0,0);
     this.scene.add(this.light);
-    this.amb = new THREE.AmbientLight( 0xffffff, 1.2 );
+    this.amb = new THREE.AmbientLight( 0xffffff, 0.3 );
     this.scene.add(this.amb);
     this.scene.add(this.camera);
     this.camera.position.set(0, 0, this.cameraDistance);

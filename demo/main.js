@@ -1,11 +1,18 @@
-var gl, cml;
+var gl, cml, enemyActor;
+
+function runscript() {
+  const seq = cml.sequence(document.getElementById('cmlscript').value);
+  if (enemyActor) enemyActor.runner.destroy(0);
+  enemyActor = new Actor(1, cml.runner(0,0,0, seq));
+  return false;
+}
 
 window.onload = ()=>{
   cml = new CannonML();
   gl = new Ptolemy({width:480, height:480,
     onInitialize:()=>{
       const floor = new THREE.Mesh(new THREE.PlaneBufferGeometry(480, 480), new THREE.MeshLambertMaterial({color: 0xffffff}));
-      floor.position.z = -20;
+      floor.position.z = -10;
       floor.receiveShadow = true;
       gl.scene.add(floor);
     },
@@ -24,11 +31,19 @@ window.onload = ()=>{
   cml.setDefaultTarget(target.runner);
   cml.setScreenSize(400,400,0);
 
-  const seq = cml.sequence("{i30[v0,3~v3,0~v0,-3~v-3,0~]}bm9,120,0,5[w50f3]");
-  new Actor(1, cml.runner(0,0,0, seq));
-
   document.getElementById('container').appendChild(gl.domElement);
+  document.getElementById('cmlscript').value = "py100{i60vx-3~[vx0~vx6~vx0~vx-6~]}\n[w10[?$x<0bm2,5f2:bm3,50f10]]";
+  document.getElementById('runscript').addEventListener('click', e=>{
+    return runscript();
+  });
+  document.getElementById('cmlscript').addEventListener('keydown', e=>{
+    if (e.ctrlKey && e.key == 's') {
+      e.preventDefault();
 
+      return runscript();
+    }
+    return true;
+  });
   gl.start();
 };
 

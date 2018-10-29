@@ -26,8 +26,6 @@ CML.Parser = class {
         this.cmdTemp = null; // current parsing statement
         this.fmlTemp = null; // current parsing formula
         this._globalVariables = null;
-        // functor for allocate CML.State instance.
-        this.newCMLState = function () { return new CML.State(); };
         // private functions
         //------------------------------------------------------------
         // regular expression indexes
@@ -155,15 +153,16 @@ CML.Parser = class {
         if (res[this.REX_NORMAL] == undefined)
             return false;
         this.cmdKey = res[this.REX_NORMAL]; // command key
-        this.cmdTemp = this.newCMLState(); // new command
+        this.cmdTemp = new CML.State(); // new command
         // individual operations
         switch (this.cmdKey) {
             case "[":
-            case "[?":
-            case "[s?":
                 this.loopstac.push(this.cmdTemp); // push loop stac
                 break;
+            case "?":
             case ":":
+                if (this.loopstac.length == 0)
+                    throw Error(": after no [ ?");
                 this.cmdTemp.jump = this.loopstac.pop(); // pop loop stac
                 this.cmdTemp.jump.jump = this.cmdTemp; // create jump chain
                 this.loopstac.push(this.cmdTemp); // push new loop stac

@@ -4,4 +4,19 @@ body {
   margin: 0;
   overflow: hidden;
   position: relative;
+  display:flex;
 }
+
+#runscript {
+  border: solid 1px #ccc;
+  width: 480px;
+  height: 30px;
+}
+#cmlscript {
+  display: block;
+  margin: 0;
+  padding: 10px;
+  width: 460px;
+  height: 320px;
+}
+
