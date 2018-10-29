@@ -392,10 +392,10 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
                 base = 0;
                 break; // based on the fixed angle
             case CML.State.HO_REL:
-                base = this._object.angleOnStage;
+                base = this._object.angleOnScreen;
                 break; // based on the angle of this object
             case CML.State.HO_PAR:
-                base = this._object.angleParentOnStage;
+                base = this._object.angleParentOnScreen;
                 break; // based on the angle of the parent object
             case CML.State.HO_VEL:
                 base = this._object.angleVelocity;
@@ -413,10 +413,10 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             case CML.State.HO_AIM: return this._object.getAimingAngle(this._target) + this.hang; // based on the angle to the target
             case CML.State.HO_ABS: return this.hang; // based on the angle in the absolute coordination
             case CML.State.HO_FIX: return this.hang; // based on the fixed angle
-            case CML.State.HO_REL: return this._object.angleOnStage + this.hang; // based on the angle of this object
-            case CML.State.HO_PAR: return this._object.angleParentOnStage + this.hang; // based on the angle of the parent object
+            case CML.State.HO_REL: return this._object.angleOnScreen + this.hang; // based on the angle of this object
+            case CML.State.HO_PAR: return this._object.angleParentOnScreen + this.hang; // based on the angle of the parent object
             case CML.State.HO_VEL: return this._object.angleVelocity + this.hang; // based on the angle of velocity
-            case CML.State.HO_SEQ: return this._object.angleOnStage + this.hang * this.chgt; // sequencial
+            case CML.State.HO_SEQ: return this._object.angleOnScreen + this.hang * this.chgt; // sequencial
             default:
                 throw new Error("BUG!! unknown error in CML.Fiber._getAngle()"); // ???
         }

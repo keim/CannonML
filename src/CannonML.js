@@ -63,6 +63,11 @@ class CannonML {
     setDefaultTarget(target_) {
         CML.Fiber._defaultTarget = target_;
     }
+    /** set screen size (escaped when Runners are out of screen size) and bias */
+    setScreenSize(width, height, bias=0) {
+        this.globalVariables._halfScreenWidth = width / 2 + bias;
+        this.globalVariables._halfScreenHeight = height / 2 + bias;
+    }
 }
 // public variables
 //------------------------------------------------------------

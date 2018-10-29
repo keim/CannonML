@@ -2,8 +2,9 @@ class Actor {
   constructor(avatarid, runner) {
     const avator = Actor.avatars[avatarid];
     this.mesh = new THREE.Mesh(avator.geometory, avator.material);
+    this.mesh.rotation.reorder("ZYX");
+    this.mesh.castShadow = true;
     this.runner = runner;
-    console.log(runner);
     Actor.scene.add(this.mesh);
     
     this.onCreateNewRunner = this.onCreateNewRunner.bind(this);
@@ -26,8 +27,8 @@ class Actor {
     this.mesh.position.y = this.runner.y; 
     this.mesh.position.z = this.runner.z;
     this.mesh.rotation.x = this.runner.bank;
-    this.mesh.rotation.y = this.runner.pitch;
-    this.mesh.rotation.z = this.runner.angleOnStage;
+    this.mesh.rotation.y = this.runner.pitch+ this.runner.age * 0.1;
+    this.mesh.rotation.z = (this.runner.angleOnScreen+180) * 0.017453292519943295;
   }
 }
 

@@ -22,8 +22,6 @@ CML.Runner = class extends CML.Object {
         this._onCreateNewRunner = createdby_ && createdby_._onCreateNewRunner;
         this._onDestroy = createdby_ && createdby_._onDestroy;
         this._onUpdate = createdby_ && createdby_._onUpdate;
-        // CannonML instance that this runner belongs to
-        this._core = CannonML._mutex;
     }
     // variables
     //------------------------------------------------------------
@@ -81,6 +79,12 @@ CML.Runner = class extends CML.Object {
         if (this._onUpdate) {
             this._onUpdate(this);
         }
+        if (this.destructionStatus < 0) {
+            const hw = CML.Object._globalVariables._halfScreenWidth,
+                  hh = CML.Object._globalVariables._halfScreenHeight;
+            if (this.x < -hw || hw < this.x || this.y < -hh || hh < this.y) 
+                this.destroy(CML.Runner.ESCAPE_STATUS);
+        }
     }
     /** @private */
     onNewObject(seq) {
@@ -91,3 +95,6 @@ CML.Runner = class extends CML.Object {
         return new CML.Runner(this, seq, true);
     }
 }
+
+/* destory status for escape */
+CML.Runner.ESCAPE_STATUS = 999999;

@@ -197,7 +197,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     vely(fbr) { return fbr.object.vy; }
     velz(fbr) { return fbr.object.vz; }
     vell(fbr) { return fbr.object.velocity; }
-    objh(fbr) { return fbr.object.angleOnStage; }
+    objh(fbr) { return fbr.object.angleOnScreen; }
     dist(fbr) { return fbr.object.getDistance(fbr.target); }
     cnta(fbr) { return fbr.object.countAllIDedChildren(); }
     cntc(fbr) { return fbr.object.countIDedChildren(this.num); }
@@ -211,7 +211,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     prt_vely(fbr) { return fbr.object.parent.vy; }
     prt_velz(fbr) { return fbr.object.parent.vz; }
     prt_vell(fbr) { return fbr.object.parent.velocity; }
-    prt_objh(fbr) { return fbr.object.parent.angleOnStage; }
+    prt_objh(fbr) { return fbr.object.parent.angleOnScreen; }
     prt_dist(fbr) { return fbr.object.parent.getDistance(fbr.target); }
     prt_cnta(fbr) { return fbr.object.parent.countAllIDedChildren(); }
     prt_cntc(fbr) { return fbr.object.parent.countIDedChildren(this.num); }
@@ -225,7 +225,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     tgt_vely(fbr) { return fbr.target.vy; }
     tgt_velz(fbr) { return fbr.target.vz; }
     tgt_vell(fbr) { return fbr.target.velocity; }
-    tgt_objh(fbr) { return fbr.target.angleOnStage; }
+    tgt_objh(fbr) { return fbr.target.angleOnScreen; }
     tgt_cnta(fbr) { return fbr.target.countAllIDedChildren(); }
     tgt_cntc(fbr) { return fbr.target.countIDedChildren(this.num); }
     refer_i(fbr) { return fbr.getInterval(); }

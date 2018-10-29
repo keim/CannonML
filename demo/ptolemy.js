@@ -17,14 +17,17 @@ class Ptolemy {
     this.setSize(option.width || window.innerWidth, option.height || window.innerHeight);
     this.onUpdate = option.onUpdate;
     this.onInitialize = option.onInitialize;
-    this.prevtime = performance.now();
-    this.setup();
-    this._loop();
   }
 
   get domElement() { return this.renderer.domElement; }
 
   get cameraDistance() { return this.renderer.getSize().height * 0.5 / Math.tan(this.camera.fov * 0.008726646259971648); } 
+
+  start() {
+    this.prevtime = performance.now();
+    this.setup();
+    this._loop();
+  }
 
   _loop() {
     const now = performance.now();
@@ -42,17 +45,23 @@ class Ptolemy {
   setup() {
     this.renderer.gammaOutput = true;
     this.renderer.physicallyCorrectLights = true;
-    this.renderer.sortObjects = false;
-    this.renderer.shadowMap.enabled = false;
+    this.renderer.shadowMap.enabled = true;
 
-    this.light = new THREE.DirectionalLight( 0xffffff, 0.5 );
+    this.light = new THREE.SpotLight( 0xffffff, 0.5 );
+    this.light.castShadow = true; 
+//    this.light.shadow.camera.near = this.light.shadow.camera.left  = this.light.shadow.camera.bottom = -240;
+//    this.light.shadow.camera.far  = this.light.shadow.camera.right = this.light.shadow.camera.top = 240;
+
+    this.light.shadow.camera.near = 10;
+    this.light.shadow.camera.far = 500;
+    this.light.shadow.camera.updateProjectionMatrix();
+    this.light.position.set(0, 100, 100);
     this.scene.add(this.light);
-    this.scene.add(this.light.target);
+    this.amb = new THREE.AmbientLight( 0xffffff, 1.2 );
+    this.scene.add(this.amb);
     this.scene.add(this.camera);
     this.camera.position.set(0, 0, this.cameraDistance);
     this.camera.lookAt(this.screenCenter);
-
-    this.light.position.set(0, 0, 1);
 
     if (this.onInitialize) this.onInitialize();
   }

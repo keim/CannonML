@@ -711,7 +711,7 @@ CML.State = class extends CML.ListElem {
         y = fbr.fy;
         // calculate fiber position on absolute coordinate, when it's not relative creation.
         if (!isParts) {
-            sang = sin.index(fbr.object.angleOnStage),
+            sang = sin.index(fbr.object.angleOnScreen),
                 cang = sang + sin.cos_shift;
             x = fbr.object.x + sin[cang] * fbr.fx - sin[sang] * fbr.fy;
             y = fbr.object.y + sin[sang] * fbr.fx + sin[cang] * fbr.fy;
@@ -746,7 +746,7 @@ CML.State = class extends CML.ListElem {
         y = fbr.fy;
         // calculate fiber position on absolute coordinate, when it's not relative creation.
         if (!isParts) {
-            sang = sin.index(fbr.object.angleOnStage);
+            sang = sin.index(fbr.object.angleOnScreen);
             cang = sang + sin.cos_shift;
             x = fbr.object.x + sin[cang] * fbr.fx - sin[sang] * fbr.fy;
             y = fbr.object.y + sin[sang] * fbr.fx + sin[cang] * fbr.fy;

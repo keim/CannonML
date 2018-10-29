@@ -27,6 +27,8 @@ CML.Global = class {
         this._funcRand = Math.random;
         this._requestUpdateRegExp = true;
         this._speedRatio = speedRatio_;
+        this._halfScreenWidth = 0;
+        this._halfScreenHeight = 0;
         this.vertical = vertical_ ? 1 : 0;
     }
     // public variables
