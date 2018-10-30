@@ -62,11 +62,11 @@ CML.Fiber = class extends CML.ListElem {
         /** @private _cml_fiber_internal */ this.seqFire = null; // previous calling sequence from "f"
         // runtime parameters
         /** @private _cml_fiber_internal */ this.wcnt = 0; // waiting counter
-        /** @private _cml_fiber_internal */ this.lcnt = new Array(); // loop counter
-        /** @private _cml_fiber_internal */ this.jstc = new Array(); // sub routine call stac
-        /** @private _cml_fiber_internal */ this.istc = new Array(); // invertion flag stac
-        /** @private _cml_fiber_internal */ this.vars = new Array(); // arguments
-        /** @private _cml_fiber_internal */ this.varc = new Array(); // argument counts
+        /** @private _cml_fiber_internal */ this.lcnt = []; // loop counter
+        /** @private _cml_fiber_internal */ this.jstc = []; // sub routine call stac
+        /** @private _cml_fiber_internal */ this.istc = []; // invertion flag stac
+        /** @private _cml_fiber_internal */ this.vars = []; // arguments
+        /** @private _cml_fiber_internal */ this.varc = []; // argument counts
         this._gene = 0;
     }
     // properties
@@ -196,7 +196,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
      *  @return Loop count. Start at 0, and end at [loop_count]-1.
      */
     getLoopCounter(nest = 0) {
-        return (this.lcnt.length > nest) ? this.lcnt[nest] : 0;
+        return (nest < this.lcnt.length) ? this.lcnt[nest] : 0;
     }
     /** Get the interval value (specifyed by "i" command) of this fiber.
      *  @return Interval.

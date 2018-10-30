@@ -22,6 +22,7 @@ CML.Runner = class extends CML.Object {
         this._onCreateNewRunner = createdby_ && createdby_._onCreateNewRunner;
         this._onDestroy = createdby_ && createdby_._onDestroy;
         this._onUpdate = createdby_ && createdby_._onUpdate;
+        this.scopeEnabled = true;
     }
     // variables
     //------------------------------------------------------------
@@ -79,7 +80,7 @@ CML.Runner = class extends CML.Object {
         if (this._onUpdate) {
             this._onUpdate(this);
         }
-        if (this.destructionStatus < 0) {
+        if (this.destructionStatus < 0 && this.scopeEnabled) {
             const hw = CML.Object._globalVariables._halfScreenWidth,
                   hh = CML.Object._globalVariables._halfScreenHeight;
             if (this.x < -hw || hw < this.x || this.y < -hh || hh < this.y) 

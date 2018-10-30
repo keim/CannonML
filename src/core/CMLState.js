@@ -72,16 +72,16 @@ CML.State = class extends CML.ListElem {
                 break;
             // repeat and branch
             case "[":
-                this.func = this._loop_start;
-                this.type = CML.State.ST_LOOP;
+                this.func = this._block_start;
+                this.type = CML.State.ST_BLOCKSTART;
                 this._resetParameters(1);
                 break;
             case "?":
-                this.func = this._if_start;
+                this.func = this._if;
                 this.type = CML.State.ST_IF;
                 break;
             case ":":
-                this.func = this._else_start;
+                this.func = this._else;
                 this.type = CML.State.ST_ELSE;
                 this._resetParameters(1);
                 break;
@@ -378,39 +378,36 @@ CML.State = class extends CML.ListElem {
     // no operation or end
     _nop(fbr) { return true; }
     // looping, branching
-    _loop_start(fbr) {
-        /**/
-        if (this.jump.type == CML.State.ST_IF)
-            if (this._args[0] == 0) 
-                fbr._pointer = this.jump.jump;
-            else
-                fbr._pointer = this.jump; 
-        else 
-            fbr.lcnt.unshift(0);
+    _block_start(fbr) {
+        fbr.lcnt.unshift(0);
         return true;
     }
-    _if_start(fbr) {
-        /**/
+    _if(fbr) {
+        // loopconter < 0 means branch. true=-1, false=-2
+        fbr.lcnt[0] = (this.prev._args[0]) ? -1: -2;
+        if (fbr.lcnt[0] == -2) 
+            fbr._pointer = this.jump.prev;
         return true;
     }
-    _else_start(fbr) {
-        /**/
-        if (this.jump.type == CML.State.ST_IF)
-            if (this._args[0] == 0) 
-                fbr._pointer = this.jump.jump;
-            else
-                fbr._pointer = this.jump; 
+    _else(fbr) {
+        if (fbr.lcnt[0] == -1) {
+            fbr._pointer = this.jump;
+            while (fbr._pointer.type != CML.State.ST_BLOCKEND)
+                fbr._pointer = fbr._pointer.jump;
+            fbr._pointer = fbr._pointer.prev;
+        } else if (fbr.lcnt[0] == -2 && this.prev.type == CML.State.ST_FORMULA)
+            this.prev.func(fbr);
         return true;
     }
     _block_end(fbr) {
-        if (this.jump.type == CML.State.ST_LOOP) {
+        if (fbr.lcnt[0] >= 0)  { // loopconter < 0 means branch
             var lmax = Math.floor(this._args[0] || this.jump._args[0]);
-            if (++fbr.lcnt[0] != lmax) {
+            if (++fbr.lcnt[0] != lmax) { // jump to block_start
                 fbr._pointer = this.jump;
                 return true;
             }
-            fbr.lcnt.shift();
         }
+        fbr.lcnt.shift();
         return true;
     }
     // wait
@@ -816,7 +813,7 @@ CML.State = class extends CML.ListElem {
 /** @private */ CML.State.ST_LABEL = 2; // labeled sequence define "#*.{...}"
 /** @private */ CML.State.ST_NO_LABEL = 3; // non-labeled sequence define "{...}"
 /** @private */ CML.State.ST_RESTRICT = 4; // restrict to put reference after this command ("&","@*","n*")
-/** @private */ CML.State.ST_LOOP = 5; // loop "["
+/** @private */ CML.State.ST_BLOCKSTART = 5; // loop "["
 /** @private */ CML.State.ST_IF = 6; // if "?"
 /** @private */ CML.State.ST_ELSE = 7; // else ":"
 /** @private */ CML.State.ST_BLOCKEND = 9; // block end "]"

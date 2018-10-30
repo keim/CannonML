@@ -20,8 +20,8 @@ CML.Parser = class {
         // variables
         //------------------------------------------------------------
         this.listState = new CML.List(); // statement chain
-        this.loopstac = new Array(); // loop stac
-        this.childstac = new Array(); // child cast "{}" stac
+        this.loopstac = []; // loop stac
+        this.childstac = []; // child cast "{}" stac
         this.cmdKey = ""; // current parsing key
         this.cmdTemp = null; // current parsing statement
         this.fmlTemp = null; // current parsing formula
@@ -153,25 +153,32 @@ CML.Parser = class {
         if (res[this.REX_NORMAL] == undefined)
             return false;
         this.cmdKey = res[this.REX_NORMAL]; // command key
-        this.cmdTemp = new CML.State(); // new command
+        this.cmdTemp = new CML.State();     // new command
+        let topStac;
         // individual operations
         switch (this.cmdKey) {
             case "[":
+                this.cmdTemp.jump = this.cmdTemp; // set jump pointer -> "["
                 this.loopstac.push(this.cmdTemp); // push loop stac
                 break;
             case "?":
+                if (this.listState.tail.type != CML.State.ST_BLOCKSTART && 
+                    this.listState.tail.type != CML.State.ST_ELSE)
+                    throw Error("? must be after [ or :");
             case ":":
                 if (this.loopstac.length == 0)
-                    throw Error(": after no [ ?");
-                this.cmdTemp.jump = this.loopstac.pop(); // pop loop stac
-                this.cmdTemp.jump.jump = this.cmdTemp; // create jump chain
-                this.loopstac.push(this.cmdTemp); // push new loop stac
+                    throw Error("? or : after no [ ?");
+                topStac = this.loopstac.pop();      // pop loop stac
+                this.cmdTemp.jump = topStac.jump;   // keep jump pointer -> "["
+                topStac.jump = this.cmdTemp;        // create jump pointer chain
+                this.loopstac.push(this.cmdTemp);   // push new loop stac
                 break;
             case "]":
                 if (this.loopstac.length == 0)
                     throw Error("[...]] ?");
-                this.cmdTemp.jump = this.loopstac.pop(); // pop loop stac
-                this.cmdTemp.jump.jump = this.cmdTemp; // create jump chain
+                topStac = this.loopstac.pop();      // pop loop stac
+                this.cmdTemp.jump = topStac.jump;   // set jump pointer -> "["
+                topStac.jump = this.cmdTemp;        // create jump pointer chain
                 break;
             case "}":
                 if (this.childstac.length <= 1)
@@ -372,7 +379,7 @@ CML.Parser = class {
     }
     // regular expression string of user command. call from _createCMLRegExp()
     get _userCommandRegExp() {
-        var cmdlist = new Array(), cmd;
+        var cmdlist = [], cmd;
         for (cmd in this._globalVariables._mapUsrDefCmd) {
             cmdlist.push(cmd);
         }
@@ -382,7 +389,7 @@ CML.Parser = class {
     }
     // regular expression string of user command. call from CML.Formula
     get _userReferenceRegExp() {
-        var reflist = new Array(), ref;
+        var reflist = [], ref;
         for (ref in this._globalVariables._mapUsrDefRef) {
             reflist.push(ref);
         }

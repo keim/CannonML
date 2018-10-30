@@ -7,10 +7,11 @@ body {
   display:flex;
 }
 
-#runscript {
+button {
   border: solid 1px #ccc;
   width: 480px;
   height: 30px;
+  padding-top: 10px;
 }
 #cmlscript {
   display: block;
@@ -20,3 +21,7 @@ body {
   height: 320px;
 }
 
+#scrpitarea {
+  display: flex;
+  flex-flow: column;
+}
