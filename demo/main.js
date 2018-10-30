@@ -23,13 +23,10 @@ function stopscript(e) {
   return false;
 }
 
-var dv = new THREE.Vector3(0.125, 0.25, 0.5);
-
 function playerMove() {
   const p = playerGeom.getAttribute("position");
   for (let i=0; i<playerGeomBase.length; i++) {
-    const r = playerGeomBase[i];
-    const v = r.p;
+    const v = playerGeomBase[i].clone().multiplyScalar(1);
     p.array[i*3] = v.x;
     p.array[i*3+1] = v.y;
     p.array[i*3+2] = v.z;
@@ -70,10 +67,7 @@ window.onload = ()=>{
   const array = playerGeom.getAttribute("position").clone().array;
   playerGeomBase = [];
   for (let i=0; i<array.length; i+=3) {
-    const p = new THREE.Vector3(array[i], array[i+1], array[i+2]),
-          d = p.clone().normalize(), a = d.clone().max(d.negate()),
-          s = (a.x>a.y)?((a.x>a.z)?a.x:a.z):((a.y>a.z)?a.y:a.z);
-    playerGeomBase.push({p, d, s});
+    playerGeomBase.push(new THREE.Vector3(array[i], array[i+1], array[i+2]));
   } 
 
   playerActor = new Actor(1, cml.runner(0, -160, 0));

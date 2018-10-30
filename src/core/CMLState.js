@@ -98,43 +98,53 @@ CML.State = class extends CML.ListElem {
             // position
             case "p":
                 this.func = this._p;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(3);
                 break;
             case "px":
                 this.func = this._px;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(1);
                 break;
             case "py":
                 this.func = this._py;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(1);
                 break;
             case "pz":
                 this.func = this._pz;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(1);
                 break;
             case "pd":
                 this.func = this._pd;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(2);
                 break;
             // velocity
             case "v":
                 this.func = this._v;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(3);
                 break;
             case "vx":
                 this.func = this._vx;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(1);
                 break;
             case "vy":
                 this.func = this._vy;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(1);
                 break;
             case "vz":
                 this.func = this._vz;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(1);
                 break;
             case "vd":
                 this.func = this._vd;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(2);
                 break;
             // accelaration
@@ -161,6 +171,7 @@ CML.State = class extends CML.ListElem {
             // rotation
             case "r":
                 this.func = this._r;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(2);
                 break;
             case "rc":
@@ -175,18 +186,22 @@ CML.State = class extends CML.ListElem {
             // bml
             case "cd":
                 this.func = this._cd;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(2);
                 break;
             case "csa":
                 this.func = this._csa;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(2);
                 break;
             case "csr":
                 this.func = this._csr;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(2);
                 break;
             case "css":
                 this.func = this._css;
+                this.type = CML.State.STF_INTERPOLATE;
                 this._resetParameters(2);
                 break;
             // kill object
@@ -413,7 +428,14 @@ CML.State = class extends CML.ListElem {
     // wait
     _w0(fbr) { fbr.wcnt = fbr.wtm1; return false; }
     _w1(fbr) { fbr.wtm1 = this._args[0]; fbr.wcnt = fbr.wtm1; return false; }
-    _wi(fbr) { fbr.wcnt = fbr.wtm2; return (fbr.wcnt == 0); }
+    _wi(fbr) {
+        if (this.next.type & CML.State.STF_INTERPOLATE) {
+            fbr._pointer = this.next;
+            fbr._pointer.func(fbr);
+        }
+        fbr.wcnt = fbr.wtm2;
+        return (fbr.wcnt == 0);
+    }
     // waitif
     _waitif(fbr) {
         if (this._args[0] == 0)
@@ -594,8 +616,7 @@ CML.State = class extends CML.ListElem {
     // new
     _n(fbr) { this._new(fbr, Math.floor(this._args[0]), false); return true; }
     _nc(fbr) { this._new(fbr, Math.floor(this._args[0]), true); return true; }
-    _fn(fbr) { if (this.next.jump != null)
-        fbr.seqNew = this.next.jump; return true; }
+    _fn(fbr) { if (this.next.jump != null) fbr.seqNew = this.next.jump; return true; }
     // fire
     _f0(fbr) { this._fire(fbr, Math.floor(this._args[1]), false); fbr.bul.update(); return true; }
     _f1(fbr) { fbr.bul.speed = this._args[0] * CML.State._speed_ratio; this._fire(fbr, Math.floor(this._args[1]), false); fbr.bul.update(); return true; }
@@ -816,7 +837,7 @@ CML.State = class extends CML.ListElem {
 /** @private */ CML.State.ST_BLOCKSTART = 5; // loop "["
 /** @private */ CML.State.ST_IF = 6; // if "?"
 /** @private */ CML.State.ST_ELSE = 7; // else ":"
-/** @private */ CML.State.ST_BLOCKEND = 9; // block end "]"
+/** @private */ CML.State.ST_BLOCKEND = 8; // block end "]"
 /** @private */ CML.State.ST_FORMULA = 10; // formula 
 /** @private */ CML.State.ST_STRING = 11; // string
 /** @private */ CML.State.ST_END = 12; // end
@@ -824,6 +845,7 @@ CML.State = class extends CML.ListElem {
 /** @private */ CML.State.ST_W4D = 14; // wait for destruction
 /** @private */ CML.State.ST_RAPID = 16; // rapid fire sequence
 /** @private */ CML.State.STF_CALLREF = 32; // flag to require reference after this command ("&","@*","f*","n*")
+/** @private */ CML.State.STF_INTERPOLATE = 64; // flag under interpolation effect
 // Head angle Option
 /** @private */ CML.State.HO_ABS = 0; // angle is based on scrolling direction
 /** @private */ CML.State.HO_PAR = 1; // angle is based on direction to parent
