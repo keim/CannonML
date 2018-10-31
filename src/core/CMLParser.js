@@ -25,24 +25,11 @@ CML.Parser = class {
         this.cmdKey = ""; // current parsing key
         this.cmdTemp = null; // current parsing statement
         this.fmlTemp = null; // current parsing formula
+        this.labels = [];
         this._globalVariables = null;
         // private functions
         //------------------------------------------------------------
         // regular expression indexes
-        this.REX_COMMENT = 1; // comment
-        this.REX_STRING = 2; // string
-        this.REX_FORMULA = 5; // formula and arguments
-        this.REX_USERDEF = 6; // user define commands
-        this.REX_NORMAL = 7; // normal commands
-        this.REX_ASSIGN = 8; // assign
-        this.REX_CALLSEQ = 9; // call sequence
-        this.REX_PREVREFER = 10; // previous reference
-        this.REX_LABELDEF = 11; // labeled sequence definition
-        this.REX_NONLABELDEF = 12; // non-labeled sequence definition
-        this.REX_ARG_PREFIX = 13; // argument prefix
-        this.REX_ARG_LITERAL = 15; // argument literal
-        this.REX_ARG_POSTFIX = 17; // argument postfix
-        this.REX_ERROR = 19; // error
         this._regexp = null; // regular expression
         this._globalVariables = globalVariables_;
         CML.Formula._initialize(globalVariables_);
@@ -51,13 +38,13 @@ CML.Parser = class {
     //------------------------------------------------------------
     _parse(seq, cml_string) {
         // create regular expression
-        var regexp = this._createCMLRegExp();
+        const regexp = this._createCMLRegExp();
         // parsing
         try {
             // initialize
-            this._initialize(seq);
+            this._initialize(seq, cml_string);
             // execute first matching
-            var res = regexp.exec(cml_string);
+            let res = regexp.exec(cml_string);
             while (res != null) {
                 //trace(res);
                 if (!this._parseFormula(res)) { // parse fomula first
@@ -67,20 +54,19 @@ CML.Parser = class {
                         if (!this._parseLabelDefine(res)) // labeled sequence definition
                             if (!this._parseNonLabelDefine(res)) // non-labeled sequence definition
                                 if (!this._parsePreviousReference(res)) // previous reference
-                                    if (!this._parseCallSequence(res)) // call sequence
+                                    if (!this._parseCallSequence(res, regexp)) // call sequence
                                         if (!this._parseAssign(res)) // assign 
-                                            if (!this._parseUserDefined(res)) // user define statement
-                                                if (!this._parseComment(res)) // comment
-                                                    if (!this._parseString(res)) // string
-                                                     {
-                                                        // command is not defined
-                                                        if (res[this.REX_ERROR] != undefined) {
-                                                            throw Error(res[this.REX_ERROR] + " ?");
-                                                        }
-                                                        else {
-                                                            throw Error("BUG!! unknown error in this._parse()");
-                                                        }
+                                            if (!this._parseComment(res)) // comment
+                                                if (!this._parseString(res)) // string
+                                                 {
+                                                    // command is not defined
+                                                    if (res[this.REX_ERROR] != undefined) {
+                                                        throw Error(res[this.REX_ERROR] + " ?");
                                                     }
+                                                    else {
+                                                        throw Error("BUG!! unknown error in this._parse()");
+                                                    }
+                                                }
                 }
                 // execute next matching
                 res = regexp.exec(cml_string);
@@ -102,7 +88,7 @@ CML.Parser = class {
     }
     // parsing subroutines
     //------------------------------------------------------------
-    _initialize(seq_) {
+    _initialize(seq_, cml_string) {
         this.listState.clear();
         this.listState.push(seq_);
         this.loopstac.length = 0;
@@ -111,6 +97,7 @@ CML.Parser = class {
         this.cmdKey = "";
         this.cmdTemp = null;
         this.fmlTemp = null;
+        this.labels = cml_string.match(/#[A-Za-z_][A-Za-z0-9_]*/g).map(s=>s.substr(1));
     }
     _append() {
         // append previous statement and formula
@@ -164,11 +151,16 @@ CML.Parser = class {
             case "?":
                 if (this.listState.tail.type != CML.State.ST_BLOCKSTART && 
                     this.listState.tail.type != CML.State.ST_ELSE)
-                    throw Error("? must be after [ or :");
-            case ":":
-                if (this.loopstac.length == 0)
-                    throw Error("? or : after no [ ?");
+                    throw Error("? should be after [ or :");
                 topStac = this.loopstac.pop();      // pop loop stac
+                this.cmdTemp.jump = topStac.jump;   // keep jump pointer -> "["
+                topStac.jump = this.cmdTemp;        // create jump pointer chain
+                this.loopstac.push(this.cmdTemp);   // push new loop stac
+                break;
+            case ":":
+                topStac = this.loopstac.pop();      // pop loop stac
+                if (topStac.type != CML.State.ST_IF)
+                    throw Error(": should be after ?");
                 this.cmdTemp.jump = topStac.jump;   // keep jump pointer -> "["
                 topStac.jump = this.cmdTemp;        // create jump pointer chain
                 this.loopstac.push(this.cmdTemp);   // push new loop stac
@@ -219,10 +211,16 @@ CML.Parser = class {
         this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
         return true;
     }
-    _parseCallSequence(res) {
+    _parseCallSequence(res, regexp) {
         if (res[this.REX_CALLSEQ] == undefined)
             return false;
-        this.cmdTemp = this._new_reference(null, res[this.REX_CALLSEQ]); // new reference command
+        // find label
+        const label = this.labels.find(l=>res.input.slice(res.index+1,res.index+l.length+1)==l);
+        if (!label) throw Error("label "+res.input.slice(res.index,res.index+10)+"... not found");
+        // increment pointer
+        regexp.lastIndex += label.length;
+        /**/
+        this.cmdTemp = this._new_reference(null, label); // new reference command
         this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
         return true;
     }
@@ -231,13 +229,6 @@ CML.Parser = class {
             return false;
         this.cmdTemp = this._new_assign(res[this.REX_ASSIGN]); // new command
         this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
-        return true;
-    }
-    _parseUserDefined(res) {
-        if (res[this.REX_USERDEF] == undefined)
-            return false;
-        this.cmdTemp = this._new_user_defined(res[this.REX_USERDEF]); // new command
-        this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new arguments
         return true;
     }
     _parseString(res) {
@@ -254,22 +245,34 @@ CML.Parser = class {
     // create regular expression once
     _createCMLRegExp() {
         if (this._globalVariables._requestUpdateRegExp) {
-            var literalRegExpString = "(0x[0-9a-f]{1,8}|\\d+\\.?\\d*|\\$(\\?\\?|\\?|" + this._userReferenceRegExp + ")[0-9]?)";
-            var operandRegExpString = CML.Formula._createOperandRegExpString(literalRegExpString);
+            const literalRegExpString = "(0x[0-9a-f]{1,8}|\\d+\\.?\\d*|\\$(\\?\\?|\\?|" + this._userReferenceRegExp + ")[0-9]?)";
+            const operandRegExpString = CML.Formula._createOperandRegExpString(literalRegExpString);
             // oonstruct regexp string
-            var rexstr = "(//[^\\n]*$|/\\*.*?\\*/)"; // comment (res[1])
+            this.REX_COMMENT = 1; // comment
+            this.REX_STRING = 2; // string
+            this.REX_FORMULA = 5; // formula and arguments
+            this.REX_NORMAL = 6; // normal commands
+            this.REX_ASSIGN = 7; // assign
+            this.REX_CALLSEQ = 8; // call sequence
+            this.REX_PREVREFER = 9; // previous reference
+            this.REX_LABELDEF = 10; // labeled sequence definition
+            this.REX_NONLABELDEF = 11; // non-labeled sequence definition
+            this.REX_ARG_PREFIX = 12; // argument prefix
+            this.REX_ARG_LITERAL = 14; // argument literal
+            this.REX_ARG_POSTFIX = 16; // argument postfix
+            this.REX_ERROR = 18; // error
+            let rexstr = "(//[^\\n]*$|/\\*.*?\\*/)"; // comment (res[1])
             rexstr += "|'(.*?)'"; // string (res[2])
             rexstr += "|(("; // ---all--- (res[3,4])
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula and arguments (res[5])
-            rexstr += "|&(" + this._userCommandRegExp + ")"; // user define commands (res[6])
-            rexstr += "|" + CML.State.command_rex; // normal commands (res[7])
-            rexstr += "|" + CML.Assign.assign_rex; // assign (res[8])
-            rexstr += "|([A-Z_.][A-Z0-9_.]*)"; // call sequence (res[9])
-            rexstr += "|(\\{\\.\\})"; // previous reference (res[10])
-            rexstr += "|#([A-Z_][A-Z0-9_]*)[ \t]*\\{"; // labeled sequence definition (res[11])
-            rexstr += "|(\\{)"; // non-labeled sequence definition (res[12])
-            rexstr += ")[ \t]*" + operandRegExpString + ")"; // argument(res[13,14];prefix, res[15,16];literal, res[17,18];postfix)
-            rexstr += "|([a-z]+)"; // error (res[19])
+            rexstr += "|" + CML.State.command_rex; // normal commands (res[6])
+            rexstr += "|" + CML.Assign.assign_rex; // assign (res[7])
+            rexstr += "|(&)"; // call sequence or command (res[8])
+            rexstr += "|(\\{\\.\\})"; // previous reference (res[9])
+            rexstr += "|#([A-Za-z_][A-Za-z0-9_]*)\s*\\{"; // labeled sequence definition (res[10])
+            rexstr += "|(\\{)"; // non-labeled sequence definition (res[11])
+            rexstr += ")\s*" + operandRegExpString + ")"; // argument(res[12,13];prefix, res[14,15];literal, res[16,17];postfix)
+            rexstr += "|([a-z]+)"; // error (res[18])
             this._regexp = new RegExp(rexstr, "gm"); // "s" optoin not available on javascript
             this._globalVariables._requestUpdateRegExp = false;
         }
@@ -313,6 +316,7 @@ CML.Parser = class {
     }
     // create new user defined command
     _new_user_defined(str) {
+        /**/
         if (!(str in this._globalVariables._mapUsrDefCmd))
             throw Error("&" + str + " ?"); // not defined
         return new CML.UserDefine(this._globalVariables._mapUsrDefCmd[str]);

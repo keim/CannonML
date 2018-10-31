@@ -110,7 +110,7 @@ if (args.length >= 2) _playSound(args[0], args[1]);
 </listing>
     */
     registerUserCommand(name, func, argc, requireSequence) {
-        this._mapUsrDefRef[name] = { func: func, argc: argc, reqseq: requireSequence };
+        this._mapUsrDefCmd[name] = { func: func, argc: argc, reqseq: requireSequence };
         this._requestUpdateRegExp = true;
     }
 }

@@ -12,7 +12,7 @@ CML.Formula = class extends CML.State {
     // functions
     //------------------------------------------------------------
     constructor(state, pnfa) {
-        super(CML.State.ST_FORMULA);
+        super(CML.State.ST_FORMULA | CML.State.STF_BE_INTERPOLATED);
         // variables
         //------------------------------------------------------------
         this._arg_index = 0;

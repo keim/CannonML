@@ -47,29 +47,24 @@ CML.Sequence = class extends CML.State {
         // variables
         //------------------------------------------------------------
         this._label = null;
-        this._childSequence = null;
         this._parent = null;
         this._non_labeled_count = 0;
+        this._childSequences = {};
         this._global = false;
-        /** @private _cml_internal */
         this.require_argc = 0;
-        this._label = null;
-        this._parent = null;
-        this._childSequence = {};
-        this._non_labeled_count = 0;
-        this.require_argc = 0;
-        this._global = false;
         this.global = globalSequence;
-        if (data != null) {
-            CML.Sequence._parser._parse(this, data);
-        }
+        if (data) CML.Sequence._parser._parse(this, data);
     }
     // properties
     //------------------------------------------------------------
+    /** root sequence */
+    get root() { let r=this; while(r._parent){r=r._parent;} return r; }
     /** dictionary of child sequence, you can access by label */
-    get childSequence() { return this._childSequence; }
+    get childSequences() { return this._childSequences; }
     /** label of this sequence */
     get label() { return this._label; }
+    /** labels of child sequences */
+    get childLabels() { return Object.keys(this._childSequences).filter(l=>!/^#/.test(l)); }
     /** Flag of global sequence.
      *  <p>
      *  Child sequences of a global sequence are accessable from other sequences.<br/>
@@ -87,8 +82,8 @@ var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you canno
      */
     get global() { return this._global; }
     set global(makeGlobal) {
-        if (this._global == makeGlobal)
-            return;
+        if (this._global == makeGlobal) return;
+
         this._global = makeGlobal;
         if (makeGlobal) {
             CML.Sequence.globalSequences.unshift(this);
@@ -146,20 +141,19 @@ trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 1
      *  </p>
      */
     /*override*/ clear() {
-        var key;
         // remove from global list
         this.global = false;
         // disconnect all chains
-        var cmd = this.next, cmd_next;
+        let cmd = this.next, cmd_next;
         while (cmd != null) {
             cmd_next = cmd.next;
             cmd.clear();
             cmd = cmd_next;
         }
         // clear children
-        for (key in this._childSequence) {
-            this._childSequence[key].clear();
-            delete this._childSequence[key];
+        for (let key in this._childSequences) {
+            this._childSequences[key].clear();
+            delete this._childSequences[key];
         }
         // call clear in super class
         super.clear();
@@ -187,26 +181,21 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
 </listing>
      */
     findSequence(label_) {
-        var idx = label_.indexOf(".");
+        const idx = label_.indexOf(".");
         if (idx == -1) {
             // label_ does not include access operator "."
-            if (label_ in this._childSequence)
-                return this._childSequence[label_];
+            if (label_ in this._childSequences)
+                return this._childSequences[label_];
         }
         else {
-            if (idx == 0) {
-                // first "." means root label
-                var root = this._parent;
-                while (root._parent != null) {
-                    root = root._parent;
-                }
-                return root.findSequence(label_.substr(1));
-            }
+            // first "." means root
+            if (idx == 0) 
+                return this.root.findSequence(label_.substr(1));
             // label_ includes access operator "."
-            var parent_label = label_.substr(0, idx);
-            if (parent_label in this._childSequence) {
-                var child_label = label_.substr(idx + 1);
-                return this._childSequence[parent_label].findSequence(child_label);
+            const parent_label = label_.substr(0, idx);
+            if (parent_label in this._childSequences) {
+                const child_label = label_.substr(idx + 1);
+                return this._childSequences[parent_label].findSequence(child_label);
             }
         }
         // seek brothers
@@ -214,12 +203,10 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     }
     // seek in global sequence
     _findGlobalSequence(label_) {
-        var key;
-        for (key in CML.Sequence.globalSequences) {
-            var seq = CML.Sequence.globalSequences[key];
-            var findseq = seq.findSequence(label_);
-            if (findseq != null)
-                return findseq;
+        for (let key in CML.Sequence.globalSequences) {
+            const seq = CML.Sequence.globalSequences[key];
+            const findseq = seq.findSequence(label_);
+            if (findseq) return findseq;
         }
         return null;
     }
@@ -228,8 +215,8 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     // create new child sequence
     /** @private _cml_internal */
     newChildSequence(label_) {
-        var seq = new CML.Sequence();
-        seq.type = (label_ == null) ? CML.State.ST_NO_LABEL : CML.State.ST_LABEL;
+        const seq = new CML.Sequence();
+        seq.type = (label_) ? CML.State.ST_LABEL : CML.State.ST_NO_LABEL;
         seq._label = label_;
         this._addChild(seq);
         return seq;
@@ -241,15 +228,15 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             seq._label = "#" + String(this._non_labeled_count);
             ++this._non_labeled_count;
         }
-        if (seq._label in this._childSequence)
+        if (seq._label in this._childSequences)
             throw Error("sequence label confliction; " + seq._label + " in " + this.label);
         seq._parent = this;
-        this._childSequence[seq._label] = seq;
+        this._childSequences[seq._label] = seq;
     }
     // verification (call after all parsing)
     /** @private _cml_internal */
     verify() {
-        var cmd, cmd_next, cmd_verify, new_cmd;
+        let cmd, cmd_next, cmd_verify, new_cmd;
         // verification
         cmd = this.next;
         while (cmd != null) {
@@ -267,7 +254,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             }
             else 
             // check a sequence after CML.State.STF_CALLREF (&,@,f and n commands).
-            if ((cmd.type & CML.State.STF_CALLREF) != 0) {
+            if (cmd.type & CML.State.STF_CALLREF) {
                 // skip formula command
                 cmd_verify = cmd_next;
                 while (cmd_verify.type == CML.State.ST_FORMULA) {
@@ -294,6 +281,20 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
                 }
             }
             else 
+            // verify interplation
+            if (cmd.type == CML.State.ST_INTERPOLATE) {
+                // search bark command
+                cmd_verify = cmd.prev;
+                while (cmd_verify.type & CML.State.STF_BE_INTERPOLATED) {
+                    cmd_verify = cmd_verify.prev;
+                }
+                if (cmd_verify.type != CML.State.ST_INTERPOLATE) {
+                    // insert interpolation initialize command first of all
+                    new_cmd = new CML.State(CML.State.ST_INIT4INT);
+                    new_cmd.insert_after(cmd_verify);
+                }
+            }
+            else
             // verify barrage commands
             if (cmd.type == CML.State.ST_BARRAGE) {
                 // insert barrage initialize command first
@@ -310,8 +311,8 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
         }
         // verify all child sequences
         var seq, key;
-        for (key in this._childSequence) {
-            seq = this._childSequence[key];
+        for (key in this._childSequences) {
+            seq = this._childSequences[key];
             seq.verify();
         }
     }
@@ -354,4 +355,4 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
 // Cannon ML Parser
 CML.Sequence._parser = null;
 // global sequence
-CML.Sequence.globalSequences = new Array();
+CML.Sequence.globalSequences = [];

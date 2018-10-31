@@ -8,6 +8,7 @@
       var content = document.getElementById(id);
       content.className = (content.className == "close") ? "open" : "close";
     }
+    return false;
   }
   
   function exp(id0,id1) {
@@ -15,6 +16,7 @@
       document.getElementById(id0).className = "open";
       document.getElementById(id1).className = "open";
     }
+    return false;
   }
 
   function expand_all() {
@@ -22,6 +24,7 @@
       var tag = document.all[i];
       if (tag.className == "close") tag.className = "open";
     }
+    return false;
   }
 
   function unexpand_all() {
@@ -29,6 +32,7 @@
       var tag = document.all[i];
       if (tag.className == "open") tag.className = "close";
     }
+    return false;
   }
   
   function expand_index() {
@@ -39,6 +43,7 @@
     document.getElementById('create').className  = "open";
     document.getElementById('control').className = "open";
     document.getElementById('label').className   = "open";
+    return false;
   }
 //-->
 </SCRIPT>
@@ -66,9 +71,9 @@
 <H2>
   [Command reference]
   <DIV class="discription">
-    <A href="#DUMMY" onclick="expand_all()">[expand all]</A>
-    <A href="#DUMMY" onclick="expand_index()">[expand index]</A>
-    <A href="#DUMMY" onclick="unexpand_all()">[unexpand all]</A>
+    <A href="#DUMMY" onclick="return expand_all()">[expand all]</A>
+    <A href="#DUMMY" onclick="return expand_index()">[expand index]</A>
+    <A href="#DUMMY" onclick="return unexpand_all()">[unexpand all]</A>
   </DIV>
 </H2>
 
@@ -76,7 +81,7 @@
 
 
 <H3>
-  <A id="expantion" href="#DUMMY" onclick="sw('form');">
+  <A id="expantion" href="#DUMMY" onclick="return sw('form');">
     Format
   </A>
   <DIV class="discription">
@@ -85,7 +90,7 @@
 </H3>
 <DIV id="form" class="close">
   <H4 id="form_comment">
-    <A id="expantion" href="#DUMMY" onclick="sw('comment');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('comment');">
       Comments (// , /* ~ */)
     </A>
   </H4>
@@ -110,14 +115,14 @@
       <DIV class="reference">
          [see also]
         <ul>
-          <li><a href="#user" onclick="exp('user','user');">User defined command</a></li>
+          <li><a href="#user" onclick="return exp('user','user');">User defined command</a></li>
         </ul>
       </DIV>
     </DIV>
   </DIV>
 
   <H4 id="form_sequence">
-    <A id="expantion" href="#DUMMY" onclick="sw('sequence');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('sequence');">
       Sequence ( {...} )
     </A>
   </H4>
@@ -131,8 +136,8 @@
       </DIV>
       <DIV class="discription">
         The sequence is a row of commands that defines a motion of an object. In cannon ML, a row of commands between "{" and "}" defines a sequence.
-        The sequence can be set after <a href="#exec_call" onclick="exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="exp('exec','fiber');">@* (Create new fiber)</a> and
-        <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
+        The sequence can be set after <a href="#exec_call" onclick="return exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="return exp('exec','fiber');">@* (Create new fiber)</a> and
+        <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
         And if you specify the sequence without any commands, the sequence is executed as "@0" command does.</br>
         The values after "{" can refer from your program, but <b>it cannot include any formula, only constant values are available.</b></br>
         For example, "f{1 hoa0.1} f{2 hoa0.1}" you can refer the values of "1" and "2" when the f command calls the function CMLObject.fireObject() in your program.
@@ -140,19 +145,19 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_call"   onclick="exp('exec','call');">& (Call sequence)</a></li>
-          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
-          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
-          <li><a href="#exec_other" onclick="exp('exec','other');">{.} (Recall sequence)</a></li>
-          <li><a href="#exec_other" onclick="exp('exec','other');">kf (Kill fiber)</a></li>
-          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (Mirror execution)</a></li>
+          <li><a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequence)</a></li>
+          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a></li>
+          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#exec_other" onclick="return exp('exec','other');">{.} (Recall sequence)</a></li>
+          <li><a href="#exec_other" onclick="return exp('exec','other');">kf (Kill fiber)</a></li>
+          <li><a href="#sub_mirror" onclick="return exp('sub','mirror');">m (Mirror execution)</a></li>
         </ul>
       </DIV>
     </DIV>
   </DIV>
 
   <H4 id="form_operator">
-    <A id="expantion" href="#DUMMY" onclick="sw('operator');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('operator');">
       Formula (operators)
     </A>
   </H4>
@@ -186,7 +191,7 @@
         $i?, $i??
       </DIV>
       <DIV class="outline">
-        (random) Return a random integer．The ranges are 0<=$i?(n)<n and -n<$i?(n)<n.
+        (random) Return a random integer．The ranges are 0<=$i?(n)&gt;n and -n&gt;$i?(n)&gt;n.
       </DIV>
       <DIV class="discription">
         You can calculate and compare the number in an argument. Interger, float and hexadecimal are available. Prefix of "0x" means hexadecimal.
@@ -196,7 +201,7 @@
   </DIV>
 
   <H4 id="form_value">
-    <A id="expantion" href="#DUMMY" onclick="sw('value');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('value');">
       Formula (variables)
     </A>
   </H4>
@@ -218,13 +223,13 @@
         $i
       </DIV>
       <DIV class="outline">
-        (<U>I</U>iterval) Return a number specifyed by <a href="#sub_interval" onclick="exp('sub','interval');">i command</a>.
+        (<U>I</U>iterval) Return a number specifyed by <a href="#sub_interval" onclick="return exp('sub','interval');">i command</a>.
       </DIV>
       <DIV class="statement">
         $l, $l1, $l2, $l3, ... $l9
       </DIV>
       <DIV class="outline">
-        (<U>L</U>oop counter) Return a counter of <a href="#exec_loop" onclick="exp('exec','loop');">loop command</a>.
+        (<U>L</U>oop counter) Return a counter of <a href="#exec_loop" onclick="return exp('exec','loop');">loop command</a>.
       </DIV>
       <DIV class="discription">
         Return 0 at first and increament on each repeat.<br/>
@@ -234,12 +239,12 @@
         $1, $2, $3,... $9
       </DIV>
       <DIV class="outline">
-        (variable) Return a number assigned by <a href="#form_assign" onclick="exp('form','assign');">assign command</a> or an argument of <a href="#label_lcall" onclick="exp('label','lcall');">call command</a>.
+        (variable) Return a number assigned by <a href="#form_assign" onclick="return exp('form','assign');">assign command</a> or an argument of <a href="#label_lcall" onclick="return exp('label','lcall');">call command</a>.
       </DIV>
       <DIV class="discription">
         In cannon macro language, you can use 9 variables ($1-$9) in a sequence.<br/>
-        These variables hold a number assigned by <a href="#form_assign" onclick="exp('form','assign');">assign command</a>.
-        And these variables are initialized by the arguments of <a href="#label_lcall" onclick="exp('label','lcall');">call command</a>.
+        These variables hold a number assigned by <a href="#form_assign" onclick="return exp('form','assign');">assign command</a>.
+        And these variables are initialized by the arguments of <a href="#label_lcall" onclick="return exp('label','lcall');">call command</a>.
         For example, "#A{p$1,$2} &A 10,20" sets position at (10, 20). "&{p$1,$2}10,20" also sets position at (10, 20).
       </DIV>
     </DIV>
@@ -258,7 +263,7 @@
         (<U>S</U>ign of position <U>X</U>/<U>Y</U>) Return the sign of x and y values of the objects position. $sx=-1 when $x<0, and $sx=1 when $x>=0.
       </DIV>
       <DIV class="reference">
-        <ul><li><a href="#control_pos" onclick="exp('control','pos')">p* (Set position)</a></li></ul>
+        <ul><li><a href="#control_pos" onclick="return exp('control','pos')">p* (Set position)</a></li></ul>
       </DIV>
       <DIV class="statement">
         $v
@@ -273,7 +278,7 @@
         (<U>V</U>elocity <U>X</U>/<U>Y</U>) Return x and y values of the objects velocity.
       </DIV>
       <DIV class="reference">
-        <ul><li><a href="#control_vel" onclick="exp('control','vel')">v* (Set the velocity)</a></li></ul>
+        <ul><li><a href="#control_vel" onclick="return exp('control','vel')">v* (Set the velocity)</a></li></ul>
       </DIV>
       <DIV class="statement">
         $ho
@@ -283,8 +288,8 @@
       </DIV>
       <DIV class="reference">
         <ul>
-          <li><a href="#control_rot" onclick="exp('control','rot')">r* (Rotate)</a></li>
-          <li><a href="#control_change_dir" onclick="exp('control','change_dir')">cd (Change direction)</a></li>
+          <li><a href="#control_rot" onclick="return exp('control','rot')">r* (Rotate)</a></li>
+          <li><a href="#control_change_dir" onclick="return exp('control','change_dir')">cd (Change direction)</a></li>
         </ul>
       </DIV>
       <DIV class="statement">
@@ -294,7 +299,7 @@
         (<U>T</U>arget <U>D</U>istance) Return the distance from the object to the target (usually player object).
       </DIV>
       <DIV class="reference">
-        <ul><li><a href="#sub_target" onclick="exp('sub','target');">t* (Set target)</a></li></ul>
+        <ul><li><a href="#sub_target" onclick="return exp('sub','target');">t* (Set target)</a></li></ul>
       </DIV>
       <DIV class="statement">
         $o, $o1, $o2,... $o9
@@ -307,7 +312,7 @@
         For example, "n{}n1{}n1{}n2{}" creates 4 objects (and 3 objects are specifyed object ID) and "$o1" returns 2, "$o2" returns 1, and "$o" returns 3.<br/>
       </DIV>
       <DIV class="reference">
-        <ul><li><a href="#create_single" onclick="exp('create','single');">n* (Create new single object)</a></li></ul>
+        <ul><li><a href="#create_single" onclick="return exp('create','single');">n* (Create new single object)</a></li></ul>
       </DIV>
     </DIV>
 
@@ -334,13 +339,13 @@
         To insert "t." after "$", you can refer the target objects parameters. "$t.td" always returns 0.
       </DIV>
       <DIV class="reference">
-        <ul><li><a href="#sub_target" onclick="exp('sub','target');">t* (Set target)</a></li></ul>
+        <ul><li><a href="#sub_target" onclick="return exp('sub','target');">t* (Set target)</a></li></ul>
       </DIV>
     </DIV>
   </DIV>
 
   <H4 id="form_assign">
-    <A id="expantion" href="#DUMMY" onclick="sw('assign');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('assign');">
       Formula (assign) (l)
     </A>
   </H4>
@@ -354,7 +359,7 @@
       </DIV>
       <DIV class="discription">
         The 'l' command assigns a value on a variables ($1, $2, ... $9 and $r).<br/>
-        You can refer variables by <a href="#form_value" onclick="exp('form','value');">$1-$9 or $r</a>.
+        You can refer variables by <a href="#form_value" onclick="return exp('form','value');">$1-$9 or $r</a>.
       </DIV>
     </DIV>
     <DIV class="command">
@@ -377,7 +382,7 @@
 
 
 <H3>
-  <A id="expantion" href="#DUMMY" onclick="sw('exec');">
+  <A id="expantion" href="#DUMMY" onclick="return sw('exec');">
     Sequence controling commands
   </A>
   <DIV class="discription">
@@ -386,7 +391,7 @@
 </H3>
 <DIV id="exec" class="close">
   <H4 id="exec_wait">
-    <A id="expantion" href="#DUMMY" onclick="sw('wait');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('wait');">
       Wait (w)
     </A>
   </H4>
@@ -420,8 +425,8 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Changing term)</a></li>
-          <li><a href="#control_gravity" onclick="exp('control','gravity');">gp (Gravity)</a></li>
+          <li><a href="#sub_interval" onclick="return exp('sub','interval');">i (Changing term)</a></li>
+          <li><a href="#control_gravity" onclick="return exp('control','gravity');">gp (Gravity)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -441,7 +446,7 @@
     
     
   <H4 id="exec_loop">
-    <A id="expantion" href="#DUMMY" onclick="sw('loop');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('loop');">
       Looping excution ([...])
     </A>
   </H4>
@@ -460,7 +465,7 @@
   </DIV>
 
   <H4 id="exec_branch">
-    <A id="expantion" href="#DUMMY" onclick="sw('branch');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('branch');">
       If branch ([?...])
     </A>
   </H4>
@@ -493,7 +498,7 @@
   </DIV>
 
   <H4 id="exec_call">
-    <A id="expantion" href="#DUMMY" onclick="sw('call');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('call');">
       Call sequence (&)
     </A>
   </H4>
@@ -513,8 +518,8 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_other"  onclick="exp('exec','other');">{.} (recall sequence)</a></li>
-          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (execute mirrored)</a></li>
+          <li><a href="#exec_other"  onclick="return exp('exec','other');">{.} (recall sequence)</a></li>
+          <li><a href="#sub_mirror" onclick="return exp('sub','mirror');">m (execute mirrored)</a></li>
         </ul>
       </DIV>
 
@@ -531,7 +536,7 @@
   </DIV>
     
   <H4 id="exec_fiber">
-    <A id="expantion" href="#DUMMY" onclick="sw('fiber');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('fiber');">
       Create new fiber (@*) 
     </A>
   </H4>
@@ -565,10 +570,10 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_other" onclick="exp('exec','other');">{.} (Recall sequence)</a></li>
-          <li><a href="#exec_other" onclick="exp('exec','other');">kf (Kill fiber)</a></li>
-          <li><a href="#sub_mirror" onclick="exp('sub','mirror');">m (Mirror execution)</a></li>
-          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#exec_other" onclick="return exp('exec','other');">{.} (Recall sequence)</a></li>
+          <li><a href="#exec_other" onclick="return exp('exec','other');">kf (Kill fiber)</a></li>
+          <li><a href="#sub_mirror" onclick="return exp('sub','mirror');">m (Mirror execution)</a></li>
+          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
         </ul>
       </DIV>
 
@@ -586,7 +591,7 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#control_killobj" onclick="exp('control','killobj');">ko (Kill object)</a></li>
+          <li><a href="#control_killobj" onclick="return exp('control','killobj');">ko (Kill object)</a></li>
         </ul>
       </DIV>
 
@@ -603,7 +608,7 @@
   </DIV>
   
   <H4 id="exec_other">
-    <A id="expantion" href="#DUMMY" onclick="sw('other');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('other');">
       Others
     </A>
   </H4>
@@ -624,9 +629,9 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_call"   onclick="exp('exec','call');">& (Call sequence)</a></li>
-          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
-          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequence)</a></li>
+          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a></li>
+          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -646,7 +651,7 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
+          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -660,7 +665,7 @@
 
 
 <H3>
-  <A id="expantion" href="#DUMMY" onclick="sw('sub');">
+  <A id="expantion" href="#DUMMY" onclick="return sw('sub');">
     Sub commands
   </A>
   <DIV class="discription">
@@ -669,7 +674,7 @@
 </H3>
 <DIV id="sub" class="close">
   <H4 id="sub_interval">
-    <A id="expantion" href="#DUMMY" onclick="sw('interval');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('interval');">
       Specify the changing term or interval (i)
     </A>
   </H4>
@@ -685,16 +690,16 @@
         [see also]
         <ul>
           <li>
-            <a href="#control_pos" onclick="exp('control','pos')">p* (Set the position)</a>,
-            <a href="#control_vel" onclick="exp('control','vel')">v* (Set the velocity)</a>,
-            <a href="#control_rot" onclick="exp('control','rot')">r* (Rotate)</a>,
-            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd (Change direction)</a>,
-            <a href="#control_change_spd" onclick="exp('control','change_spd')">cs* (Change speed)</a>,
-            <a href="#exec_wait" onclick="exp('exec','wait')">~ (Wait interval)</a>.
+            <a href="#control_pos" onclick="return exp('control','pos')">p* (Set the position)</a>,
+            <a href="#control_vel" onclick="return exp('control','vel')">v* (Set the velocity)</a>,
+            <a href="#control_rot" onclick="return exp('control','rot')">r* (Rotate)</a>,
+            <a href="#control_change_dir" onclick="return exp('control','change_dir')">cd (Change direction)</a>,
+            <a href="#control_change_spd" onclick="return exp('control','change_spd')">cs* (Change speed)</a>,
+            <a href="#exec_wait" onclick="return exp('exec','wait')">~ (Wait interval)</a>.
           </li>
           <li>
-            <a href="#control_acc" onclick="exp('control','acc')">a* (set accelaration)</a>,
-            <a href="#control_gravity" onclick="exp('control','gravity')">gp (gravity)</a> <b>DOES NOT</b> refer i command．
+            <a href="#control_acc" onclick="return exp('control','acc')">a* (set accelaration)</a>,
+            <a href="#control_gravity" onclick="return exp('control','gravity')">gp (gravity)</a> <b>DOES NOT</b> refer i command．
           </li>
         </ul>
         [default value]
@@ -706,7 +711,7 @@
   </DIV>
     
   <H4 id="sub_fiber_pos">
-    <A id="expantion" href="#DUMMY" onclick="sw('fiber_pos');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('fiber_pos');">
       Specify the object creating point (q*)
     </A>
   </H4>
@@ -735,11 +740,11 @@
         [see also]
         <ul>
           <li>
-            <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
+            <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
             Starting point of new objects is specifyed.
           </li>
           <li>
-            <a href="#sub_head" onclick="exp('sub','head')">ht (Specifyed the angle from the target direction)</a>
+            <a href="#sub_head" onclick="return exp('sub','head')">ht (Specifyed the angle from the target direction)</a>
             The origin of the angle calculation is specifyed.
           </li>
         </ul>
@@ -753,7 +758,7 @@
   </DIV>
     
   <H4 id="sub_head">
-    <A id="expantion" href="#DUMMY" onclick="sw('head');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('head');">
       Specify the angle (h*)
     </A>
   </H4>
@@ -820,18 +825,18 @@
         [see also]
         <ul>
           <li>
-            <a href="#create_multi" onclick="exp('create','multi')">f* (Create new objects)</a>
+            <a href="#create_multi" onclick="return exp('create','multi')">f* (Create new objects)</a>
             The initial angle and direction of new objects are specifyed.
           </li>
           <li>
-            <a href="#control_rot" onclick="exp('control','rot')">r* (Rotate)</a>,
-            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd (Change direction)</a>
+            <a href="#control_rot" onclick="return exp('control','rot')">r* (Rotate)</a>,
+            <a href="#control_change_dir" onclick="return exp('control','change_dir')">cd (Change direction)</a>
             The last angle of the rotation is specifyed.
           </li>
           <li>
-            <a href="#control_pos" onclick="exp('control','pos')">pd (Set the position)</a>,
-            <a href="#control_vel" onclick="exp('control','vel')">vd (Set the velocity)</a>,
-            <a href="#control_acc" onclick="exp('control','acc')">ad (Set the accelaration)</a>
+            <a href="#control_pos" onclick="return exp('control','pos')">pd (Set the position)</a>,
+            <a href="#control_vel" onclick="return exp('control','vel')">vd (Set the velocity)</a>,
+            <a href="#control_acc" onclick="return exp('control','acc')">ad (Set the accelaration)</a>
             Direction for each parameters is specifyed.
           </li>
         </ul>
@@ -842,15 +847,15 @@
         The angle is specifyed by counterclockwise rotation.<br/><br/>
         The base angle update always in command without postfix "x", and The base angle is fixed in command with postfix "x".<br/>
         For example, "ht w30 f" fires bullet to the player, but "htx w30 f" fires bullet to "the position that the player was there 30 frames ago".<br/>
-        For another example in the case with <a href="#sub_barrage" onclick="exp('sub','barrage')">b* command</a>, 
+        For another example in the case with <a href="#sub_barrage" onclick="return exp('sub','barrage')">b* command</a>, 
         "bs5,0,0,5 ht f" fires bullets continuously to the player 5 frames each, buts
         "bs5,0,0,5 htx f" fires bullets continuously to the same position that the player was there at first.
       </DIV>
     </DIV>
-  </DIV>
+  </DIV>
     
   <H4 id="sub_barrage">
-    <A id="expantion" href="#DUMMY" onclick="sw('barrage');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('barrage');">
       Specify the setting of multiple creation of f* command (b*)
     </A>
   </H4>
@@ -878,7 +883,7 @@
         [see also]
         <ul>
           <li>
-            <a href="#create_multi" onclick="exp('create','multi')">f* (Create new multiple objects)</a>
+            <a href="#create_multi" onclick="return exp('create','multi')">f* (Create new multiple objects)</a>
             The initial direction and speed of new objects are specifyed.
           </li>
         </ul>
@@ -906,7 +911,7 @@
         [see also]
         <ul>
           <li>
-            <a href="#create_multi" onclick="exp('create','multi')">f* (Create new multiple objects)</a>
+            <a href="#create_multi" onclick="return exp('create','multi')">f* (Create new multiple objects)</a>
             The initial speed of new objects is specifyed.
           </li>
         </ul>
@@ -914,7 +919,7 @@
         <ul>
           <li>bv0</li>
         </ul>
-        The bv command is a primitive command focused on the 3rd argument of bs command. By a conbination with <a href="#exec_loop" onclick="exp('exec','loop');">loop command</a>, you can write more complex barrage.<br/>
+        The bv command is a primitive command focused on the 3rd argument of bs command. By a conbination with <a href="#exec_loop" onclick="return exp('exec','loop');">loop command</a>, you can write more complex barrage.<br/>
         The f* command with no arguments fires bullets with a speed increaced by <i>[increament of speed]</i> from before.<br/>
         The bv command <b>CANNOT</b> specify multiply as bm/bs/br command can.
       </DIV>
@@ -922,7 +927,7 @@
   </DIV>
     
   <H4 id="sub_target">
-    <A id="expantion" href="#DUMMY" onclick="sw('target');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('target');">
       Set target (t*)
     </A>
   </H4>
@@ -952,8 +957,8 @@
       <DIV class="discription">
         [see also]
         <ul>
-          <li><a href="#sub_head" onclick="exp('sub','head')">ht (Specify the angle from the target direction)</a></li>
-          <li><a href="#create_single" onclick="exp('create','single');">n* (Create new object)</a></li>
+          <li><a href="#sub_head" onclick="return exp('sub','head')">ht (Specify the angle from the target direction)</a></li>
+          <li><a href="#create_single" onclick="return exp('create','single');">n* (Create new object)</a></li>
         </ul>
         [default value]
         <ul>
@@ -964,7 +969,7 @@
   </DIV>
   
   <H4 id="sub_mirror">
-    <A id="expantion" href="#DUMMY" onclick="sw('mirror');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('mirror');">
       Execute mirrord (m)
     </A>
   </H4>
@@ -980,21 +985,21 @@
         [see also]
         <ul>
           <li>
-            <a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (Object creating point)</a>,
-            <a href="#control_pos" onclick="exp('control','pos')">p* (Set the position)</a>,
-            <a href="#control_vel" onclick="exp('control','vel')">v* (Set the velocity)</a>,
-            <a href="#control_acc" onclick="exp('control','acc')">a* (Set the accelaration)</a>
+            <a href="#sub_fiber_pos" onclick="return exp('sub','fiber_pos')">q* (Object creating point)</a>,
+            <a href="#control_pos" onclick="return exp('control','pos')">p* (Set the position)</a>,
+            <a href="#control_vel" onclick="return exp('control','vel')">v* (Set the velocity)</a>,
+            <a href="#control_acc" onclick="return exp('control','acc')">a* (Set the accelaration)</a>
             The values of x and y are mirrored.
           </li>
           <li>
-            <a href="#sub_head" onclick="exp('sub','head')">h*(Specify the angle)</a>,
-            <a href="#control_change_dir" onclick="exp('control','change_dir')">cd*(Change direction)</a>
+            <a href="#sub_head" onclick="return exp('sub','head')">h*(Specify the angle)</a>,
+            <a href="#control_change_dir" onclick="return exp('control','change_dir')">cd*(Change direction)</a>
             The angle is mirrored.
           </li>
           <li>
-            <a href="#exec_call"   onclick="exp('exec','call');">& (Call sequence)</a>,
-            <a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a>,
-            <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
+            <a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequence)</a>,
+            <a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a>,
+            <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
             All commands in the sequence are mirrored.
           </li>
         </ul>
@@ -1014,7 +1019,7 @@
 
 
 <H3>
-  <A id="expantion" href="#DUMMY" onclick="sw('create');">
+  <A id="expantion" href="#DUMMY" onclick="return sw('create');">
     Creating commands
   </A>
   <DIV class="discription">
@@ -1023,7 +1028,7 @@
 </H3>
 <DIV id="create" class="close">
   <H4 id="create_single">
-    <A id="expantion" href="#DUMMY" onclick="sw('single');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('single');">
       Create single object (n*)
     </A>
   </H4>
@@ -1059,11 +1064,11 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');"  >@o (Execute sequence on another object)</a></li>
-          <li><a href="#exec_other"  onclick="exp('exec','other');"  >{.} (Refer the sequence executed before)</a></li>
-          <li><a href="#sub_mirror"  onclick="exp('sub','mirror');"  >m (Mirror execution)</a></li>
-          <li><a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (Specify creating point)</a></li>
-          <li><a href="#sub_target"  onclick="exp('sub','target');"  >to (Set target object)</a></li>
+          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');"  >@o (Execute sequence on another object)</a></li>
+          <li><a href="#exec_other"  onclick="return exp('exec','other');"  >{.} (Refer the sequence executed before)</a></li>
+          <li><a href="#sub_mirror"  onclick="return exp('sub','mirror');"  >m (Mirror execution)</a></li>
+          <li><a href="#sub_fiber_pos" onclick="return exp('sub','fiber_pos')">q* (Specify creating point)</a></li>
+          <li><a href="#sub_target"  onclick="return exp('sub','target');"  >to (Set target object)</a></li>
         </ul>
       </DIV>
 
@@ -1081,7 +1086,7 @@
 
     
   <H4 id="create_multi">
-    <A id="expantion" href="#DUMMY" onclick="sw('multi');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('multi');">
       Create multiple objects (f*)
     </A>
   </H4>
@@ -1114,12 +1119,12 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');"  >@o (Execute sequence on another object)</a></li>
-          <li><a href="#exec_other"  onclick="exp('exec','other');"  >{.} (Refer the sequence executed before)</a></li>
-          <li><a href="#sub_mirror"  onclick="exp('sub','mirror');"  >m (Mirror execution)</a></li>
-          <li><a href="#sub_barrage"   onclick="exp('sub','barrage');" >b* (Specify a setting of the multiple creation)</a></li>
-          <li><a href="#sub_fiber_pos" onclick="exp('sub','fiber_pos')">q* (Specify creating point)</a></li>
-          <li><a href="#sub_target"  onclick="exp('sub','target');"  >to (Set target object)</a></li>
+          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');"  >@o (Execute sequence on another object)</a></li>
+          <li><a href="#exec_other"  onclick="return exp('exec','other');"  >{.} (Refer the sequence executed before)</a></li>
+          <li><a href="#sub_mirror"  onclick="return exp('sub','mirror');"  >m (Mirror execution)</a></li>
+          <li><a href="#sub_barrage"   onclick="return exp('sub','barrage');" >b* (Specify a setting of the multiple creation)</a></li>
+          <li><a href="#sub_fiber_pos" onclick="return exp('sub','fiber_pos')">q* (Specify creating point)</a></li>
+          <li><a href="#sub_target"  onclick="return exp('sub','target');"  >to (Set target object)</a></li>
         </ul>
       </DIV>
 
@@ -1139,19 +1144,19 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_head" onclick="exp('sub','head');">hs (Specify the angle)</a></li>
-          <li><a href="#sub_barrage" onclick="exp('exec','barrage');">bv ()</a></li>
+          <li><a href="#sub_head" onclick="return exp('sub','head');">hs (Specify the angle)</a></li>
+          <li><a href="#sub_barrage" onclick="return exp('exec','barrage');">bv ()</a></li>
         </ul>
       </DIV>
     </DIV>
-  </DIV>
+  </DIV>
 </DIV>
 
 
 
 
 <H3>
-  <A id="expantion" href="#DUMMY" onclick="sw('control');">
+  <A id="expantion" href="#DUMMY" onclick="return sw('control');">
     Controling commands
   </A>
   <DIV class="discription">
@@ -1160,7 +1165,7 @@
 </H3>
 <DIV id="control" class="close">
   <H4 id="control_pos">
-    <A id="expantion" href="#DUMMY" onclick="sw('pos');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('pos');">
       Set the position (p*)
     </A>
   </H4>
@@ -1200,16 +1205,16 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
-          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
-          <li><a href="#control_vel" onclick="exp('control','vel');">v* (Set the velocity)</a></li>
+          <li><a href="#sub_interval" onclick="return exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="return exp('sub','head');">h* (Specify the angle)</a></li>
+          <li><a href="#control_vel" onclick="return exp('control','vel');">v* (Set the velocity)</a></li>
         </ul>
       </DIV>
     </DIV>
   </DIV>
     
   <H4 id="control_vel">
-    <A id="expantion" href="#DUMMY" onclick="sw('vel');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('vel');">
       Set the velocity (v*)
     </A>
   </H4>
@@ -1247,16 +1252,16 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
-          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
-          <li><a href="#control_pos" onclick="exp('control','pos');">p* (Set the position)</a></li>
+          <li><a href="#sub_interval" onclick="return exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="return exp('sub','head');">h* (Specify the angle)</a></li>
+          <li><a href="#control_pos" onclick="return exp('control','pos');">p* (Set the position)</a></li>
         </ul>
       </DIV>
     </DIV>
   </DIV>
     
   <H4 id="control_acc">
-    <A id="expantion" href="#DUMMY" onclick="sw('acc');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('acc');">
       Set the accelaration (a*)
     </A>
   </H4>
@@ -1298,14 +1303,14 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+          <li><a href="#sub_head" onclick="return exp('sub','head');">h* (Specify the angle)</a></li>
         </ul>
       </DIV>
     </DIV>
   </DIV>
 
   <H4 id="control_change_dir">
-    <A id="expantion" href="#DUMMY" onclick="sw('change_dir');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('change_dir');">
       Change the direction (same as &lt;changeDirection&gt; in bulletML) (cd)
     </A>
   </H4>
@@ -1318,7 +1323,7 @@
         (<U>C</U>hange <U>D</U>irection) Change the direction to the angle specifyed by h* command (same as &lt;changeDirection&gt; in bulletML).
       </DIV>
       <DIV class="discription">
-        The cd command changes the objects angle and the velocity direction together (the <a href="#control_rot" onclick="exp('control','rot')">r command</a> changes the objects angle only).
+        The cd command changes the objects angle and the velocity direction together (the <a href="#control_rot" onclick="return exp('control','rot')">r command</a> changes the objects angle only).
         The starting angle is the objects angle at that time.<br/>
         After this command, the objects angle (even changing by r* command) synchronizes with the velocity direction (this behavior calls "bml motion mode").
         If you want to stop this behavior, specify p*, v*, a* or gp command.<br/><br/>
@@ -1329,8 +1334,8 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
-          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+          <li><a href="#sub_interval" onclick="return exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="return exp('sub','head');">h* (Specify the angle)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -1338,7 +1343,7 @@
 
     
   <H4 id="control_change_spd">
-    <A id="expantion" href="#DUMMY" onclick="sw('change_spd');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('change_spd');">
       Change the speed (same as &lt;changeSpeed&gt; in bulletML) (cs*)
     </A>
   </H4>
@@ -1373,7 +1378,7 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_interval" onclick="return exp('sub','interval');">i (Specify the parameter changing term)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -1381,7 +1386,7 @@
 
     
   <H4 id="control_gravity">
-    <A id="expantion" href="#DUMMY" onclick="sw('gravity');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('gravity');">
       Set the gravity (gp)
     </A>
   </H4>
@@ -1403,7 +1408,7 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#control_pos" onclick="exp('control','pos');">p (Set the position)</a></li>
+          <li><a href="#control_pos" onclick="return exp('control','pos');">p (Set the position)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -1411,7 +1416,7 @@
 
 
   <H4 id="control_rot">
-    <A id="expantion" href="#DUMMY" onclick="sw('rot');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('rot');">
       Set the rotation (r*)
     </A>
   </H4>
@@ -1448,8 +1453,8 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#sub_interval" onclick="exp('sub','interval');">i (Specify the parameter changing term)</a></li>
-          <li><a href="#sub_head" onclick="exp('sub','head');">h* (Specify the angle)</a></li>
+          <li><a href="#sub_interval" onclick="return exp('sub','interval');">i (Specify the parameter changing term)</a></li>
+          <li><a href="#sub_head" onclick="return exp('sub','head');">h* (Specify the angle)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -1457,7 +1462,7 @@
     
 
   <H4 id="control_killobj">
-    <A id="expantion" href="#DUMMY" onclick="sw('killobj');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('killobj');">
       Kill object (ko)
     </A>
   </H4>
@@ -1476,7 +1481,7 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_fiber" onclick="exp('exec','fiber');">@ko (Specify destruction fiber)</a></li>
+          <li><a href="#exec_fiber" onclick="return exp('exec','fiber');">@ko (Specify destruction fiber)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -1486,7 +1491,7 @@
 
 
 <H3>
-  <A id="expantion" href="#DUMMY" onclick="sw('label');">
+  <A id="expantion" href="#DUMMY" onclick="return sw('label');">
     Label
   </A>
   <DIV class="discription">
@@ -1495,7 +1500,7 @@
 </H3>
 <DIV id="label" class="close">
   <H4 id="label_define">
-    <A id="expantion" href="#DUMMY" onclick="sw('define');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('define');">
       Define the label
     </A>
   </H4>
@@ -1513,10 +1518,10 @@
         For example in "#A{#C{seqA} &C} #B{#C{seqB} &C}", label C in label A refers {seqA} and label C in label B refers {seqB}.
       </DIV>
     </DIV>
-  </DIV>
+  </DIV>
 
   <H4 id="label_lcall">
-    <A id="expantion" href="#DUMMY" onclick="sw('lcall');">
+    <A id="expantion" href="#DUMMY" onclick="return sw('lcall');">
       Refer the label
     </A>
   </H4>
@@ -1530,8 +1535,8 @@
       </DIV>
       <DIV class="discription">
         Specifying the label name in a sequence directly, the sequence of specifyed label is executed as it is there.<br/>
-        The label can be set after <a href="#exec_call" onclick="exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="exp('exec','fiber');">@* (Create new fiber)</a> and
-        <a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
+        The label can be set after <a href="#exec_call" onclick="return exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="return exp('exec','fiber');">@* (Create new fiber)</a> and
+        <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
         And if you specify the label without any command, the sequence of specifyed label is executed as "@0" command does.</br>
         You can specify the arguments when you refer the label and you can get the arguments by "$1,$2..." in the labeled sequence.
         But, because the numbers (0-9) can be used as the label name, a space is necessary between the label and number.<br/><br/>
@@ -1541,20 +1546,20 @@
       <DIV class="reference">
         [see also]
         <ul>
-          <li><a href="#exec_call"   onclick="exp('exec','call');">& (Call sequenece)</a></li>
-          <li><a href="#exec_fiber"  onclick="exp('exec','fiber');">@* (Create new fiber)</a></li>
-          <li><a href="#create_single" onclick="exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequenece)</a></li>
+          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a></li>
+          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
         </ul>
       </DIV>
     </DIV>
-  </DIV>
+  </DIV>
 </DIV>
-
+
   
   
 
 <H3>
-  <A id="expantion" href="#DUMMY" onclick="sw('user');">
+  <A id="expantion" href="#DUMMY" onclick="return sw('user');">
     User defined commands
   </A>
   <DIV class="discription">
@@ -1574,8 +1579,8 @@
         <b>You cannot use "_"(under bar) in the command name.</b><br/>
       </DIV>
     </DIV>
-</DIV>
-
+</DIV>
+
 
 
 </BODY>

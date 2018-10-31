@@ -13,6 +13,7 @@ class Control {
 
 function runscript(e) {
   const seq = cml.sequence(document.getElementById('cmlscript').value);
+  console.log(seq.childLabels);
   if (enemyActor) enemyActor.runner.destroy(0);
   enemyActor = new Actor(2, cml.runner(0,0,0, seq));
   return false;
