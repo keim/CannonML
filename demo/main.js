@@ -13,7 +13,6 @@ class Control {
 
 function runscript(e) {
   const seq = cml.sequence(document.getElementById('cmlscript').value);
-  console.log(seq.childLabels);
   if (enemyActor) enemyActor.runner.destroy(0);
   enemyActor = new Actor(2, cml.runner(0,0,0, seq));
   return false;
@@ -77,7 +76,7 @@ window.onload = ()=>{
   cml.setScreenSize(400,400,0);
 
   document.getElementById('container').appendChild(gl.domElement);
-  document.getElementById('cmlscript').value = "py100{i60vx-3~[vx0~vx6~vx0~vx-6~]}\n[w10[$x<0?bm2,5f2:bm3,50f10]]";
+  document.getElementById('cmlscript').value = "#move{i60~px150i120[~px-150~px150]}py100&move";
   document.getElementById('runscript').addEventListener('click', runscript);
   document.getElementById('stopscript').addEventListener('click', stopscript);
 
