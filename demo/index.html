@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <meta charset="UTF-8" />
 <link rel="stylesheet" type="text/css" href="style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.1/ace.js" integrity="sha256-kCykSp9wgrszaIBZpbagWbvnsHKXo4noDEi6ra6Y43w=" crossorigin="anonymous"></script>
+
 <script type="text/javascript" src="three.min.js"></script>
 <script type="text/javascript" src="ptolemy.js"></script>
 
@@ -32,9 +34,8 @@
 <script type="text/javascript" src="actor.js"></script>
 <script type="text/javascript" src="main.js"></script>
 
-<div id='container'></div>
-<div id='scrpitarea'>
-<textarea id='cmlscript' spellcheck='false'></textarea>
-<button id='runscript'>Run</button>
-<button id='stopscript'>Stop</button>
+<div id='screen'></div>
+<div id='editor'></div>
+<div id='controler'>
+  <button id='runscript'>Run (Ctrl+Enter)</button>
 </div>
