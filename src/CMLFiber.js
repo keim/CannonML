@@ -450,10 +450,10 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     // 1 frame execution for all fibers
     /** @private _cml_fiber_internal */
     static _updateAll() {
-        var activeFibers = CML.Fiber._rootFiber._listChild;
+        const activeFibers = CML.Fiber._rootFiber._listChild;
         if (activeFibers.isEmpty())
             return;
-        var elem = activeFibers.begin, elem_end = activeFibers.end;
+        let elem = activeFibers.begin, elem_end = activeFibers.end;
         while (elem != elem_end) {
             elem = elem._onUpdate();
         }

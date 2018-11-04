@@ -43,7 +43,7 @@ class CannonML {
      *  @param seq default sequence to execute by new runner
      */
     runner(x=0, y=0, z=0, seq=null, args=null, invFlag=0) {
-        const r = new CML.Runner(null, seq, false);
+        const r = new CML.Runner(seq, false);
         r.create(x, y, z);
         if (seq) r.execute(seq, args, invFlag);
         return r;

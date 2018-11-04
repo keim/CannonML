@@ -83,20 +83,11 @@ var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you canno
     get global() { return this._global; }
     set global(makeGlobal) {
         if (this._global == makeGlobal) return;
-
         this._global = makeGlobal;
-        if (makeGlobal) {
+        if (makeGlobal) 
             CML.Sequence.globalSequences.unshift(this);
-        }
-        else {
-            var i, imax = CML.Sequence.globalSequences.length;
-            for (i = 0; i < imax; ++i) {
-                if (CML.Sequence.globalSequences[i] == this) {
-                    CML.Sequence.globalSequences.splice(i, 1);
-                    return;
-                }
-            }
-        }
+        else 
+            CML.Sequence.globalSequences = CML.Sequence.globalSequences.filter(seq=>!(seq===this));
     }
     /** Is this sequence empty ? */
     get isEmpty() {
@@ -244,12 +235,9 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             // solve named reference
             if (cmd.type == CML.State.ST_REFER) {
                 if (cmd.isLabelUnsolved()) {
-                    cmd.jump = this.findSequence(cmd._label);
-                    if (cmd.jump == null) {
-                        cmd.jump = this._findGlobalSequence(cmd._label);
-                        if (cmd.jump == null)
-                            throw Error("Not defined label; " + cmd._label);
-                    }
+                    cmd.jump = this.findSequence(cmd._label) || this._findGlobalSequence(cmd._label);
+                    if (!cmd.jump)
+                        throw Error("Not defined label; " + cmd._label);
                 }
             }
             else 
@@ -264,7 +252,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
                 if (cmd_verify.type != CML.State.ST_REFER) {
                     if ((cmd.type & CML.State.ST_RESTRICT) != 0) {
                         // throw error
-                        throw Error("No sequences after &/@/n ?");
+                        throw Error("No sequences after @ ?");
                     }
                     else {
                         // insert reference after call command.

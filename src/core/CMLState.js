@@ -216,13 +216,8 @@ CML.State = class extends CML.ListElem {
                 break;
             // sub routine
             case "&":
-                console.log("ok");
                 this.func = this._gosub;
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            case "^&":
-                this.func = this._fgosub;
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
+                this.type = CML.State.STF_CALLREF;
                 break;
             // fiber
             case "@":
@@ -294,7 +289,6 @@ CML.State = class extends CML.ListElem {
                 break;
             // head
             case "ha":
-            case "hax":
                 this.func = this._ha;
                 this.type = CML.State.STF_BE_INTERPOLATED;
                 this._resetParameters(1);
@@ -316,26 +310,6 @@ CML.State = class extends CML.ListElem {
                 break;
             case "hv":
                 this.func = this._hv;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "hpx":
-                this.func = this._hpx;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "htx":
-                this.func = this._htx;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "hox":
-                this.func = this._hox;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "hvx":
-                this.func = this._hvx;
                 this.type = CML.State.STF_BE_INTERPOLATED;
                 this._resetParameters(1);
                 break;
@@ -590,12 +564,7 @@ CML.State = class extends CML.ListElem {
     _hp(fbr) { fbr.hang = this._invertAngle(this._args[0]); fbr.hopt = CML.State.HO_PAR; return true; }
     _ht(fbr) { fbr.hang = this._invertAngle(this._args[0]); fbr.hopt = CML.State.HO_AIM; return true; }
     _hv(fbr) { fbr.hang = this._invertAngle(this._args[0]); fbr.hopt = CML.State.HO_VEL; return true; }
-    _hox(fbr) { fbr.hang = this._invertAngle(this._args[0]); fbr.hopt = CML.State.HO_REL; this._fix(fbr); return true; }
-    _hpx(fbr) { fbr.hang = this._invertAngle(this._args[0]); fbr.hopt = CML.State.HO_PAR; this._fix(fbr); return true; }
-    _htx(fbr) { fbr.hang = this._invertAngle(this._args[0]); fbr.hopt = CML.State.HO_AIM; this._fix(fbr); return true; }
-    _hvx(fbr) { fbr.hang = this._invertAngle(this._args[0]); fbr.hopt = CML.State.HO_VEL; this._fix(fbr); return true; }
     _hs(fbr) { fbr.hang = this._invertRotation(this._args[0]); fbr.hopt = CML.State.HO_SEQ; return true; }
-    _fix(fbr) { fbr.hang = fbr._getAngle(0); fbr.hopt = CML.State.HO_FIX; }
     // set target
     _td(fbr) { fbr.target = null; return true; }
     _tp(fbr) { fbr.target = fbr.object.parent; return true; }
@@ -614,12 +583,6 @@ CML.State = class extends CML.ListElem {
         fbr._unshiftInvertion(CML.State._invert_flag);
         fbr._unshiftArguments(seq.require_argc, ref._args);
         fbr._pointer = seq;
-        return true;
-    }
-    // fake gosub
-    _fgosub(fbr) {
-        if (this.next.jump != null)
-            fbr.seqSub = this.next.jump;
         return true;
     }
     // return
@@ -872,15 +835,14 @@ CML.State = class extends CML.ListElem {
 /** @private */ CML.State.HO_ABS = 0; // angle is based on scrolling direction
 /** @private */ CML.State.HO_PAR = 1; // angle is based on direction to parent
 /** @private */ CML.State.HO_AIM = 2; // angle is based on direction to target
-/** @private */ CML.State.HO_FIX = 3; // angle is based on fixed vector
-/** @private */ CML.State.HO_REL = 4; // angle is based on object angle
-/** @private */ CML.State.HO_VEL = 5; // amgle is based on moving direction
-/** @private */ CML.State.HO_SEQ = 6; // angle is calculated from previous frame
+/** @private */ CML.State.HO_REL = 3; // angle is based on object angle
+/** @private */ CML.State.HO_VEL = 4; // amgle is based on moving direction
+/** @private */ CML.State.HO_SEQ = 5; // angle is calculated from previous frame
 // invert flag
 CML.State._invert_flag = 0;
 // speed ratio
 CML.State._speed_ratio = 1;
 // command regular expressions
-CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|ko|i|m|cd|csa|csr|css|\\^@|@ko|@o|@|\\^n|nc|n|\\^f|fc|f|qx|qy|q|bm|bs|br|bv|hax|ha|hox|ho|hpx|hp|htx|ht|hvx|hv|hs|td|tp|to|kf)";
+CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|ko|i|m|cd|csa|csr|css|\\^@|@ko|@o|@|\\^n|nc|n|\\^f|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to|kf)";
 // global variables
 CML.State._globalVariables = null;
