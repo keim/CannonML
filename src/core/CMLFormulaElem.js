@@ -5,8 +5,10 @@
 //----------------------------------------------------------------------------------------------------
 /** @private */
 CML.FormulaElem = class {
-    constructor() { }
+    constructor(parent) {
+    	this._parent = parent;
+    }
     calc(fbr) { return 0; }
-    calcStatic(frb) { return 0; }
+    calcStatic() { return 0; }
 }
 CML.FormulaElem._globalVariables = null;

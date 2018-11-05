@@ -18,12 +18,15 @@ CML.Formula = class extends CML.State {
         this._form = null;
         this.jump = state;
         this.func = this._calc;
-        CML.Formula.stacOperator.length = 0;
+        this.valiables = [];
+        this.isStatic = true;
+        this._stacIndex = 0;
         this.max_reference = 0;
+        CML.Formula.stacOperator.length = 0;
         // copy argument to operand, when the 1st operand already parsed as the 1st argument
         if (copyfromArgument) {
             CML.Formula.stacOperand.length = 1;
-            CML.Formula.stacOperand[0] = new CML.FormulaLiteral();
+            CML.Formula.stacOperand[0] = new CML.FormulaLiteral(this);
             CML.Formula.stacOperand[0].num = state._args[0];
         }
         else {
@@ -52,7 +55,7 @@ CML.Formula = class extends CML.State {
     pushOperator(oprator, isSingle) {
         if (!oprator)
             return false;
-        const ope = new CML.FormulaOperator(oprator, isSingle);
+        const ope = new CML.FormulaOperator(this, oprator, isSingle);
         while (CML.Formula.stacOperator.length > 0 && CML.Formula.stacOperator[0].priorL > ope.priorR) {
             const oprcnt = CML.Formula.stacOperator[0].oprcnt;
             if (CML.Formula.stacOperand.length < oprcnt)
@@ -72,7 +75,7 @@ CML.Formula = class extends CML.State {
     pushLiteral(literal) {
         if (!literal)
             return;
-        const lit = new CML.FormulaLiteral();
+        const lit = new CML.FormulaLiteral(this);
         const ret = lit.parseLiteral(literal);
         if (this.max_reference < ret)
             this.max_reference = ret;
@@ -113,16 +116,18 @@ CML.Formula = class extends CML.State {
     }
     // calculation
     //------------------------------------------------------------
-    _calc(fbr) {
-        fbr.calcstac = [];
-        fbr.calcstac.push(this._form.calc(fbr));
-        this.jump._args = fbr.calcstac.concat();
-        return true;
+    _calcStatic(variablesLength) {
+        this._stacIndex = 0;
+        this.valiables.length = variablesLength;
+        this.valiables[this._stacIndex] = this._form.calcStatic();
+        this.isStatic = this.valiables.every(num=>!isNaN(num));
+        return this.valiables;
     }
-    _calcStatic() {
-        const fbr = {"calcstac":[]};
-        fbr.calcstac.push(this._form.calcStatic(fbr));
-        return fbr.calcstac;
+    _calc(fbr) {
+        this._stacIndex = 0;
+        this.valiables[this._stacIndex] = this._form.calc(fbr);
+        this.jump._args = this.valiables.concat();
+        return true;
     }
 }
 CML.Formula.stacOperator = [];

@@ -6,8 +6,8 @@
 //import CML.FormulaElem from "./CML.FormulaElem.js";
 /** @private */
 CML.FormulaLiteral = class extends CML.FormulaElem {
-    constructor() {
-        super();
+    constructor(form) {
+        super(form);
         this.func = null;
         this.num = Number.NaN;
         this.idx = Number.NaN;
@@ -179,7 +179,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     calc(fbr) {
         return this.func(fbr);
     }
-    calcStatic(frb) {
+    calcStatic() {
         return this.num;
     }
     ltrl(fbr) { return this.num; }

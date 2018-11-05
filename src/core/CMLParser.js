@@ -268,8 +268,8 @@ CML.Parser = class {
         if (fml) {
             if (!fml.construct())
                 throw Error("in formula");
-            state._args = fml._calcStatic();
-            if (state._args.some(num=>isNaN(num))) {
+            state._args = fml._calcStatic(0);
+            if (!fml.isStatic) {
                 this.listState.push(fml);
                 this._update_max_reference(fml.max_reference);
             }

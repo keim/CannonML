@@ -6,8 +6,8 @@
 //import CML.FormulaElem from "./CML.FormulaElem.js";
 /** @private */
 CML.FormulaOperator = class extends CML.FormulaElem {
-    constructor(opr = "", isSingle = false) {
-        super();
+    constructor(form, opr = "", isSingle = false) {
+        super(form);
         this.priorL = 0;
         this.priorR = 0;
         this.oprcnt = 0;
@@ -161,11 +161,14 @@ CML.FormulaOperator = class extends CML.FormulaElem {
     calc(fbr) {
         return this.func(fbr, this.opr0.calc(fbr), (this.oprcnt == 2) ? (this.opr1.calc(fbr)) : 0);
     }
-    calcStatic(fbr) {
-        return this.func(fbr, this.opr0.calcStatic(fbr), (this.oprcnt == 2) ? (this.opr1.calcStatic(fbr)) : 0);
+    calcStatic() {
+        return this.func(null, this.opr0.calcStatic(), (this.oprcnt == 2) ? (this.opr1.calcStatic()) : 0);
     }
     static stacResult(fbr, r0, r1) {
-        fbr.calcstac.push(r0);
+        if (this._parent.variables.length <= this._parent._stacIndex) 
+            this._parent.variables.length = this._parent._stacIndex + 1;
+        this._parent.variables[this._parent._stacIndex] = r0;
+        this._parent._stacIndex++;
         return r1;
     }
     static nop(fbr, r0, r1) { return r0; }

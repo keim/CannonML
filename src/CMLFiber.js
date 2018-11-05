@@ -67,7 +67,6 @@ CML.Fiber = class extends CML.ListElem {
         /** @private _cml_fiber_internal */ this.istc = []; // invertion flag stac
         /** @private _cml_fiber_internal */ this.vars = []; // fiber variables
         /** @private _cml_fiber_internal */ this.varc = []; // fiber variables counts
-        /** @private _cml_fiber_internal */ this.calcstac = []; // calculation result stac
         this._gene = 0;
     }
     // properties
