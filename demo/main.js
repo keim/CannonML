@@ -59,7 +59,7 @@ new Ptolemy({
     cml.setScreenSize(400,400,0);
 
     editor = ace.edit("editor");
-    editor.setValue("#move{i60~px150i120[~px-150~px150]}py100&move");
+    editor.setValue("#move{i60~px150i120[~px-150~px150]}\npy100&move");
     editor.commands.addCommand({
       name : "play",
       bindKey: {win:"Ctrl-Enter", mac:"Command-Enter"},

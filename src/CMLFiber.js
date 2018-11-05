@@ -65,8 +65,9 @@ CML.Fiber = class extends CML.ListElem {
         /** @private _cml_fiber_internal */ this.lcnt = []; // loop counter
         /** @private _cml_fiber_internal */ this.jstc = []; // sub routine call stac
         /** @private _cml_fiber_internal */ this.istc = []; // invertion flag stac
-        /** @private _cml_fiber_internal */ this.vars = []; // arguments
-        /** @private _cml_fiber_internal */ this.varc = []; // argument counts
+        /** @private _cml_fiber_internal */ this.vars = []; // fiber variables
+        /** @private _cml_fiber_internal */ this.varc = []; // fiber variables counts
+        /** @private _cml_fiber_internal */ this.calcstac = []; // calculation result stac
         this._gene = 0;
     }
     // properties
@@ -333,11 +334,11 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     /** @private _cml_fiber_internal */
     _unshiftArguments(argCount = 0, argArray = null) {
         var i, imax;
-        if (argCount == 0 && (argArray == null || argArray.length == 0)) {
+        if (argCount == 0 && (!argArray || argArray.length == 0)) {
             this.varc.unshift(0);
         }
         else {
-            if (argArray != null) {
+            if (argArray) {
                 argCount = (argCount > argArray.length) ? argCount : argArray.length;
                 this.varc.unshift(argCount);
                 imax = this.vars.length;

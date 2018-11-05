@@ -9,12 +9,13 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     constructor() {
         super();
         this.func = null;
-        this.num = 0;
+        this.num = Number.NaN;
+        this.idx = Number.NaN;
         this.name = "";
         this.func = this.ltrl;
     }
     parseLiteral(opr = "") {
-        var ret = 0;
+        var maxReference = 0;
         // Numbers
         if (opr.charAt(0) != "$") {
             this.func = this.ltrl;
@@ -22,20 +23,18 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
             return 0;
         }
         // Variables
-        this.num = parseFloat(opr.charAt(opr.length - 1));
-        if (isNaN(this.num)) {
-            this.num = 0;
-        }
-        else {
+        this.idx = parseFloat(opr.charAt(opr.length - 1));
+        if (isNaN(this.idx)) 
+            this.idx = 0;
+        else 
             opr = opr.substr(0, opr.length - 1);
-        }
         switch (opr) {
             case "$":
                 this.func = this.vars;
-                ret = this.num;
-                if (this.num == 0)
+                if (isNaN(this.idx) || this.idx == 0)
                     throw new Error('$0 is not available, $[1-9] only.');
-                this.num--;
+                maxReference = this.idx;
+                this.idx--;
                 break;
             case "$?":
                 this.func = this.rand;
@@ -47,7 +46,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
                 this.func = this.refer_i;
                 break;
             case "$r":
-                this.func = (this.num == 0) ? this.rank : this.rankg;
+                this.func = (this.idx == 0) ? this.rank : this.rankg;
                 break;
             case "$l":
                 this.func = this.loop;
@@ -89,7 +88,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
                 this.func = this.dist;
                 break;
             case "$o":
-                this.func = (this.num == 0) ? this.cnta : this.cntc;
+                this.func = (this.idx == 0) ? this.cnta : this.cntc;
                 break;
             case "$p.x":
                 this.func = this.prt_posx;
@@ -128,7 +127,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
                 this.func = this.prt_dist;
                 break;
             case "$p.o":
-                this.func = (this.num == 0) ? this.prt_cnta : this.prt_cntc;
+                this.func = (this.idx == 0) ? this.prt_cnta : this.prt_cntc;
                 break;
             case "$t.x":
                 this.func = this.tgt_posx;
@@ -165,28 +164,31 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
                 break;
             case "$t.td":
                 this.func = this.ltrl;
-                this.num = 0;
+                this.idx = 0;
                 break;
             case "$t.o":
-                this.func = (this.num == 0) ? this.tgt_cnta : this.tgt_cntc;
+                this.func = (this.idx == 0) ? this.tgt_cnta : this.tgt_cntc;
                 break;
             default:
                 this.func = CML.FormulaElem._globalVariables._mapUsrDefRef[opr.substr(1)];
                 if (this.func == null)
                     throw Error(opr + " ?");
         }
-        return ret;
+        return maxReference;
     }
     calc(fbr) {
         return this.func(fbr);
+    }
+    calcStatic(frb) {
+        return this.num;
     }
     ltrl(fbr) { return this.num; }
     rand(fbr) { return CML.FormulaElem._globalVariables.rand(); }
     rands(fbr) { return CML.FormulaElem._globalVariables.rand() * 2 - 1; }
     rank(fbr) { return fbr.object.rank; }
-    rankg(fbr) { return CML.FormulaElem._globalVariables.getRank(this.num); }
-    vars(fbr) { return fbr.getVeriable(this.num); }
-    loop(fbr) { return fbr.getLoopCounter(this.num); }
+    rankg(fbr) { return CML.FormulaElem._globalVariables.getRank(this.idx); }
+    vars(fbr) { return fbr.getVeriable(this.idx); }
+    loop(fbr) { return fbr.getLoopCounter(this.idx); }
     posx(fbr) { return fbr.object.x; }
     posy(fbr) { return fbr.object.y; }
     posz(fbr) { return fbr.object.z; }
@@ -200,7 +202,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     objh(fbr) { return fbr.object.angleOnScreen; }
     dist(fbr) { return fbr.object.getDistance(fbr.target); }
     cnta(fbr) { return fbr.object.countAllIDedChildren(); }
-    cntc(fbr) { return fbr.object.countIDedChildren(this.num); }
+    cntc(fbr) { return fbr.object.countIDedChildren(this.idx); }
     prt_posx(fbr) { return fbr.object.parent.x; }
     prt_posy(fbr) { return fbr.object.parent.y; }
     prt_posz(fbr) { return fbr.object.parent.z; }
@@ -214,7 +216,7 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     prt_objh(fbr) { return fbr.object.parent.angleOnScreen; }
     prt_dist(fbr) { return fbr.object.parent.getDistance(fbr.target); }
     prt_cnta(fbr) { return fbr.object.parent.countAllIDedChildren(); }
-    prt_cntc(fbr) { return fbr.object.parent.countIDedChildren(this.num); }
+    prt_cntc(fbr) { return fbr.object.parent.countIDedChildren(this.idx); }
     tgt_posx(fbr) { return fbr.target.x; }
     tgt_posy(fbr) { return fbr.target.y; }
     tgt_posz(fbr) { return fbr.target.z; }
@@ -227,12 +229,12 @@ CML.FormulaLiteral = class extends CML.FormulaElem {
     tgt_vell(fbr) { return fbr.target.velocity; }
     tgt_objh(fbr) { return fbr.target.angleOnScreen; }
     tgt_cnta(fbr) { return fbr.target.countAllIDedChildren(); }
-    tgt_cntc(fbr) { return fbr.target.countIDedChildren(this.num); }
+    tgt_cntc(fbr) { return fbr.target.countIDedChildren(this.idx); }
     refer_i(fbr) { return fbr.getInterval(); }
 }
 // Refer from CML.Parser._userReferenceRegExp() to sort all reference names.
 CML.FormulaLiteral.defaultReferences = [
-    'i', 'r', 'l', 'x', 'y', 'z', 'sx', 'sy', 'sz', 'v', 'vx', 'vy', 'vz', 'ho', 'td', 'o',
+    '', 'i', 'r', 'l', 'x', 'y', 'z', 'sx', 'sy', 'sz', 'v', 'vx', 'vy', 'vz', 'ho', 'td', 'o',
     'p.x', 'p.y', 'p.z', 'p.sx', 'p.sy', 'p.sz', 'p.v', 'p.vx', 'p.vy', 'p.vz', 'p.ho', 'p.td', 'p.o',
     't.x', 't.y', 't.z', 't.sx', 't.sy', 't.sz', 't.v', 't.vx', 't.vy', 't.vz', 't.ho', 't.td', 't.o'
 ];

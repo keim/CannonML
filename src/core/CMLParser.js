@@ -25,11 +25,11 @@ CML.Parser = class {
         this.cmdKey = ""; // current parsing key
         this.cmdTemp = null; // current parsing statement
         this.fmlTemp = null; // current parsing formula
-        this.labelRegExp = null; // label regular expression
-        this._globalVariables = null;
+        this.currentLabelRegExpString = null; // labels in current parsing script
         // private functions
         //------------------------------------------------------------
         // regular expression indexes
+        this._compiledLabelRegExpString = null; // labels in current parsing script
         this._regexp = null; // regular expression
         this._regexpUserCommand = null; // regular expression for user commands
         this._globalVariables = globalVariables_;
@@ -38,12 +38,10 @@ CML.Parser = class {
     // parsing
     //------------------------------------------------------------
     _parse(seq, cml_string) {
-        // create regular expression
-        const regexp = this._createCMLRegExp();
+        // initialize and create regular expression
+        const regexp = this._initialize(seq, cml_string);
         // parsing
         try {
-            // initialize
-            this._initialize(seq, cml_string);
             // execute first matching
             let res = regexp.exec(cml_string);
             while (res != null) {
@@ -53,19 +51,17 @@ CML.Parser = class {
                     // check the result of matching
                     if (!this._parseStatement(res)) // new normal statement
                         if (!this._parseLabelDefine(res)) // labeled sequence definition
-                            if (!this._parseNonLabelDefine(res)) // non-labeled sequence definition
-                                if (!this._parseCallSequence(res, regexp)) // call sequence
+                            if (!this._parseNonLabeledSequence(res)) // non-labeled sequence
+                                if (!this._parseCallSequence(res)) // call sequence
                                     if (!this._parseAssign(res)) // assign 
                                         if (!this._parseComment(res)) // comment
                                             if (!this._parseString(res)) // string
-                                             {
+                                            {
                                                 // command is not defined
-                                                if (res[this.REX_ERROR] != undefined) {
+                                                if (res[this.REX_ERROR] != undefined) 
                                                     throw Error(res[this.REX_ERROR] + " ?");
-                                                }
-                                                else {
+                                                else 
                                                     throw Error("BUG!! unknown error in this._parse()");
-                                                }
                                             }
                 }
                 // execute next matching
@@ -99,13 +95,14 @@ CML.Parser = class {
         this.fmlTemp = null;
         const seqLabels = (cml_string.match(/#[A-Za-z0-9_]+/g) || []).map(l=>l.substr(1)),
               gloLabels = CML.Sequence.globalSequences.reduce((acm,seq)=>acm.concat(seq.childLabels), []),
-              labels = seqLabels.concat(gloLabels).sort((a,b)=>((a>b)?-1:1));
-        this.labelRegExp = (labels.length>0) ? new RegExp(labels.join('|'), "gm") : null;
+              commands  = Object.keys(this._globalVariables._mapUsrDefCmd);
+        this.currentLabelRegExpString = commands.concat(gloLabels, seqLabels).sort((a,b)=>((a>b)?-1:1)).join('|');
+        return this._createCMLRegExp();
     }
     _append() {
         // append previous statement and formula
         if (this.cmdTemp != null) {
-            this._append_formula(this.fmlTemp);
+            this._append_formula(this.fmlTemp, this.cmdTemp);
             this._append_statement(this.cmdTemp.setCommand(this.cmdKey));
             this.fmlTemp = null;
         }
@@ -119,28 +116,21 @@ CML.Parser = class {
         this.listState.cut(this.listState.head, this.listState.tail);
     }
     _parseFormula(res) {
-        if (res[this.REX_FORMULA] == undefined)
+        if (!res[this.REX_FORMULA])
             return false;
-        // formula, argument, ","
-        if (this.cmdTemp == null)
+        if (!this.cmdTemp)
             throw Error("in formula " + res[this.REX_FORMULA]);
-        if (res[this.REX_FORMULA] == ",") {
-            this._append_formula(this.fmlTemp); // append old formula
-            this.fmlTemp = this._check_argument(this.cmdTemp, res, true); // push new argument
-        }
-        else { // + - * / % ( )
-            if (this.fmlTemp == null)
-                this.fmlTemp = new CML.Formula(this.cmdTemp, true); // new formula
-            if (!this.fmlTemp.pushOperator(res[this.REX_FORMULA], false))
-                throw Error("in formula " + res[1]);
-            this.fmlTemp.pushPrefix(res[this.REX_ARG_PREFIX], true);
-            this.fmlTemp.pushLiteral(res[this.REX_ARG_LITERAL]);
-            this.fmlTemp.pushPostfix(res[this.REX_ARG_POSTFIX], true);
-        }
+        if (!this.fmlTemp)
+            this.fmlTemp = new CML.Formula(this.cmdTemp, true); // new formula
+        if (!this.fmlTemp.pushOperator(res[this.REX_FORMULA], false))
+            throw Error("in formula " + res[1]);
+        this.fmlTemp.pushPrefix(res[this.REX_ARG_PREFIX], true);
+        this.fmlTemp.pushLiteral(res[this.REX_ARG_LITERAL]);
+        this.fmlTemp.pushPostfix(res[this.REX_ARG_POSTFIX], true);
         return true;
     }
     _parseStatement(res) {
-        if (res[this.REX_NORMAL] == undefined)
+        if (!res[this.REX_NORMAL])
             return false;
         this.cmdKey = res[this.REX_NORMAL]; // command key
         this.cmdTemp = new CML.State();     // new command
@@ -188,74 +178,58 @@ CML.Parser = class {
                 break;
         }
         // push new argument
-        if (this.cmdTemp != null) {
+        if (this.cmdTemp) {
             this.fmlTemp = this._check_argument(this.cmdTemp, res);
         }
         return true;
     }
     _parseLabelDefine(res) {
-        if (res[this.REX_LABELDEF] == undefined)
+        if (!res[this.REX_LABELDEF])
             return false;
         this.cmdTemp = this._new_sequence(this.childstac[0], res[this.REX_LABELDEF]); // new sequence with label
         this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
         this.childstac.unshift(this.cmdTemp); // push child stac
         return true;
     }
-    _parseNonLabelDefine(res) {
-        if (res[this.REX_NONLABELDEF] == undefined)
+    _parseNonLabeledSequence(res) {
+        if (!res[this.REX_NONLABELDEF])
             return false;
         this.cmdTemp = this._new_sequence(this.childstac[0], null); // new sequence without label
         this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
         this.childstac.unshift(this.cmdTemp); // push child stac
         return true;
     }
-    _parseCallSequence(res, regexp) {
-        if (res[this.REX_CALLSEQ] == undefined)
+    _parseCallSequence(res) {
+        if (!res[this.REX_CALLSEQ])
             return false;
-        // find label
-        if (this.labelRegExp) {
-            this.labelRegExp.lastIndex = regexp.lastIndex;
-            const label = this.labelRegExp.exec(res.input);
-            if (label && label.index == regexp.lastIndex) {
-                regexp.lastIndex += label[0].length;
-                this.cmdTemp = this._new_reference(null, label[0]); // new reference command
-                this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
-                return true;
-            }
-        }
-        if (this._regexpUserCommand) {
-            this._regexpUserCommand.lastIndex = regexp.lastIndex;
-            const command = this._regexpUserCommand.exec(res.input);
-            if (command && command.index == regexp.lastIndex) {
-                regexp.lastIndex += command[0].length;
-                this.cmdTemp = this._new_user_defined(command[0]); // new user command
-                this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
-                return true;
-            }
-        }
-        throw Error("&"+res.input.slice(res.index,res.index+10)+"... not found");
+        if (res[this.REX_CALLSEQ] in this._globalVariables._mapUsrDefCmd) 
+            this.cmdTemp = this._new_user_defined(res[this.REX_CALLSEQ]); // new user command
+        else 
+            this.cmdTemp = this._new_reference(null, res[this.REX_CALLSEQ]); // new reference call
+        this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
+        return true;
     }
     _parseAssign(res) {
-        if (res[this.REX_ASSIGN] == undefined)
+        if (!res[this.REX_ASSIGN])
             return false;
         this.cmdTemp = this._new_assign(res[this.REX_ASSIGN]); // new command
         this.fmlTemp = this._check_argument(this.cmdTemp, res); // push new argument
         return true;
     }
     _parseString(res) {
-        if (res[this.REX_STRING] == undefined)
+        if (!res[this.REX_STRING])
             return false;
         this.cmdTemp = new CML.String(res[this.REX_STRING]); // new string
         return true;
     }
     _parseComment(res) {
-        if (res[this.REX_COMMENT] == undefined)
+        if (!res[this.REX_COMMENT])
             return false;
         return true;
     }
     // create regular expression once
     _createCMLRegExp() {
-        if (this._globalVariables._requestUpdateRegExp) {
+        if (this._globalVariables._requestUpdateRegExp || this._compiledLabelRegExpString != this.currentLabelRegExpString) {
             const literalRegExpString = "(0x[0-9a-f]{1,8}|\\d+\\.?\\d*|\\$(\\?\\?|\\?|" + this._userReferenceRegExpString() + ")[0-9]?)";
             const operandRegExpString = CML.Formula._createOperandRegExpString(literalRegExpString);
             // oonstruct regexp string
@@ -277,30 +251,33 @@ CML.Parser = class {
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula and arguments (res[5])
             rexstr += "|" + CML.State.command_rex; // normal commands (res[6])
             rexstr += "|" + CML.Assign.assign_rex; // assign (res[7])
-            rexstr += "|(&)"; // call sequence or command (res[8])
+            rexstr += "|&("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
             rexstr += "|#([A-Za-z_][A-Za-z0-9_]*)\s*\\{"; // labeled sequence definition (res[9])
             rexstr += "|(\\{)"; // non-labeled sequence definition (res[10])
             rexstr += ")\s*" + operandRegExpString + ")"; // argument(res[11,12];prefix, res[13,14];literal, res[15,16];postfix)
             rexstr += "|([a-z]+)"; // error (res[17])
             this._regexp = new RegExp(rexstr, "gm"); // "s" optoin not available on javascript
-            this._regexpUserCommand = this._userCommandRegExp();
             this._globalVariables._requestUpdateRegExp = false;
+            this._compiledLabelRegExpString = this.currentLabelRegExpString;
         }
         this._regexp.lastIndex = 0;
         return this._regexp;
     }
+    // append new formula
+    _append_formula(fml, state) {
+        if (fml) {
+            if (!fml.construct())
+                throw Error("in formula");
+            state._args = fml._calcStatic();
+            if (state._args.some(num=>isNaN(num))) {
+                this.listState.push(fml);
+                this._update_max_reference(fml.max_reference);
+            }
+        }
+    }
     // append new command
     _append_statement(state) {
         this.listState.push(state);
-    }
-    // append new formula
-    _append_formula(fml) {
-        if (fml != null) {
-            if (!fml.construct())
-                throw Error("in formula");
-            this.listState.push(fml);
-            this._update_max_reference(fml.max_reference);
-        }
     }
     // cut sequence from the list
     _cut_sequence(start, end) {
@@ -332,9 +309,9 @@ CML.Parser = class {
     }
     // create new assign command
     _new_assign(str) {
-        var asg = new CML.Assign(str);
-        this._update_max_reference(asg.max_reference);
-        return asg;
+        const newAssign = new CML.Assign(str);
+        this._update_max_reference(newAssign.max_reference);
+        return newAssign;
     }
     // check and update max reference of sequence
     _update_max_reference(max_reference) {
@@ -343,57 +320,20 @@ CML.Parser = class {
         }
     }
     // set arguments 
-    _check_argument(state, res, isComma = false) {
-        var prefix = res[this.REX_ARG_PREFIX];
-        var literal = res[this.REX_ARG_LITERAL];
-        var postfix = res[this.REX_ARG_POSTFIX];
-        // push 0 before ","
-        if (isComma && state._args.length == 0)
-            state._args.push(Number.NaN);
-        // push argument
-        var fml = null;
-        if (literal != undefined) {
-            // set number when this argument is constant value
-            if (literal.charAt(0) != "$") {
-                if (postfix == undefined) {
-                    if (prefix == undefined) {
-                        state._args.push(Number(literal));
-                        return null;
-                    }
-                    else if (prefix == "-") {
-                        state._args.push(-(Number(literal)));
-                        return null;
-                    }
-                }
-                else if (postfix == ")") {
-                    if (prefix == "(") {
-                        state._args.push(Number(literal));
-                        return null;
-                    }
-                    else if (prefix == "-(") {
-                        state._args.push(-(Number(literal)));
-                        return null;
-                    }
-                }
-            }
-            // set formula when this argument is variable
-            state._args.push(0);
-            fml = new CML.Formula(state, false);
-            fml.pushPrefix(prefix, true);
-            fml.pushLiteral(literal);
-            fml.pushPostfix(postfix, true);
-        }
-        else {
-            // push NaN when there are no arguments in "," command
-            if (isComma)
-                state._args.push(Number.NaN);
-        }
+    _check_argument(state, res) {
+        const prefix  = res[this.REX_ARG_PREFIX],
+              literal = res[this.REX_ARG_LITERAL],
+              postfix = res[this.REX_ARG_POSTFIX];
+        // no arguments
+        if (!literal)
+            return null;
+        // no arguments
+        state._args.push(0);
+        const fml = new CML.Formula(state, false);
+        fml.pushPrefix(prefix, true);
+        fml.pushLiteral(literal);
+        fml.pushPostfix(postfix, true);
         return fml;
-    }
-    // regular expression string of user command. call from _createCMLRegExp()
-    _userCommandRegExp() {
-        const keys = Object.keys(this._globalVariables._mapUsrDefCmd);
-        return (keys.length>0) ? new RegExp(keys.sort((a,b)=>((a>b)?-1:1)).join('|'), "gm") : null;
     }
     // regular expression string of user command. call from CML.Formula
     _userReferenceRegExpString() {

@@ -11,23 +11,20 @@
 CML.Formula = class extends CML.State {
     // functions
     //------------------------------------------------------------
-    constructor(state, pnfa) {
+    constructor(state, copyfromArgument) {
         super(CML.State.ST_FORMULA | CML.State.STF_BE_INTERPOLATED);
         // variables
         //------------------------------------------------------------
-        this._arg_index = 0;
         this._form = null;
-        this.max_reference = 0;
         this.jump = state;
         this.func = this._calc;
-        this._arg_index = state._args.length - 1;
         CML.Formula.stacOperator.length = 0;
         this.max_reference = 0;
-        // Pickup Number From Argument ?
-        if (pnfa) {
+        // copy argument to operand, when the 1st operand already parsed as the 1st argument
+        if (copyfromArgument) {
             CML.Formula.stacOperand.length = 1;
             CML.Formula.stacOperand[0] = new CML.FormulaLiteral();
-            CML.Formula.stacOperand[0].num = state._args[this._arg_index];
+            CML.Formula.stacOperand[0].num = state._args[0];
         }
         else {
             CML.Formula.stacOperand.length = 0;
@@ -35,8 +32,7 @@ CML.Formula = class extends CML.State {
     }
     // Initialize all statics (call from CML.Parser._createCMLRegExp())
     static _createOperandRegExpString(literalRegExpString) {
-        var rex;
-        rex = "(" + CML.FormulaOperator.prefix_rex + "+)?";
+        let rex = "(" + CML.FormulaOperator.prefix_rex + "+)?";
         rex += literalRegExpString + "?";
         rex += "(" + CML.FormulaOperator.postfix_rex + "+)?";
         return rex;
@@ -54,11 +50,11 @@ CML.Formula = class extends CML.State {
     //------------------------------------------------------------
     // push operator stac
     pushOperator(oprator, isSingle) {
-        if (oprator == undefined)
+        if (!oprator)
             return false;
-        var ope = new CML.FormulaOperator(oprator, isSingle);
+        const ope = new CML.FormulaOperator(oprator, isSingle);
         while (CML.Formula.stacOperator.length > 0 && CML.Formula.stacOperator[0].priorL > ope.priorR) {
-            var oprcnt = CML.Formula.stacOperator[0].oprcnt;
+            const oprcnt = CML.Formula.stacOperator[0].oprcnt;
             if (CML.Formula.stacOperand.length < oprcnt)
                 return false;
             CML.Formula.stacOperator[0].opr1 = (oprcnt > 1) ? (CML.Formula.stacOperand.shift()) : (null);
@@ -74,27 +70,27 @@ CML.Formula = class extends CML.State {
     }
     // push operand stac
     pushLiteral(literal) {
-        if (literal == undefined)
+        if (!literal)
             return;
-        var lit = new CML.FormulaLiteral();
-        var ret = lit.parseLiteral(literal);
+        const lit = new CML.FormulaLiteral();
+        const ret = lit.parseLiteral(literal);
         if (this.max_reference < ret)
             this.max_reference = ret;
         CML.Formula.stacOperand.unshift(lit);
     }
     // push prefix
     pushPrefix(prefix, isSingle) {
-        return (prefix != undefined) ? this._parse_and_push(CML.Formula._prefixRegExp, prefix, isSingle) : true;
+        return (prefix) ? this._parse_and_push(CML.Formula._prefixRegExp, prefix, isSingle) : true;
     }
     // push postfix
     pushPostfix(postfix, isSingle) {
-        return (postfix != undefined) ? this._parse_and_push(CML.Formula._postfixRegExp, postfix, isSingle) : true;
+        return (postfix) ? this._parse_and_push(CML.Formula._postfixRegExp, postfix, isSingle) : true;
     }
     // call from pushPostfix and pushPrefix.
     _parse_and_push(rex, str, isSingle) {
         rex.lastIndex = 0;
-        var res = rex.exec(str);
-        while (res != null) {
+        let res = rex.exec(str);
+        while (res) {
             if (!this.pushOperator(res[1], isSingle))
                 return false;
             res = rex.exec(str);
@@ -104,7 +100,7 @@ CML.Formula = class extends CML.State {
     // construct formula structure
     construct() {
         while (CML.Formula.stacOperator.length > 0) {
-            var oprcnt = CML.Formula.stacOperator[0].oprcnt;
+            const oprcnt = CML.Formula.stacOperator[0].oprcnt;
             if (CML.Formula.stacOperand.length < oprcnt)
                 return false;
             CML.Formula.stacOperator[0].opr1 = (oprcnt > 1) ? (CML.Formula.stacOperand.shift()) : (null);
@@ -113,16 +109,23 @@ CML.Formula = class extends CML.State {
         }
         if (CML.Formula.stacOperand.length == 1)
             this._form = CML.Formula.stacOperand.shift();
-        return (this._form != null);
+        return Boolean(this._form);
     }
     // calculation
     //------------------------------------------------------------
     _calc(fbr) {
-        this.jump._args[this._arg_index] = this._form.calc(fbr);
+        fbr.calcstac = [];
+        fbr.calcstac.push(this._form.calc(fbr));
+        this.jump._args = fbr.calcstac.concat();
         return true;
     }
+    _calcStatic() {
+        const fbr = {"calcstac":[]};
+        fbr.calcstac.push(this._form.calcStatic(fbr));
+        return fbr.calcstac;
+    }
 }
-CML.Formula.stacOperator = new Array();
-CML.Formula.stacOperand = new Array();
+CML.Formula.stacOperator = [];
+CML.Formula.stacOperand = [];
 CML.Formula._prefixRegExp = null;
 CML.Formula._postfixRegExp = null;

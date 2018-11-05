@@ -245,7 +245,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             if (cmd.type & CML.State.STF_CALLREF) {
                 // skip formula command
                 cmd_verify = cmd_next;
-                while (cmd_verify.type == CML.State.ST_FORMULA) {
+                while (cmd_verify.type == (CML.State.ST_FORMULA | CML.State.STF_BE_INTERPOLATED)) {
                     cmd_verify = cmd_verify.next;
                 }
                 // if there are no references, ... 

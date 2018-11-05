@@ -7,5 +7,6 @@
 CML.FormulaElem = class {
     constructor() { }
     calc(fbr) { return 0; }
+    calcStatic(frb) { return 0; }
 }
 CML.FormulaElem._globalVariables = null;
