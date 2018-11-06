@@ -100,9 +100,7 @@ CML.Parser = class {
     _append() {
         // append previous statement and formula
         if (this.cmdTemp != null) {
-            this._append_formula(this.cmdTemp.formula, this.cmdTemp);
             this._append_statement(this.cmdTemp.setCommand(this.cmdKey));
-            this.cmdTemp.formula = null;
         }
         // reset
         this.cmdKey = "";
@@ -261,20 +259,14 @@ CML.Parser = class {
         this._regexp.lastIndex = 0;
         return this._regexp;
     }
-    // append new formula
-    _append_formula(fml, state) {
-        if (fml) {
-            if (!fml.construct())
-                throw Error("in formula");
-            state._args = fml._calcStatic(0);
-            if (!fml.isStatic) {
-                this.listState.push(fml);
-                this._update_max_reference(fml.max_reference);
-            }
-        }
-    }
     // append new command
     _append_statement(state) {
+        if (state.formula) {
+            if (!state.formula.construct())
+                throw Error("in formula");
+            state.formula.calcStatic();
+            state._args = state.formula.variables.concat();
+        }
         this.listState.push(state);
     }
     // cut sequence from the list

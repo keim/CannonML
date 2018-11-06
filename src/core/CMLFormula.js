@@ -16,7 +16,7 @@ CML.Formula = class extends CML.State {
         // variables
         //------------------------------------------------------------
         this.jump = state;
-        this.func = this._calc;
+        this.func = this.calcDynamic;
         this.variables = [];
         this.isStatic = true;
         this._root = null;
@@ -115,16 +115,14 @@ CML.Formula = class extends CML.State {
     }
     // calculation
     //------------------------------------------------------------
-    _calcStatic() {
+    calcStatic() {
         this.variables = [];
         this.variables.push(this._root.calcStatic());
-        this.isStatic = this.variables.every(num=>!isNaN(num));
-        return this.variables;
+        return (this.isStatic = this.variables.every(num=>!isNaN(num)));
     }
-    _calc(fbr) {
+    calcDynamic(fbr) {
         this.variables = [];
         this.variables.push(this._root.calc(fbr));
-        this.jump._args = this.variables.concat();
         return true;
     }
 }

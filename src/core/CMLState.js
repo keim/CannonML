@@ -375,6 +375,15 @@ CML.State = class extends CML.ListElem {
             }
         }
     }
+    /** execute */
+    execute(fbr) {
+        if (this.formula){
+            if (!this.formula.isStatic) this.formula.calcDynamic();
+            this._args = this.formula.variables.concat();
+        }
+        return this.func(fbr);
+    }
+
     // command executer
     //------------------------------------------------------------
     // set invertion flag (call from CML.Fiber.execute())
@@ -402,7 +411,7 @@ CML.State = class extends CML.ListElem {
                 fbr._pointer = fbr._pointer.jump;
             fbr._pointer = fbr._pointer.prev;
         } else if (fbr.lcnt[0] == -2 && this.prev.type == CML.State.ST_FORMULA)
-            this.prev.func(fbr);
+            this.prev.execute(fbr);
         return true;
     }
     _block_end(fbr) {
@@ -435,7 +444,7 @@ CML.State = class extends CML.ListElem {
     _wi(fbr) {
         while (fbr._pointer.next.type & CML.State.STF_BE_INTERPOLATED) {
             fbr._pointer = fbr._pointer.next;
-            fbr._pointer.func(fbr);
+            fbr._pointer.execute(fbr);
         }
         fbr.wcnt = fbr.wtm2;
         return (fbr.wcnt == 0);
@@ -445,7 +454,7 @@ CML.State = class extends CML.ListElem {
         fbr.chgt = 0;
         while (fbr._pointer.next.type & CML.State.STF_BE_INTERPOLATED) {
             fbr._pointer = fbr._pointer.next;
-            fbr._pointer.func(fbr);
+            fbr._pointer.execute(fbr);
         }
         fbr.chgt = _chgt;
         return true;
@@ -456,7 +465,7 @@ CML.State = class extends CML.ListElem {
         CML.State._invert_flag = fbr.invt ^ (((this._args[0]) + 1) >> 0);
         // execute next statement
         fbr._pointer = fbr._pointer.next;
-        const res = fbr._pointer.func(fbr);
+        const res = fbr._pointer.execute(fbr);
         // reset flag
         CML.State._invert_flag = fbr.invt;
         return res;

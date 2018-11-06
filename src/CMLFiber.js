@@ -295,7 +295,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             var i = 0;
             var res = true;
             while (res && this._pointer != null) {
-                res = this._pointer.func(this); // execute CML.State function
+                res = this._pointer.execute(this); // execute CML.State function
                 this._pointer = this._pointer.next; // increment pointer
                 // too many loops error, script may has no wait.
                 if (++i == CML.Fiber._loopmax) {

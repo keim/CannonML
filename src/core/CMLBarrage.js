@@ -67,6 +67,7 @@ CML.Barrage = class {
      *  @param interval_ rapid interval frame.
      */
     appendMultiple(count_, angle_, speed_, interval_) {
+        console.log(count_, angle_, speed_, interval_);
         this.qrtList.push(CML.Barrage.alloc().setMultiple(count_, angle_, speed_, interval_));
     }
     /** Append append new element "br"
