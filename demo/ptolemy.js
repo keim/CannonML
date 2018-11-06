@@ -11,7 +11,7 @@ class Ptolemy {
   constructor(option) {
     option = option || {};
 
-    // member valiables
+    // member variables
     this._starttime = 0;
     this._prevtime = 0;
     this.paused = Boolean(option.paused);

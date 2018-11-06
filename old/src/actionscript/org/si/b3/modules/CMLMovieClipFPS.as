@@ -13,7 +13,7 @@ package org.si.b3.modules {
     /** FPS controling module */
     public class CMLMovieClipFPS
     {
-    // valiables
+    // variables
     //----------------------------------------
         /** @private unique instance */
         static internal var instance:CMLMovieClipFPS;

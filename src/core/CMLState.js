@@ -15,6 +15,7 @@ CML.State = class extends CML.ListElem {
         this._args = [];
         this.jump = null;
         this.type = type_;
+        this.formula = null;
         switch (this.type) {
             case CML.State.ST_RAPID:
                 this.func = this._rapid_fire;

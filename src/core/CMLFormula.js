@@ -15,12 +15,11 @@ CML.Formula = class extends CML.State {
         super(CML.State.ST_FORMULA | CML.State.STF_BE_INTERPOLATED);
         // variables
         //------------------------------------------------------------
-        this._form = null;
         this.jump = state;
         this.func = this._calc;
-        this.valiables = [];
+        this.variables = [];
         this.isStatic = true;
-        this._stacIndex = 0;
+        this._root = null;
         this.max_reference = 0;
         CML.Formula.stacOperator.length = 0;
         // copy argument to operand, when the 1st operand already parsed as the 1st argument
@@ -52,10 +51,10 @@ CML.Formula = class extends CML.State {
     // function to create formula structure
     //------------------------------------------------------------
     // push operator stac
-    pushOperator(oprator, isSingle) {
+    pushOperator(oprator, oprcnt) {
         if (!oprator)
             return false;
-        const ope = new CML.FormulaOperator(this, oprator, isSingle);
+        const ope = new CML.FormulaOperator(this, oprator, oprcnt);
         while (CML.Formula.stacOperator.length > 0 && CML.Formula.stacOperator[0].priorL > ope.priorR) {
             const oprcnt = CML.Formula.stacOperator[0].oprcnt;
             if (CML.Formula.stacOperand.length < oprcnt)
@@ -65,7 +64,7 @@ CML.Formula = class extends CML.State {
             CML.Formula.stacOperand.unshift(CML.Formula.stacOperator.shift());
         }
         // closed by ()
-        if (CML.Formula.stacOperator.length > 0 && CML.Formula.stacOperator[0].priorL == 1 && ope.priorR == 1)
+        if (CML.Formula.stacOperator.length > 0 && CML.Formula.stacOperator[0].priorR == 99 && ope.priorL == 99)
             CML.Formula.stacOperator.shift();
         else
             CML.Formula.stacOperator.unshift(ope);
@@ -82,19 +81,19 @@ CML.Formula = class extends CML.State {
         CML.Formula.stacOperand.unshift(lit);
     }
     // push prefix
-    pushPrefix(prefix, isSingle) {
-        return (prefix) ? this._parse_and_push(CML.Formula._prefixRegExp, prefix, isSingle) : true;
+    pushPrefix(prefix) {
+        return (prefix) ? this._parse_and_push(CML.Formula._prefixRegExp, prefix) : true;
     }
     // push postfix
-    pushPostfix(postfix, isSingle) {
-        return (postfix) ? this._parse_and_push(CML.Formula._postfixRegExp, postfix, isSingle) : true;
+    pushPostfix(postfix) {
+        return (postfix) ? this._parse_and_push(CML.Formula._postfixRegExp, postfix) : true;
     }
     // call from pushPostfix and pushPrefix.
-    _parse_and_push(rex, str, isSingle) {
+    _parse_and_push(rex, str) {
         rex.lastIndex = 0;
         let res = rex.exec(str);
         while (res) {
-            if (!this.pushOperator(res[1], isSingle))
+            if (!this.pushOperator(res[1], 1))
                 return false;
             res = rex.exec(str);
         }
@@ -111,22 +110,21 @@ CML.Formula = class extends CML.State {
             CML.Formula.stacOperand.unshift(CML.Formula.stacOperator.shift());
         }
         if (CML.Formula.stacOperand.length == 1)
-            this._form = CML.Formula.stacOperand.shift();
-        return Boolean(this._form);
+            this._root = CML.Formula.stacOperand.shift();
+        return Boolean(this._root);
     }
     // calculation
     //------------------------------------------------------------
-    _calcStatic(variablesLength) {
-        this._stacIndex = 0;
-        this.valiables.length = variablesLength;
-        this.valiables[this._stacIndex] = this._form.calcStatic();
-        this.isStatic = this.valiables.every(num=>!isNaN(num));
-        return this.valiables;
+    _calcStatic() {
+        this.variables = [];
+        this.variables.push(this._root.calcStatic());
+        this.isStatic = this.variables.every(num=>!isNaN(num));
+        return this.variables;
     }
     _calc(fbr) {
-        this._stacIndex = 0;
-        this.valiables[this._stacIndex] = this._form.calc(fbr);
-        this.jump._args = this.valiables.concat();
+        this.variables = [];
+        this.variables.push(this._root.calc(fbr));
+        this.jump._args = this.variables.concat();
         return true;
     }
 }
