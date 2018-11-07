@@ -66,8 +66,6 @@ CML.Fiber = class extends CML.ListElem {
         /** @private _cml_fiber_internal */ this.jstc = []; // sub routine call stac
         /** @private _cml_fiber_internal */ this.istc = []; // invertion flag stac
         /** @private _cml_fiber_internal */ this.vars = []; // fiber variables
-        /** @private _cml_fiber_internal */ this.varc = []; // fiber variables counts
-        this._gene = 0;
     }
     // properties
     //------------------------------------------------------------
@@ -189,7 +187,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
      *  @return Value of variable.
      */
     getVeriable(idx) {
-        return (idx < this.varc[0]) ? this.vars[idx] : 0;
+        return this.vars[0][idx];
     }
     /** Get the loop counter of this fiber.
      *  @param Nested loop index. The index of 0 means the most inner loop, and 1 means the loop 1 outside.
@@ -219,7 +217,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.jstc.length = 0; // clear sub-routine call stac
         this.istc.length = 0; // clear invertion stac
         this._firstDest = this._listChild.end; // reset last child
-        this._unshiftArguments(seq.require_argc, args_); // set argument
+        this._unshiftVariables(args_); // set argument
         return (this._gene < CML.Fiber._stacmax);
     }
     // finalizer 
@@ -250,7 +248,6 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.wtm1 = 1; // waiting time for "w"
         this.wtm2 = 1; // waiting time for "~"
         this.vars.length = 0;
-        this.varc.length = 0;
         var nop = CML.Sequence.nop();
         this.seqSub = nop;
         this.seqExec = nop;
@@ -331,41 +328,13 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     }
     // push arguments
     /** @private _cml_fiber_internal */
-    _unshiftArguments(argCount = 0, argArray = null) {
-        var i, imax;
-        if (argCount == 0 && (!argArray || argArray.length == 0)) {
-            this.varc.unshift(0);
-        }
-        else {
-            if (argArray) {
-                argCount = (argCount > argArray.length) ? argCount : argArray.length;
-                this.varc.unshift(argCount);
-                imax = this.vars.length;
-                this.vars.length = imax + argCount;
-                for (i = 0; i < imax; i++) {
-                    this.vars[i + argCount] = this.vars[i];
-                }
-                for (i = 0; i < argCount; i++) {
-                    this.vars[i] = (i < argArray.length) ? argArray[i] : 0;
-                }
-            }
-            else {
-                this.varc.unshift(argCount);
-                imax = this.vars.length;
-                this.vars.length = imax + argCount;
-                for (i = 0; i < imax; i++) {
-                    this.vars[i + argCount] = this.vars[i];
-                }
-                for (i = 0; i < argCount; i++) {
-                    this.vars[i] = 0;
-                }
-            }
-        }
+    _unshiftVariables(argArray = null) {
+        this.vars.unshift(Object.assign(new Array(9).fill(0), argArray));
     }
     // pop arguments
     /** @private _cml_fiber_internal */
-    _shiftArguments() {
-        this.vars.splice(0, this.varc.shift());
+    _shiftVariables() {
+        this.vars.shift();
     }
     // push invertion
     /** @private _cml_fiber_internal */

@@ -99,9 +99,8 @@ CML.Parser = class {
     }
     _append() {
         // append previous statement and formula
-        if (this.cmdTemp != null) {
+        if (this.cmdTemp) 
             this._append_statement(this.cmdTemp.setCommand(this.cmdKey));
-        }
         // reset
         this.cmdKey = "";
         this.cmdTemp = null;
@@ -116,8 +115,6 @@ CML.Parser = class {
             return false;
         if (!this.cmdTemp)
             throw Error("in formula " + res[this.REX_FORMULA]);
-        if (!this.cmdTemp.formula)
-            this.cmdTemp.formula = new CML.Formula(this.cmdTemp, true); // new formula
         if (!this.cmdTemp.formula.pushOperator(res[this.REX_FORMULA], 2))
             throw Error("in formula " + res[1]);
         this.cmdTemp.formula.pushPrefix(res[this.REX_ARG_PREFIX]);
@@ -175,7 +172,7 @@ CML.Parser = class {
         }
         // push new argument
         if (this.cmdTemp) {
-            this.cmdTemp.formula = this._check_argument(this.cmdTemp, res);
+            this._check_argument(this.cmdTemp, res);
         }
         return true;
     }
@@ -183,7 +180,7 @@ CML.Parser = class {
         if (!res[this.REX_LABELDEF])
             return false;
         this.cmdTemp = this._new_sequence(this.childstac[0], res[this.REX_LABELDEF]); // new sequence with label
-        this.cmdTemp.formula = this._check_argument(this.cmdTemp, res); // push new argument
+        this._check_argument(this.cmdTemp, res); // push new argument
         this.childstac.unshift(this.cmdTemp); // push child stac
         return true;
     }
@@ -191,7 +188,7 @@ CML.Parser = class {
         if (!res[this.REX_NONLABELDEF])
             return false;
         this.cmdTemp = this._new_sequence(this.childstac[0], null); // new sequence without label
-        this.cmdTemp.formula = this._check_argument(this.cmdTemp, res); // push new argument
+        this._check_argument(this.cmdTemp, res); // push new argument
         this.childstac.unshift(this.cmdTemp); // push child stac
         return true;
     }
@@ -202,14 +199,14 @@ CML.Parser = class {
             this.cmdTemp = this._new_user_defined(res[this.REX_CALLSEQ]); // new user command
         else 
         this.cmdTemp = this._new_reference(null, res[this.REX_CALLSEQ]); // new reference call
-        this.cmdTemp.formula = this._check_argument(this.cmdTemp, res); // push new argument
+        this._check_argument(this.cmdTemp, res); // push new argument
         return true;
     }
     _parseAssign(res) {
         if (!res[this.REX_ASSIGN])
             return false;
         this.cmdTemp = this._new_assign(res[this.REX_ASSIGN]); // new command
-        this.cmdTemp.formula = this._check_argument(this.cmdTemp, res); // push new argument
+        this._check_argument(this.cmdTemp, res); // push new argument
         return true;
     }
     _parseString(res) {
@@ -261,12 +258,8 @@ CML.Parser = class {
     }
     // append new command
     _append_statement(state) {
-        if (state.formula) {
-            if (!state.formula.construct())
-                throw Error("in formula");
-            state.formula.calcStatic();
-            state._args = state.formula.variables.concat();
-        }
+        if (!state.construct())
+            throw Error("in formula");
         this.listState.push(state);
     }
     // cut sequence from the list
@@ -299,35 +292,19 @@ CML.Parser = class {
     }
     // create new assign command
     _new_assign(str) {
-        const newAssign = new CML.Assign(str);
-        this._update_max_reference(newAssign.max_reference);
-        return newAssign;
-    }
-    // check and update max reference of sequence
-    _update_max_reference(max_reference) {
-        if (this.childstac[0].require_argc < max_reference) {
-            this.childstac[0].require_argc = max_reference;
-        }
+        return new CML.Assign(str);
     }
     // set arguments 
     _check_argument(state, res) {
-        const prefix  = res[this.REX_ARG_PREFIX],
-              literal = res[this.REX_ARG_LITERAL],
-              postfix = res[this.REX_ARG_POSTFIX];
-        // no arguments
-        if (!literal)
-            return null;
-        // no arguments
-        state._args.push(0);
-        const fml = new CML.Formula(state, false);
-        fml.pushPrefix(prefix);
-        fml.pushLiteral(literal);
-        fml.pushPostfix(postfix);
-        return fml;
+        if (res[this.REX_ARG_LITERAL]) {
+            state.formula.pushPrefix(res[this.REX_ARG_PREFIX]);
+            state.formula.pushLiteral(res[this.REX_ARG_LITERAL]);
+            state.formula.pushPostfix(res[this.REX_ARG_POSTFIX]);
+        }
     }
     // regular expression string of user command. call from CML.Formula
     _userReferenceRegExpString() {
-        return Object.keys(this._globalVariables._mapUsrDefRef).concat(CML.FormulaLiteral.defaultReferences)
-                .sort((a,b)=>((a>b)?-1:1)).join('|').replace(/\./g, '\\.');
+        return Object.keys(this._globalVariables._mapUsrDefRef).concat(Object.keys(CML.FormulaLiteral.operators))
+                .sort((a,b)=>((a>b)?-1:1)).join('|').replace(/[.?]/g, '\\$&');
     }
 }

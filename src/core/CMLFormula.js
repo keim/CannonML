@@ -4,33 +4,18 @@
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
 //import CML.State from "./CML.State.js";
-//import CML.FormulaElem from "./CML.FormulaElem.js";
 //import CML.FormulaLiteral from "./CML.FormulaLiteral.js";
 //import CML.FormulaOperator from "./CML.FormulaOperator.js";
 /** @private statemant for formula calculation */
-CML.Formula = class extends CML.State {
+CML.Formula = class {
     // functions
     //------------------------------------------------------------
-    constructor(state, copyfromArgument) {
-        super(CML.State.ST_FORMULA | CML.State.STF_BE_INTERPOLATED);
-        // variables
-        //------------------------------------------------------------
-        this.jump = state;
-        this.func = this.calcDynamic;
-        this.variables = [];
+    constructor() {
         this.isStatic = true;
-        this._root = null;
-        this.max_reference = 0;
-        CML.Formula.stacOperator.length = 0;
-        // copy argument to operand, when the 1st operand already parsed as the 1st argument
-        if (copyfromArgument) {
-            CML.Formula.stacOperand.length = 1;
-            CML.Formula.stacOperand[0] = new CML.FormulaLiteral(this);
-            CML.Formula.stacOperand[0].num = state._args[0];
-        }
-        else {
-            CML.Formula.stacOperand.length = 0;
-        }
+        this.answerCount = 0;
+        this._rootOperator = null;
+        this._stacOperator = [];
+        this._stacOperand = [];
     }
     // Initialize all statics (call from CML.Parser._createCMLRegExp())
     static _createOperandRegExpString(literalRegExpString) {
@@ -41,11 +26,12 @@ CML.Formula = class extends CML.State {
     }
     // initialize
     static _initialize(globalVariables_) {
-        CML.FormulaElem._globalVariables = globalVariables_;
+        CML.Formula._globalVariables = globalVariables_;
         CML.Formula._prefixRegExp = new RegExp(CML.FormulaOperator.prefix_rex, 'g');
         CML.Formula._postfixRegExp = new RegExp(CML.FormulaOperator.postfix_rex, 'g');
     }
-    /*override*/ _setCommand(cmd) {
+    // [override] 
+    _setCommand(cmd) {
         return this;
     }
     // function to create formula structure
@@ -54,31 +40,25 @@ CML.Formula = class extends CML.State {
     pushOperator(oprator, oprcnt) {
         if (!oprator)
             return false;
-        const ope = new CML.FormulaOperator(this, oprator, oprcnt);
-        while (CML.Formula.stacOperator.length > 0 && CML.Formula.stacOperator[0].priorL > ope.priorR) {
-            const oprcnt = CML.Formula.stacOperator[0].oprcnt;
-            if (CML.Formula.stacOperand.length < oprcnt)
+        const ope = new CML.FormulaOperator(oprator, oprcnt);
+        while (this._stacOperator.length > 0 && this._stacOperator[0].priorL > ope.priorR) {
+            const oprcnt = this._stacOperator[0].oprcnt;
+            if (this._stacOperand.length < oprcnt)
                 return false;
-            CML.Formula.stacOperator[0].opr1 = (oprcnt > 1) ? (CML.Formula.stacOperand.shift()) : (null);
-            CML.Formula.stacOperator[0].opr0 = (oprcnt > 0) ? (CML.Formula.stacOperand.shift()) : (null);
-            CML.Formula.stacOperand.unshift(CML.Formula.stacOperator.shift());
+            this._stacOperator[0].opr1 = (oprcnt > 1) ? (this._stacOperand.shift()) : (null);
+            this._stacOperator[0].opr0 = (oprcnt > 0) ? (this._stacOperand.shift()) : (null);
+            this._stacOperand.unshift(this._stacOperator.shift());
         }
         // closed by ()
-        if (CML.Formula.stacOperator.length > 0 && CML.Formula.stacOperator[0].priorR == 99 && ope.priorL == 99)
-            CML.Formula.stacOperator.shift();
+        if (this._stacOperator.length > 0 && this._stacOperator[0].priorR == 99 && ope.priorL == 99)
+            this._stacOperator.shift();
         else
-            CML.Formula.stacOperator.unshift(ope);
+            this._stacOperator.unshift(ope);
         return true;
     }
     // push operand stac
     pushLiteral(literal) {
-        if (!literal)
-            return;
-        const lit = new CML.FormulaLiteral(this);
-        const ret = lit.parseLiteral(literal);
-        if (this.max_reference < ret)
-            this.max_reference = ret;
-        CML.Formula.stacOperand.unshift(lit);
+        return (literal) ? this._stacOperand.unshift(new CML.FormulaLiteral(literal)) : true;
     }
     // push prefix
     pushPrefix(prefix) {
@@ -101,32 +81,40 @@ CML.Formula = class extends CML.State {
     }
     // construct formula structure
     construct() {
-        while (CML.Formula.stacOperator.length > 0) {
-            const oprcnt = CML.Formula.stacOperator[0].oprcnt;
-            if (CML.Formula.stacOperand.length < oprcnt)
+        // no arguments
+        if (this._stacOperand.length == 0)
+            return true;
+        // construct tree structure
+        while (this._stacOperator.length > 0) {
+            const oprcnt = this._stacOperator[0].oprcnt;
+            if (this._stacOperand.length < oprcnt)
                 return false;
-            CML.Formula.stacOperator[0].opr1 = (oprcnt > 1) ? (CML.Formula.stacOperand.shift()) : (null);
-            CML.Formula.stacOperator[0].opr0 = (oprcnt > 0) ? (CML.Formula.stacOperand.shift()) : (null);
-            CML.Formula.stacOperand.unshift(CML.Formula.stacOperator.shift());
+            this._stacOperator[0].opr1 = (oprcnt > 1) ? (this._stacOperand.shift()) : (null);
+            this._stacOperator[0].opr0 = (oprcnt > 0) ? (this._stacOperand.shift()) : (null);
+            this._stacOperand.unshift(this._stacOperator.shift());
         }
-        if (CML.Formula.stacOperand.length == 1)
-            this._root = CML.Formula.stacOperand.shift();
-        return Boolean(this._root);
+        // success when operand stac has only one member
+        if (this._stacOperand.length == 1)
+            this._rootOperator = this._stacOperand.shift();
+        return Boolean(this._rootOperator);
     }
     // calculation
     //------------------------------------------------------------
     calcStatic() {
-        this.variables = [];
-        this.variables.push(this._root.calcStatic());
-        return (this.isStatic = this.variables.every(num=>!isNaN(num)));
+        if (!this._rootOperator) 
+            return null;
+        const answers = [];
+        answers.push(this._rootOperator.calcStatic(answers));
+        this.isStatic = answers.every(num=>!isNaN(num));
+        this.answerCount = answers.length;
+        return (this.isStatic) ? answers : null;
     }
     calcDynamic(fbr) {
-        this.variables = [];
-        this.variables.push(this._root.calc(fbr));
-        return true;
+        const answers = [];
+        answers.push(this._rootOperator.calcDynamic(answers, fbr));
+        return answers;
     }
 }
-CML.Formula.stacOperator = [];
-CML.Formula.stacOperand = [];
+CML.Formula._globalVariables = null;
 CML.Formula._prefixRegExp = null;
 CML.Formula._postfixRegExp = null;

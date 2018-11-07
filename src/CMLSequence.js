@@ -51,7 +51,6 @@ CML.Sequence = class extends CML.State {
         this._non_labeled_count = 0;
         this._childSequences = {};
         this._global = false;
-        this.require_argc = 0;
         this.global = globalSequence;
         if (data) CML.Sequence._parser._parse(this, data);
     }
@@ -122,7 +121,7 @@ trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 1
 </listing>
      */
     getParameter(idx) {
-        return (idx < this._args.length) ? Number(this._args[idx]) : 0;
+        return (idx < this.$.length) ? Number(this.$[idx]) : 0;
     }
     // operations
     //------------------------------------------------------------

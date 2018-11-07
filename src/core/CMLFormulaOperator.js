@@ -3,11 +3,9 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-//import CML.FormulaElem from "./CML.FormulaElem.js";
 /** @private */
-CML.FormulaOperator = class extends CML.FormulaElem {
-    constructor(parent, opr, oprcnt = 2) {
-        super(parent);
+CML.FormulaOperator = class {
+    constructor(opr, oprcnt = 2) {
         this.oprcnt = oprcnt;
         this.opr0 = null;
         this.opr1 = null;
@@ -16,15 +14,15 @@ CML.FormulaOperator = class extends CML.FormulaElem {
             throw Error("syntax error: " + opr);
         Object.assign(this, hash);
     }
-    calc(fbr) {
-        const r0 = this.opr0.calc(fbr),
-              r1 = (this.oprcnt == 2) ? (this.opr1.calc(fbr)) : 0;
-        return this.func(r0, r1, this._parent.variables);
+    calcDynamic(resultStac, fbr) {
+        const r0 = this.opr0.calcDynamic(resultStac, fbr),
+              r1 = (this.oprcnt == 2) ? (this.opr1.calcDynamic(resultStac, fbr)) : 0;
+        return this.func(r0, r1, resultStac);
     }
-    calcStatic() {
-        const r0 = this.opr0.calcStatic(),
-              r1 = (this.oprcnt == 2) ? (this.opr1.calcStatic()) : 0;
-        return this.func(r0, r1, this._parent.variables);
+    calcStatic(resultStac) {
+        const r0 = this.opr0.calcStatic(resultStac),
+              r1 = (this.oprcnt == 2) ? (this.opr1.calcStatic(resultStac)) : 0;
+        return this.func(r0, r1, resultStac);
     }
 }
 /** @type {String} Regular expressions */
@@ -98,12 +96,12 @@ CML.FormulaOperator.operators = [{
         priorR: 11,
     },
     "$i?":{
-        func: r0=>Number(Math.floor(CML.FormulaElem._globalVariables.rand() * r0)),
+        func: r0=>Number(Math.floor(CML.Formula._globalVariables.rand() * r0)),
         priorL: 10,
         priorR: 11,
     },
     "$i??":{
-        func: r0=>Number(Math.floor(CML.FormulaElem._globalVariables.rand() * (r0 * 2 + 1)) - r0),
+        func: r0=>Number(Math.floor(CML.Formula._globalVariables.rand() * (r0 * 2 + 1)) - r0),
         priorL: 10,
         priorR: 11,
     }

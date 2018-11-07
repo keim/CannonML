@@ -22,7 +22,7 @@ CML.UserDefine = class extends CML.State {
         return this;
     }
     _call(fbr) {
-        this._funcUserDefine(fbr, this._args);
+        this._funcUserDefine(fbr, this.$);
         return true;
     }
 }
