@@ -15,9 +15,6 @@ CML.Refer = class extends CML.State {
     //------------------------------------------------------------
     constructor(pointer = null, label_ = null) {
         super(CML.State.ST_REFER);
-        // variables
-        //------------------------------------------------------------
-        this._label = null;
         this.jump = pointer;
         this._label = label_;
     }
