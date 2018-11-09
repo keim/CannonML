@@ -56,4 +56,3 @@ CML.Assign = class extends CML.State {
     _mul(fbr) { fbr.vars[0][this._index] *= this.$[0]; return true; }
     _div(fbr) { fbr.vars[0][this._index] /= this.$[0]; return true; }
 }
-CML.Assign.assign_rex = "l\\$([1-9r][+\\-*/]?)=";

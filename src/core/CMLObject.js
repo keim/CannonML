@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------------
 //import CML.List from "./CML.List.js";
 //import CML.ListElem from "./CML.ListElem.js";
+//import CML.Vector from "./CML.Vector.js"
 //import interpolation from "./interpolation.js";
 /** <b>Basic class for all objects.</b>
  * @see CML.Object#initialize()
@@ -23,18 +24,19 @@ CML.Object = class extends CML.ListElem {
         super();
         // public variables
         //------------------------------------------------------------
-        /** X value of position. */
-        this.x = 0;
-        /** Y value of position. */
-        this.y = 0;
-        /** Z value of position. */
-        this.z = 0;
-        /** X value of velocity. */
-        this.vx = 0;
-        /** Y value of velocity. */
-        this.vy = 0;
-        /** Z value of velocity. */
-        this.vz = 0;
+        this.pos = new CML.Vector();
+        this.vel = new CML.Vector();
+        this.acc = new CML.Vector();
+        this.bez = new CML.Vector();
+        this.relative = new CML.Vector();
+        this.projected = new CML.Vector();
+        this.euler = new CML.Vector();
+        this.quat = new CML.Vector();
+        this.euler.changed = false;
+        this.quat.w = 1;
+        this.counter = 0;
+        this.bmlVelocity = 0;
+        this.bmlAccel = 0;
         // common parameters
         this._id = 0; // construction id
         this._parent = null; // parent object
@@ -43,29 +45,12 @@ CML.Object = class extends CML.ListElem {
         this._destructionStatus = -1; // destruction status
         this._IDedChildren = []; // children list that has access id
         this._partChildren = []; // children list that is part of this
-        // motion parameters
-        this._rx = 0; // relative position
-        this._ry = 0;
-        this._rz = 0;
-        this._ax = 0; // accelaration
-        this._ay = 0;
-        this._az = 0;
-        this._bx = 0; // differential of accelaration
-        this._by = 0;
-        this._bz = 0;
-        this._ac = 0; // accelaration counter
         this._motion_type = CML.Object.MT_CONST; // motion type
         this._age = 0; // age in frame
-        // posture
-        this._head = 0; // head angle (z-axis rotation)
-        this._head_offset = 0; // head angle offset
-        this._pitch = 0; // pitch angle (x-axis rotation)
-        this._bank = 0; // bank angle (y-axis rotation)
         // rotation
         this._roti = new CML.interpolation(); // rotation CML.interpolation
         this._rott = 0; // rotation parameter
         this._rotd = 0; // rotation parameter increament
-        this._id = 0;
     }
     // public properties
     //------------------------------------------------------------
@@ -105,11 +90,15 @@ target_object = null;                   // target object was destroyed.
     get isActive() { return (this._parent != null); }
     /** Is this object a part of its parent ? The part object's position is relative to parent's position. */
     get isPart() { return Boolean(this._motion_type & CML.Object.MT_PART_FLAG); }
+    /** Is this object bulletML mode. */
+    get isBMLMode() { return (this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_BULLETML; }
     /** Does this object have another object as a part ? */
     get hasParts() { return (this._partChildren.length != 0); }
     /** You can define the "$r" value for each object by overriding this property, Ussualy returns CML.Global.getRank(0). @see CML.Global#getRank */
     get rank() { return CML.Object._globalVariables.getRank(0); }
     set rank(r) { CML.Object._globalVariables.setRank(0, r); }
+    /** age in frames */
+    get age() { return this._age; }
     /** Destruction status. You can refer the argument of destroy() or the '&#64;ko' command. Returns -1 when the object isn't destroyed.
      *  @see CML.Object#onDestroy()
      *  @see CML.Object#destroy()
@@ -117,44 +106,78 @@ target_object = null;                   // target object was destroyed.
      */
     get destructionStatus() { return this._destructionStatus; }
     /** The x value of position parent related */
-    get relatedX() { return (this._motion_type & CML.Object.MT_PART_FLAG) ? this._rx : this.x; }
+    get relatedX() { return (this.isPart) ? this.relative.x : this.pos.x; }
     /** The y value of position parent related */
-    get relatedY() { return (this._motion_type & CML.Object.MT_PART_FLAG) ? this._ry : this.y; }
+    get relatedY() { return (this.isPart) ? this.relative.y : this.pos.y; }
     /** The z value of position parent related */
-    get relatedZ() { return (this._motion_type & CML.Object.MT_PART_FLAG) ? this._rz : this.z; }
+    get relatedZ() { return (this.isPart) ? this.relative.z : this.pos.z; }
     // velocity
     /** Absolute value of velocity. */
-    get velocity() { return ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_BULLETML) ? this._ax : (Math.sqrt(this.vx * this.vx + this.vy * this.vy)); }
+    get velocity() { return (this.isBMLMode) ? this.bmlVelocity : this.vel.length(); }
     set velocity(vel) {
-        if ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_BULLETML) {
-            this._ax = vel;
-        }
-        else {
-            const r = vel / this.velocity;
-            this.vx *= r;
-            this.vy *= r;
-        }
+        if (this.isBMLMode) 
+            this.bmlVelocity = vel;
+        else 
+            this.vel.setLength(vel);
     }
-    /** age in frames */
-    get age() { return this._age; }
     // angles
     /** Angle of this object, scrolling direction is 0 degree. */
-    get angle() { return ((this._motion_type & CML.Object.MT_PART_FLAG) ? (this._head_offset + this._parent.angleOnScreen) : (this._head_offset)) + this._head + CML.Object._globalVariables.scrollAngle; }
-    set angle(ang) { this._head = ang - ((this._motion_type & CML.Object.MT_PART_FLAG) ? (this._head_offset + this._parent.angleOnScreen) : (this._head_offset)) - CML.Object._globalVariables.scrollAngle; }
+    get angle() { 
+        return this.angleOnScreen + CML.Object._globalVariables._scrollRadian;
+    }
+    set angle(ang) {
+        this.angleOnScreen = ang - CML.Object._globalVariables._scrollRadian;
+    }
     /** Angle of this object, The direction(1,0) is 0 degree. */
-    get angleOnScreen() { return ((this._motion_type & CML.Object.MT_PART_FLAG) ? (this._head_offset + this._parent.angleOnScreen) : (this._head_offset)) + this._head; }
-    set angleOnScreen(ang) { this._head = ang - ((this._motion_type & CML.Object.MT_PART_FLAG) ? (this._head_offset + this._parent.angleOnScreen) : (this._head_offset)); }
+    get angleOnScreen() { 
+        return this.angleParentOnScreen + this.head;
+    }
+    set angleOnScreen(ang) {
+        this.head = ang - this.angleParentOnScreen;
+    }
     /** Angle of this parent object, scrolling direction is 0 degree. */
-    get angleParentOnScreen() { return ((this._motion_type & CML.Object.MT_PART_FLAG) ? (this._head_offset + this._parent.angleOnScreen) : (this._head_offset)); }
+    get angleParentOnScreen() {
+        return (this.isPart) ? this._parent.angleOnScreen : 0;
+    }
     /** Calculate direction of position from origin. */
-    get anglePosition() { return ((this._motion_type & CML.Object.MT_PART_FLAG) ? (Math.atan2(this._ry, this._rx)) : (Math.atan2(this.y, this.x))) * 57.29577951308232 - CML.Object._globalVariables.scrollAngle; }
+    get anglePositionOnScreen() {
+        if (this.isPart) {
+            const dx = this.projected.x - this._parent.projected.x,
+                  dy = this.projected.y - this._parent.projected.y;
+            return Math.atan2(dy, dx);                  
+        }
+        return Math.atan2(this.projected.y, this.projected.x);
+    }
     /** Calculate direction of velocity. */
-    get angleVelocity() { return ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_BULLETML) ? (this.angleOnScreen) : (Math.atan2(this.vy, this.vx) * 57.29577951308232 - CML.Object._globalVariables.scrollAngle); }
+    get angleVelocityOnScreen() {
+        return (this.isBMLMode) ? this.angleOnScreen : Math.atan2(this.vel.y, this.vel.x);
+    }
     /** Calculate direction of accelaration. */
-    get angleAccel() { return ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_BULLETML) ? (this.angleOnScreen) : (Math.atan2(this._ay, this._ax) * 57.29577951308232 - CML.Object._globalVariables.scrollAngle); }
-    /**  */
-    get pitch() {return this._pitch;}
-    get bank() {return this._bank;}
+    get angleAccelOnScreen() { 
+        return (this.isBMLMode) ? this.angleOnScreen : Math.atan2(this.acc.y, this.acc.x);
+    }
+    /** rotation */
+    get head()  {
+        return this.euler.z;
+    }
+    set head(r) {
+        this.euler.z = r;
+        this.euler.changed = true;
+    }
+    get pitch() {
+        return this.euler.y;
+    }
+    set pitch(r){
+        this.euler.y = r;
+        this.euler.changed = true;
+    }
+    get bank()  {
+        return this.euler.x;
+    }
+    set bank(r) {
+        this.euler.x = r;
+        this.euler.changed = true;
+    }
     // callback functions
     //------------------------------------------------------------
     /** Callback function on create. Override this to initialize.*/
@@ -168,13 +191,6 @@ target_object = null;                   // target object was destroyed.
     }
     /** Callback function from CML.Object.update(). This function is called after updating position. Override this to update own parameters.*/
     onUpdate() {
-    }
-    /** Statement "n" calls this when it needs. Override this to define the new CML.Object created by "n" command.
-     *  @param args The arguments of sequence.
-     *  @return The new CML.Object created by "n" command. You must not activate(call create()) returning CML.Object.
-     */
-    onNewObject(seq) {
-        return null;
     }
     /** Statement "f" calls this when it needs. Override this to define the new CML.Object created by "f" command.
      *  @param args The arguments of sequence.
@@ -233,10 +249,10 @@ target_object = null;                   // target object was destroyed.
      *  @param access_id_ Access ID from parent.
      *  @return this instance.
      */
-    create(x_, y_, parent_ = null, isPart_ = false, access_id_ = CML.Object.ID_NOT_SPECIFYED) {
+    create(x, y, parent = null, isPart = false, access_id = CML.Object.ID_NOT_SPECIFYED) {
         if (this.isActive)
             throw new Error("CML.Object.create() must be called from inactive CML.Object.");
-        this._initialize(parent_ || CML.Object._root, isPart_, access_id_, x_, y_, 0, 0, 0);
+        this._initialize(parent || CML.Object._root, isPart, access_id, x, y, 0, 0, 0);
         return this;
     }
     /** Destroy this object. The onDestroy() is called when the next CML.Object.update().
@@ -249,58 +265,38 @@ target_object = null;                   // target object was destroyed.
     }
     /** Reset position, velocity, accelaration, interpolation, motion type and rotation.
      */
-    reset(x_, y_, z_ = 0) {
+    reset(x, y, z = 0) {
         this._motion_type = CML.Object.MT_CONST | (this._motion_type & CML.Object.MT_PART_FLAG);
-        this.setPosition(x_, y_, z_);
-        this._bx = this._by = this._bz = this._ax = this._ay = this._az = this.vx = this.vy = this.vz = 0;
-        this._ac = 0;
-        this._head_offset = this._head = 0;
+        this.setPosition(x, y, z); // pos, relative, projected
+        this.vel.setScaler(0);
+        this.acc.setScaler(0);
+        this.bez.setScaler(0);
+        this.euler.setScaler(0);
+        this.quat.setScaler(0);
+        this.counter = 0;
+        this.bmlVelocity = 0;
+        this.bmlAccel = 0;
         this._rotd = 0;
         return this;
     }
     // reference
     //------------------------------------------------------------
-    /** Calculate distance from another object aproximately. The distance is calculated as an octagnal.
-     * @param tgt Another object to calculate distance.
-     * @return Rough distance.
+    /** Calculate distance from another object.
+     * @param target Another object to calculate distance.
+     * @return distance.
      */
-    getDistance(tgt) {
-        var dx = (this.x < tgt.x) ? (tgt.x - this.x) : (this.x - tgt.x);
-        var dy = (this.y < tgt.y) ? (tgt.y - this.y) : (this.y - tgt.y);
-        return (dx > dy) ? (dx + dy * 0.2928932188134524) : (dy + dx * 0.2928932188134524);
+    getDistance(target) {
+        return this.projected.distanceTo(target.projected);
     }
     /** Calculate aiming angle to another object.
-     * @param target_ Another object to calculate angle.
+     * @param target Another object to calculate angle.
      * @param offx X position offset to calculate angle.
      * @param offy Y position offset to calculate angle.
      * @return Angle.
      */
-    getAimingAngle(target_, offx = 0, offy = 0) {
-        var sin = CML.Object._globalVariables._sin;
-        var sang = sin.index(this.angleOnScreen), cang = sang + sin.cos_shift, absx = this.x + sin[cang] * offx - sin[sang] * offy, absy = this.y + sin[sang] * offx + sin[cang] * offy;
-        return Math.atan2(target_.y - absy, target_.x - absx) * 57.29577951308232 - CML.Object._globalVariables.scrollAngle;
-    }
-    /** transform object local coordinate to global coordinate
-     *  @param point on local coordinate. this instance is overwritten inside.
-     *  @return point on global coordinate. this instance is that you passed as argument.
-     */
-    transformLocalToGlobal(local) {
-        var sin = CML.Object._globalVariables._sin;
-        var sang = sin.index(this.angleOnScreen), cang = sang + sin.cos_shift, glbx = this.x + sin[cang] * local.x - sin[sang] * local.y, glby = this.y + sin[sang] * local.x + sin[cang] * local.y;
-        local.x = glbx;
-        local.y = glby;
-        return local;
-    }
-    /** transform global coordinate to object local coordinate
-     *  @param point on global coordinate. this instance is overwritten inside.
-     *  @return point on local coordinate. this instance is that you passed as argument.
-     */
-    transformGlobalToLocal(global) {
-        var sin = CML.Object._globalVariables._sin;
-        var sang = sin.index(-this.angleOnScreen), cang = sang + sin.cos_shift, locx = sin[cang] * (global.x - this.x) - sin[sang] * (global.y - this.y), locy = sin[sang] * (global.x - this.x) + sin[cang] * (global.y - this.y);
-        global.x = locx;
-        global.y = locy;
-        return global;
+    getAimingAngle(target, offx = 0, offy = 0) {
+        const vec2 = this._calcFiberPosition(offx, offy);
+        return Math.atan2(target.projected.y - vec2.y, target.projected.x - vec2.x) - CML.Object._globalVariables._scrollRadian;
     }
     /** Count all children with access id.
      *  @return The count of child objects with access id.
@@ -324,220 +320,147 @@ target_object = null;                   // target object was destroyed.
     }
     // set parameters
     //------------------------------------------------------------
+    _changeMotionType(type) {
+        this._motion_type = type | (this._motion_type & CML.Object.MT_PART_FLAG);
+    }
     /** Set position.
-     *  @param x_ X value of position.
-     *  @param y_ Y value of position.
-     *  @param z_ Z value of position.
-     *  @param term_ Frames for tweening with bezier interpolation.
+     *  @param x X value of position.
+     *  @param y Y value of position.
+     *  @param z Z value of position.
+     *  @param frames Frames for tweening with bezier interpolation.
      *  @return this object
      */
-    setPosition(x_, y_, z_ = 0, term_ = 0) {
-        if (term_ == 0) {
+    setPosition(x, y, z, frames=0) {
+        if (frames == 0) {
             if (this._motion_type == CML.Object.MT_GRAVITY) {
-                this._rx = x_;
-                this._ry = y_;
-                this._rz = z_;
+                this.relative.set(x, y, z);
             }
             else {
                 if (this.isPart) {
-                    this._rx = x_;
-                    this._ry = y_;
-                    this._rz = z_;
+                    this.relative.set(x, y, z);
                     this.calcAbsPosition();
                 }
                 else {
-                    this.x = x_;
-                    this.y = y_;
-                    this.z = z_;
+                    this.pos.set(x, y, z);
                 }
-                this._motion_type = CML.Object.MT_CONST | (this._motion_type & CML.Object.MT_PART_FLAG);
+                this._changeMotionType(CML.Object.MT_CONST);
             }
         }
         else {
             // interlopation
-            var t = 1 / term_;
-            var dx, dy, dz;
-            if (this.isPart) {
-                dx = x_ - this._rx;
-                dy = y_ - this._ry;
-                dz = z_ - this._rz;
-            }
-            else {
-                dx = x_ - this.x;
-                dy = y_ - this.y;
-                dz = z_ - this.z;
-            }
-            this._ax = (dx * t * 3 - this.vx * 2) * t * 2;
-            this._ay = (dy * t * 3 - this.vy * 2) * t * 2;
-            this._az = (dz * t * 3 - this.vz * 2) * t * 2;
-            this._bx = (dx * t * -2 + this.vx) * t * t * 6;
-            this._by = (dy * t * -2 + this.vy) * t * t * 6;
-            this._bz = (dz * t * -2 + this.vz) * t * t * 6;
-            this._ac = term_;
-            this._motion_type = CML.Object.MT_INTERPOL | (this._motion_type & CML.Object.MT_PART_FLAG);
+            //this._ax = (v.x * t * 3 - this.vx * 2) * t * 2;
+            //this._bx = (v.x * t * -2 + this.vx) * t * t * 6;
+            const t = 1 / frames;
+            const v = new CML.Vector(x,y,z).sub((this.isPart) ? this.relative : this.pos);
+            this.acc.copy(v).multiplyScalar(t*t*6).addScaledVector(this.vel,-t*4);
+            this.bez.copy(v).multiplyScalar(t*t*t*-12).addScaledVector(this.vel,t*t*6);
+            this.counter = frames;
+            this._changeMotionType(CML.Object.MT_INTERPOL);
         }
         return this;
     }
+    setPositionX(x, frames=0) { return this.setPosition(x, this._getY(), this._getZ(), frames); }
+    setPositionY(y, frames=0) { return this.setPosition(this._getX(), y, this._getZ(), frames); }
+    setPositionZ(z, frames=0) { return this.setPosition(this._getX(), this._getY(), z, frames); }
+    setPositionByDirection(angle, v, h, frames=0) { 
+        const sin = Math.sin(angle), cos = Math.cos(angle);
+        return this.setPosition(cos*v-sin*h, sin*v+cos*h, this._getZ(), frames);
+    }
     /** Set velocity.
-     *  @param vx_ X value of velocity.
-     *  @param vy_ Y value of velocity.
-     *  @param vz_ Z value of velocity.
-     *  @param term_ Frames for tweening with bezier interpolation.
+     *  @param vx X value of velocity.
+     *  @param vy Y value of velocity.
+     *  @param vz Z value of velocity.
+     *  @param frames Frames for tweening with bezier interpolation.
      *  @return this object
      */
-    setVelocity(vx_, vy_, vz_ = 0, term_ = 0) {
-        if (term_ == 0) {
-            this.vx = vx_;
-            this.vy = vy_;
-            this.vz = vz_;
+    setVelocity(vx=0, vy=0, vz=0, frames=0) {
+        if (frames == 0) {
+            this.vel.set(vx, vy, vz);
             this._motion_type = CML.Object.MT_CONST | (this._motion_type & CML.Object.MT_PART_FLAG);
         }
         else {
-            var t = 1 / term_;
+            const t = 1 / frames;
+            const v = new CML.Vector(vx, vy, vz);
             if ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_INTERPOL) {
                 // interlopation
-                this._ax -= vx_ * t * 2;
-                this._ay -= vy_ * t * 2;
-                this._az -= vz_ * t * 2;
-                this._bx += vx_ * t * t * 6;
-                this._by += vy_ * t * t * 6;
-                this._bz += vz_ * t * t * 6;
-                this._ac = term_;
-                this._motion_type = CML.Object.MT_INTERPOL | (this._motion_type & CML.Object.MT_PART_FLAG);
+                //this._ax -= vx_ * t * 2;
+                //this._bx += vx_ * t * t * 6;
+                this.acc.addScaledVector(v,-t*2);
+                this.bez.addScaledVector(v, t*t*6);
+                this.counter = frames;
+                this._changeMotionType(CML.Object.MT_INTERPOL);
             }
             else {
                 // accelaration
-                this._ax = (vx_ - this.vx) * t;
-                this._ay = (vy_ - this.vy) * t;
-                this._az = (vz_ - this.vz) * t;
-                this._ac = term_;
-                this._motion_type = CML.Object.MT_ACCEL | (this._motion_type & CML.Object.MT_PART_FLAG);
+                //this._ax = (vx_ - this.vx) * t;
+                this.acc.copy(v).sub(this.vel).multiplyScalar(t);
+                this.counter = frames;
+                this._changeMotionType(CML.Object.MT_ACCEL);
             }
         }
         return this;
+    }
+    setVelocityX(x, frames=0) { return this.setVelocity(x, this.vel.y, this.vel.z, frames); }
+    setVelocityY(y, frames=0) { return this.setVelocity(this.vel.x, y, this.vel.z, frames); }
+    setVelocityZ(z, frames=0) { return this.setVelocity(this.vel.x, this.vel.y, z, frames); }
+    setVelocityByDirection(angle, v, h, frames=0) { 
+        const sin = Math.sin(angle), cos = Math.cos(angle);
+        return this.setVelocity(cos*v-sin*h, sin*v+cos*h, this._getZ(), frames);
     }
     /** Set accelaration.
-     *  @param ax_ X value of accelaration.
-     *  @param ay_ Y value of accelaration.
-     *  @param az_ Z value of accelaration.
-     *  @param time_ Frames to stop accelarate. 0 means not to stop.
+     *  @param ax X value of accelaration.
+     *  @param ay Y value of accelaration.
+     *  @param az Z value of accelaration.
+     *  @param frames Frames to stop accelarate. 0 means not to stop.
      *  @return this object
      */
-    setAccelaration(ax_, ay_, az_, time_ = 0) {
-        this._ax = ax_;
-        this._ay = ay_;
-        this._az = az_;
-        this._ac = time_;
-        if (this._ax == 0 && this._ay == 0) {
-            this._motion_type = CML.Object.MT_CONST | (this._motion_type & CML.Object.MT_PART_FLAG);
-        }
-        else {
-            this._motion_type = CML.Object.MT_ACCEL | (this._motion_type & CML.Object.MT_PART_FLAG);
-        }
+    setAccel(ax=0, ay=0, az=0, frames=0) {
+        this.acc.set(ax, ay, az);
+        this.counter = frames;
+        this._changeMotionType((ax==0 && ay==0 && az==0) ? CML.Object.MT_CONST : CML.Object.MT_ACCEL);
         return this;
     }
-    /** Set interpolating motion.
-     *  @param x_ X value of position.
-     *  @param y_ Y value of position.
-     *  @param z_ Z value of position.
-     *  @param vx_ X value of velocity.
-     *  @param vy_ Y value of velocity.
-     *  @param vz_ Z value of velocity.
-     *  @param term_ Frames for tweening with bezier interpolation.
-     *  @return this object
-     */
-    setInterpolation(x_, y_, z_, vx_, vy_, vz_, term_ = 0) {
-        if (term_ == 0) {
-            this.vx = vx_;
-            this.vy = vy_;
-            this.vz = vz_;
-            if (this.isPart) {
-                this._rx = x_;
-                this._ry = y_;
-                this._rz = z_;
-                this.calcAbsPosition();
-            }
-            else {
-                this.x = x_;
-                this.y = y_;
-                this.z = z_;
-            }
-            this._motion_type = CML.Object.MT_CONST | (this._motion_type & CML.Object.MT_PART_FLAG);
-        }
-        else {
-            // 3rd dimensional motion
-            var t = 1 / term_;
-            var dx, dy, dz;
-            if (this.isPart) {
-                dx = x_ - this._rx;
-                dy = y_ - this._ry;
-                dz = z_ - this._rz;
-            }
-            else {
-                dx = x_ - this.x;
-                dy = y_ - this.y;
-                dz = z_ - this.z;
-            }
-            this._ax = (dx * t * 3 - this.vx * 2 - vx_) * t * 2;
-            this._ay = (dy * t * 3 - this.vy * 2 - vy_) * t * 2;
-            this._az = (dz * t * 3 - this.vz * 2 - vz_) * t * 2;
-            this._bx = (dx * t * -2 + this.vx + vx_) * t * t * 6;
-            this._by = (dy * t * -2 + this.vy + vy_) * t * t * 6;
-            this._bz = (dz * t * -2 + this.vz + vz_) * t * t * 6;
-            this._ac = term_;
-            this._motion_type = CML.Object.MT_INTERPOL | (this._motion_type & CML.Object.MT_PART_FLAG);
-        }
-        return this;
+    setAccelX(x, frames=0) { return this.setAccel(x, this._getAy(), this._getAz(), frames); }
+    setAccelY(y, frames=0) { return this.setAccel(this._getAx(), y, this._getAz(), frames); }
+    setAccelZ(z, frames=0) { return this.setAccel(this._getAx(), this._getAy(), z, frames); }
+    setAccelByDirection(angle, v, h, frames=0) { 
+        const sin = Math.sin(angle), cos = Math.cos(angle);
+        return this.setAccel(cos*v-sin*h, sin*v+cos*h, this._getAz(), frames);
     }
     /** &lt;changeDirection type='absolute'&gt; of bulletML.
      *  @param dir Direction to change.
-     *  @param term Frames to change direction.
+     *  @param frames Frames to change direction.
      *  @param rmax Maxmum speed of rotation [degrees/frame].
      *  @param shortest_rot Flag to rotate on shortest rotation.
      *  @return this object
      */
-    setChangeDirection(dir, term, rmax, shortest_rot = true) {
-        if (term == 0) {
-            // set head angle and set velocity to head direction
-            this.setRotation(dir, 0, 1, 1, shortest_rot);
-            var sin = CML.Object._globalVariables._sin;
-            var sang = sin.index(this.angle), cang = sang + sin.cos_shift, spd = this.velocity;
-            this.vx = sin[cang] * spd;
-            this.vy = sin[sang] * spd;
-        }
-        else {
-            // set constant rotation
-            this.setConstantRotation(dir, term, rmax, shortest_rot);
-            // set verocity
-            if ((this._motion_type & CML.Object.MT_PART_FILTER) != CML.Object.MT_BULLETML) {
-                this._ax = this.velocity;
-                this._bx = 0;
-                this._ac = 0;
-                this._motion_type = CML.Object.MT_BULLETML | (this._motion_type & CML.Object.MT_PART_FLAG);
-            }
-        }
+    setChangeDirection(dir, frames, rmax, shortest_rot = true) {
+        this.setConstantRotation(dir, frames, rmax, shortest_rot);
+        this.bmlVelocity = this.velocity;
+        this.bmlAccel = 0;
+        this.conter = 0;
+        this._changeMotionType(CML.Object.MT_BULLETML);
         return this;
     }
     /** &lt;changeSpeed type='absolute'&gt; of bulletML.
-     *  @param spd Speed to change.
-     *  @param term Frames to change speed.
+     *  @param speed Speed to change.
+     *  @param frames Frames to change speed.
      *  @return this object
      */
-    setChangeSpeed(spd, term = 0) {
-        if (term == 0) {
+    setChangeSpeed(speed, frames = 0) {
+        if (frames == 0) {
             // turn velocity vector to head direction
-            var sin = CML.Object._globalVariables._sin;
-            var sang = sin.index(this.angle), cang = sang + sin.cos_shift;
-            this.vx = sin[cang] * spd;
-            this.vy = sin[sang] * spd;
+            this.bmlVelocity = speed;
+            this.bmlAccel = 0;
+            this.conter = 0;
         }
         else {
             // set verocity
-            this._ax = this.velocity;
-            this._bx = (spd - this._ax) / term;
-            this._ac = term;
-            this._motion_type = CML.Object.MT_BULLETML | (this._motion_type & CML.Object.MT_PART_FLAG);
+            this.bmlVelocity = this.velocity;
+            this.bmlAccel = (speed - this.velocity) / frames;
+            this.conter = frames;
         }
+        this._changeMotionType(CML.Object.MT_BULLETML);
         return this;
     }
     /** Set gravity motion.
@@ -549,104 +472,97 @@ target_object = null;                   // target object was destroyed.
      *  </p>
      *  @param atr_a Attracting parameter a[%]. Ratio of attracting force.
      *  @param atr_b Attracting parameter b[%]. Ratio of air fliction.
-     *  @param term Frames to enable attracting force.
+     *  @param frames Frames to enable attracting force.
      *  @return this object
      *  @see CML.Object#setPosition
      */
-    setGravity(atr_a, atr_b, term = 0) {
-        if (this._motion_type & CML.Object.MT_PART_FLAG)
+    setGravity(atr_a, atr_b, frames = 0) {
+        if (this.isPart)
             return this;
         if (atr_a == 0 && atr_b == 0) {
             // stop attraction
-            this._ax = 0;
-            this._ay = 0;
-            this._az = 0;
-            this._bx = 0;
-            this._by = 0;
-            this._bz = 0;
-            this._ac = 0;
+            this.acc.setScaler(0);
+            this.bez.setScaler(0);
+            this.counter = 0;
             this._motion_type = CML.Object.MT_CONST;
         }
         else {
             // attraction
-            this._bx = atr_a * 0.01;
-            this._by = atr_b * 0.01;
-            this._ac = term;
-            this._rx = this.x;
-            this._ry = this.y;
-            this._rz = this.z;
+            this.acc.setScaler(0);
+            this.bez.setScaler(0);
+            this.counter = 0;
+            this.bez.x = atr_a * 0.01;
+            this.bez.y = atr_b * 0.01;
+            this.counter = frames;
+            this.relative.copy(this.pos);
             this._motion_type = CML.Object.MT_GRAVITY;
         }
         return this;
     }
     /** Set rotation. You can specify the first and last speed.
      *  @param end_angle Final angle when the rotation finished, based on scrolling direction.
-     *  @param term Frames to rotate.
+     *  @param frames Frames to rotate.
      *  @param start_t Ratio of first rotating speed. The value of 1 means the speed of a constant rotation.
      *  @param end_t Ratio of last rotating speed. The value of 1 means the speed of a constant rotation.
      *  @param isShortestRotation Rotate with shortest rotation or not.
      *  @return this object
      */
-    setRotation(end_angle, term = 0, start_t = 1, end_t = 1, isShortestRotation = true) {
+    setRotation(end_angle, frames = 0, start_t = 1, end_t = 1, isShortestRotation = true) {
         // calculate shotest rotation
-        var diff;
+        let diff;
         if (isShortestRotation) {
             this._normalizeHead();
-            diff = (end_angle - this.angleOnScreen + 180) * 0.00277777777777777778;
-            diff = (diff - Math.floor(diff)) * 360 - 180;
+            diff = (end_angle - this.angleOnScreen) / (Math.PI * 2) + 0.5;
+            diff = (diff - Math.floor(diff) - 0.5) * Math.PI * 2;
         }
         else {
             diff = end_angle - this.angleOnScreen;
         }
-        if (term == 0) {
-            this._head += diff;
+        if (frames == 0) {
+            this.head += diff;
             this._rott = 0;
             this._rotd = 0;
         }
         else {
             // rotating interpolation
-            this._roti.setFergusonCoons(this._head, this._head + diff, diff * start_t, diff * end_t);
+            this._roti.setFergusonCoons(this.head, this.head + diff, diff * start_t, diff * end_t);
             this._rott = 0;
-            this._rotd = 1 / term;
+            this._rotd = 1 / frames;
         }
         return this;
     }
     /** Set constant rotation. You can specify the maximum speed.
      *  @param end_angle Final angle when the rotation finished, based on scrolling direction.
-     *  @param term Frames to rotate.
+     *  @param frames Frames to rotate.
      *  @param rmax Maximum speed of rotation [degrees/frame].
      *  @param isShortestRotation Rotate with shortest rotation or not.
      *  @return this object
      */
-    setConstantRotation(end_angle, term = 0, rmax = 1, isShortestRotation = true) {
+    setConstantRotation(end_angle, frames = 0, rmax = 1, isShortestRotation = true) {
         // rotation max
-        rmax *= (term == 0) ? 1 : term;
+        rmax *= (frames == 0) ? 1 : frames;
         // calculate shotest rotation
         var diff;
         if (isShortestRotation) {
             this._normalizeHead();
-            diff = (end_angle - this.angleOnScreen + 180) * 0.00277777777777777778;
-            diff = (diff - Math.floor(diff)) * 360 - 180;
+            diff = (end_angle - this.angleOnScreen) / (Math.PI * 2) + 0.5;
+            diff = (diff - Math.floor(diff) - 0.5) * Math.PI * 2;
         }
         else {
             diff = end_angle - this.angleOnScreen;
         }
         // restriction
-        if (rmax != 0) {
-            if (diff < -rmax)
-                diff = -rmax;
-            else if (diff > rmax)
-                diff = rmax;
-        }
-        if (term == 0) {
-            this._head += diff;
+        if (rmax != 0) 
+            diff = (diff < -rmax) ? -rmax : (diff > rmax) : rmax : diff;
+        if (frames == 0) {
+            this.head += diff;
             this._rott = 0;
             this._rotd = 0;
         }
         else {
-            this._roti.setLinear(this._head, this._head + diff);
+            this._roti.setLinear(this.head, this.head + diff);
             this._rott = 0;
-            this._rotd = 1 / term;
+            this._rotd = 1 / frames;
         }
         return this;
     }
@@ -663,7 +579,7 @@ target_object = null;                   // target object was destroyed.
             // check parents parts
             this._parent._partChildren.splice(this._parent._partChildren.indexOf(this), 1);
             // calculate absolute angle
-            this._head = this._parent.angleOnScreen + this._head;
+            this.head = this.angleOnScreen;
         }
         // change parameters
         this._parent = parent_ || CML.Object._root;
@@ -683,7 +599,7 @@ target_object = null;                   // target object was destroyed.
             // calculate related position
             this.calcRelatedPosition();
             // calculate related angle
-            this._head = this._head - this._parent.angleOnScreen;
+            this.head -= this.angleParentOnScreen;
         }
         else {
             // change parts flag
@@ -702,10 +618,9 @@ target_object = null;                   // target object was destroyed.
     }
     // calculate the angleOnScreen in a range of -180 to 180.
     _normalizeHead() {
-        var offset = (this._motion_type & CML.Object.MT_PART_FLAG) ? (this._head_offset + this._parent.angleOnScreen) : (this._head_offset);
-        this._head += 180 - offset;
-        this._head *= 0.00277777777777777778;
-        this._head = (this._head - Math.floor(this._head)) * 360 - 180 + offset;
+        const offset = this.angleParentOnScreen;
+        const diff = (this.head + Math.PI - offset) / (Math.PI * 2);
+        this.head = (diff - Math.floor(diff) - 0.5) * Math.PI * 2 + offset;
     }
     // execute in each frame when it's necessary
     //------------------------------------------------------------
@@ -713,33 +628,24 @@ target_object = null;                   // target object was destroyed.
      *  The protected function _motion_parts() is a typical usage of this.
      */
     calcAbsPosition() {
-        var parent_angle = this.angleParentOnScreen;
-        if (parent_angle != 0) {
-            var sin = CML.Object._globalVariables._sin, sang = sin.index(parent_angle), cang = sang + sin.cos_shift;
-            this.x = this._parent.x + sin[cang] * this._rx - sin[sang] * this._ry;
-            this.y = this._parent.y + sin[sang] * this._rx + sin[cang] * this._ry;
-            this.z = this._parent.z + this._rz;
+        if (this.parent.euler.isZero()) {
+            this.pos.addVectors(this.related, this.parent.pos);
         }
         else {
-            this.x = this._parent.x + this._rx;
-            this.y = this._parent.y + this._ry;
-            this.z = this._parent.z + this._rz;
+            /**/
+            this.pos.addVectors(this.parent.pos, new CML.Vector().copy(this.related).applyQuat(this.parent.quat));
         }
     }
     /** Calculate parent related position from absolute position.
      */
     calcRelatedPosition() {
-        var parent_angle = this.angleParentOnScreen;
-        if (parent_angle != 0) {
-            var sin = CML.Object._globalVariables._sin, sang = sin.index(-parent_angle), cang = sang + sin.cos_shift, dx = this.x - this._parent.x, dy = this.y - this._parent.y, dz = this.z - this._parent.z;
-            this._rx = sin[cang] * dx - sin[sang] * dy;
-            this._ry = sin[sang] * dx + sin[cang] * dy;
-            this._rz = dz;
+        if (this.parent.euler.isZero()) {
+            this.related.subVectors(this.pos, this.parent.pos);
         }
         else {
-            this._rx = this.x - this._parent.x;
-            this._ry = this.y - this._parent.y;
-            this._rz = this.z - this._parent.z;
+            /**/
+            const q = new CML.Vector().copy(this.parent.quat).nagate();
+            this.pos.addVectors(this.parent.pos, new CML.Vector().copy(this.related).applyQuat(q));
         }
     }
     /** Rotate haed in 1 frame, if rotd &gt; 0. The _motion() is a typical usage exapmle. @see CML.Object#_motion()*/
@@ -749,7 +655,7 @@ target_object = null;                   // target object was destroyed.
             this._rott = 1;
             this._rotd = 0;
         }
-        this._head = this._roti.calc(this._rott);
+        this.head = this._roti.calc(this._rott);
     }
     // operation for children/parts
     //------------------------------------------------------------
@@ -801,32 +707,37 @@ target_object = null;                   // target object was destroyed.
         return count;
     }
     // back door ...
-    /** @private _cml_internal */ _getX() { return (this._motion_type & CML.Object.MT_PART_FLAG) ? this._rx : this.x; }
-    /** @private _cml_internal */ _getY() { return (this._motion_type & CML.Object.MT_PART_FLAG) ? this._ry : this.y; }
-    /** @private _cml_internal */ _getZ() { return (this._motion_type & CML.Object.MT_PART_FLAG) ? this._rz : this.z; }
+    /** @private _cml_internal */ _getX() { return (this.isPart) ? this.relative.x : this.pos.x; }
+    /** @private _cml_internal */ _getY() { return (this.isPart) ? this.relative.y : this.pos.y; }
+    /** @private _cml_internal */ _getZ() { return (this.isPart) ? this.relative.z : this.pos.z; }
     /** @private _cml_internal */ _getAx() {
         var filterd_mt = this._motion_type & CML.Object.MT_PART_FILTER;
-        return (filterd_mt == CML.Object.MT_CONST || filterd_mt == CML.Object.MT_BULLETML) ? 0 : this._ax;
+        return (filterd_mt == CML.Object.MT_CONST || filterd_mt == CML.Object.MT_BULLETML) ? 0 : this.acc.x;
     }
     /** @private _cml_internal */ _getAy() {
         var filterd_mt = this._motion_type & CML.Object.MT_PART_FILTER;
-        return (filterd_mt == CML.Object.MT_CONST || filterd_mt == CML.Object.MT_BULLETML) ? 0 : this._ay;
+        return (filterd_mt == CML.Object.MT_CONST || filterd_mt == CML.Object.MT_BULLETML) ? 0 : this.acc.y;
     }
     /** @private _cml_internal */ _getAz() {
         var filterd_mt = this._motion_type & CML.Object.MT_PART_FILTER;
-        return (filterd_mt == CML.Object.MT_CONST || filterd_mt == CML.Object.MT_BULLETML) ? 0 : this._az;
+        return (filterd_mt == CML.Object.MT_CONST || filterd_mt == CML.Object.MT_BULLETML) ? 0 : this.acc.z;
+    }
+    /** @private */ 
+    _calcFiberPosition(fx, fy) {
+        if (!this.isPart)
+            return {x:fx+this.projected.x, y:fy+this.projected.y};
+        const rad = this.angleOnScreen;
+        return {x:this.projected.x + Math.cos(rad) * fx - Math.sin(rad) * fy, 
+                y:this.projected.y + Math.sin(rad) * fx + Math.cos(rad) * fy};
     }
     // initialize and finalize
     //------------------------------------------------------------
     /** @private initializer */
     _initialize(parent_, isPart_, access_id_, x_, y_, vx_, vy_, head_) {
         // clear some parameters
-        this.vx = vx_;
-        this.vy = vy_;
-        this.vz = 0;
+        this.vel.set(vx_, vy_, 0);
         this._age = 0;
-        this._head = head_;
-        this._head_offset = 0;
+        this.head = head;
         this._rotd = 0;
         this._destructionStatus = -1;
         // set the relations
@@ -842,16 +753,12 @@ target_object = null;                   // target object was destroyed.
         // push the active objects list, initialize position and motion.
         if (isPart_) {
             this._parent._partChildren.push(this);
-            this._rx = x_;
-            this._ry = y_;
-            this._rz = 0;
+            this.relative.set(x_, y_, 0);
             this.calcAbsPosition();
             this._motion_type = CML.Object.MT_PART_CONST;
         }
         else {
-            this.x = x_;
-            this.y = y_;
-            this.z = 0;
+            this.pos.set(x_, y_, 0);
             this._motion_type = CML.Object.MT_CONST;
         }
         CML.Object._activeObjects.push(this);
@@ -889,107 +796,69 @@ target_object = null;                   // target object was destroyed.
     //------------------------------------------------------------
     /** update position and angle */
     update() {
-        var sin = CML.Object._globalVariables._sin, sang, cang;
+        let ang;
         switch (this._motion_type) {
-            case CML.Object.MT_CONST: 
-                this.x += this.vx;
-                this.y += this.vy;
-                this.z += this.vz;
+            case CML.Object.MT_CONST:
+                this.pos.add(this.vel);
                 break;
             case CML.Object.MT_ACCEL: 
-                this.x += this.vx + this._ax * 0.5;
-                this.y += this.vy + this._ay * 0.5;
-                this.z += this.vz + this._az * 0.5;
-                this.vx += this._ax;
-                this.vy += this._ay;
-                this.vz += this._az;
-                if (--this._ac == 0)
+                this.pos.add(this.vel).addScaledVector(this.acc, 0.5);
+                this.vel.add(this.acc);
+                if (--this.counter == 0)
                     this._motion_type = CML.Object.MT_CONST;
                 break;
-            case CML.Object.MT_INTERPOL: 
-                this.x += this.vx + this._ax * 0.5 + this._bx * 0.16666666666666667;
-                this.y += this.vy + this._ay * 0.5 + this._by * 0.16666666666666667;
-                this.z += this.vz + this._az * 0.5 + this._bz * 0.16666666666666667;
-                this.vx += this._ax + this._bx * 0.5;
-                this.vy += this._ay + this._by * 0.5;
-                this.vz += this._az + this._bz * 0.5;
-                this._ax += this._bx;
-                this._ay += this._by;
-                this._az += this._bz;
-                if (--this._ac == 0)
+            case CML.Object.MT_INTERPOL:
+                this.pos.add(this.vel).addScaledVector(this.acc, 0.5).addScaledVector(this.bez, 0.16666666666666667);
+                this.vel.add(this.acc).addScaledVector(this.bez, 0.5);
+                this.acc.add(this.bez);
+                if (--this.counter == 0)
                     this._motion_type = CML.Object.MT_CONST;
                 break;
             case CML.Object.MT_BULLETML: 
-                sang = sin.index(this.angle);
-                cang = sang + sin.cos_shift;
-                this.vx = sin[cang] * this._ax;
-                this.vy = sin[sang] * this._ax;
-                this._ax += this._bx;
-                this.x += this.vx;
-                this.y += this.vy;
-                this.z += this.vz;
-                if (--this._ac == 0)
-                    this._bx = 0;
-                if (this._rotd == 0 && this._bx == 0)
+                ang = this.angleOnScreen;
+                this.vel.set(Math.cos(ang) * this.bmlVelocity, Math.sin(ang) * this.bmlVelocity, this.vel.z);
+                this.bmlVelocity += this.bmlAccel;
+                this.pos.add(this.vel);
+                if (--this.counter == 0)
+                    this.bmlAccel = 0;
+                if (this._rotd == 0 && this.bmlAccel == 0)
                     this._motion_type = CML.Object.MT_CONST;
                 break;
             case CML.Object.MT_GRAVITY: 
-                this._ax = (this._rx - this.x) * this._bx - this.vx * this._by,
-                    this._ay = (this._ry - this.y) * this._bx - this.vy * this._by;
-                this._az = (this._rz - this.z) * this._bx - this.vz * this._by;
-                this.x += this.vx + this._ax * 0.5;
-                this.y += this.vy + this._ay * 0.5;
-                this.z += this.vz + this._az * 0.5;
-                this.vx += this._ax;
-                this.vy += this._ay;
-                this.vz += this._az;
-                if (--this._ac == 0)
+                this.acc.subVectors(this.related, this.pos).multiplyScalar(this.bez.x).addScaledVector(this.vel, this.bez.y);
+                this.pos.add(this.vel).addScaledVector(this.acc, 0.5);
+                this.vel.add(this.acc);
+                if (--this.counter == 0)
                     this._motion_type = CML.Object.MT_CONST;
                 break;
             case CML.Object.MT_PART_CONST: 
-                this._rx += this.vx;
-                this._ry += this.vy;
-                this._rz += this.vz;
+                this.related.add(this.vel);
                 this.calcAbsPosition();
                 break;
             case CML.Object.MT_PART_ACCEL: 
-                this._rx += this.vx + this._ax * 0.5;
-                this._ry += this.vy + this._ay * 0.5;
-                this._rz += this.vz + this._az * 0.5;
-                this.vx += this._ax;
-                this.vy += this._ay;
-                this.vz += this._az;
+                this.related.add(this.vel).addScaledVector(this.acc, 0.5);
+                this.vel.add(this.acc);
                 this.calcAbsPosition();
-                if (--this._ac == 0)
+                if (--this.counter == 0)
                     this._motion_type = CML.Object.MT_PART_CONST;
                 break;
             case CML.Object.MT_PART_INTERPOL: 
-                this._rx += this.vx + this._ax * 0.5 + this._bx * 0.16666666666666667;
-                this._ry += this.vy + this._ay * 0.5 + this._by * 0.16666666666666667;
-                this._rz += this.vz + this._az * 0.5 + this._bz * 0.16666666666666667;
-                this.vx += this._ax + this._bx * 0.5;
-                this.vy += this._ay + this._by * 0.5;
-                this.vz += this._az + this._bz * 0.5;
-                this._ax += this._bx;
-                this._ay += this._by;
-                this._az += this._bz;
+                this.related.add(this.vel).addScaledVector(this.acc, 0.5).addScaledVector(this.bez, 0.16666666666666667);
+                this.vel.add(this.acc).addScaledVector(this.bez, 0.5);
+                this.acc.add(this.bez);
                 this.calcAbsPosition();
-                if (--this._ac == 0)
+                if (--this.counter == 0)
                     this._motion_type = CML.Object.MT_PART_CONST;
                 break;
             case CML.Object.MT_PART_BULLETML: 
-                sang = sin.index(this.angle);
-                cang = sang + sin.cos_shift;
-                this.vx = sin[cang] * this._ax;
-                this.vy = sin[sang] * this._ax;
-                this._ax += this._bx;
-                this._rx += this.vx;
-                this._ry += this.vy;
-                this._rz += this.vz;
+                ang = this.angleOnScreen;
+                this.vel.set(Math.cos(ang) * this.bmlVelocity, Math.sin(ang) * this.bmlVelocity, this.vel.z);
+                this.bmlVelocity += this.bmlAccel;
+                this.related.add(this.vel);
                 this.calcAbsPosition();
-                if (--this._ac == 0)
-                    this._bx = 0;
-                if (this._rotd == 0 && this._bx == 0)
+                if (--this.counter == 0)
+                    this.bmlAccel = 0;
+                if (this._rotd == 0 && this.bmlAccel == 0)
                     this._motion_type = CML.Object.MT_PART_CONST;
                 break;
             default:
@@ -997,6 +866,10 @@ target_object = null;                   // target object was destroyed.
         }
         if (this._rotd != 0)
             this.rotateHead();
+        if (this.euler.changed) {
+            this.quat.euler2Quat(this.euler);
+            this.euler.changed = false;
+        }
         this._age++;
         this.onUpdate();
     }

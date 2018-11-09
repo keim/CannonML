@@ -38,8 +38,13 @@ CML.Global = class {
     /** Value of (frame rate to calculate speed) / (update frame rate). */
     get speedRatio() { return this._speedRatio; }
     /** Flag for scrolling direction (vertical=1, horizontal=0). */
-    get vertical() { return (this._scrollAngle == -90) ? 1 : 0; }
-    set vertical(v) { this._scrollAngle = (v) ? -90 : 180; }
+    get vertical() {
+        return (this._scrollAngle == -90) ? 1 : 0;
+    }
+    set vertical(v) {
+        this._scrollAngle = (v) ? -90 : 180;
+        this._scrollRadian = this._scrollAngle * 0.017453292519943295;
+    }
     /** Function for "$?/$??" variable, The type is function():Number. @default Math.random() */
     get funcRand() { return this._funcRand; }
     set funcRand(func) { this._funcRand = func; }

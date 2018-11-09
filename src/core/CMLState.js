@@ -8,32 +8,17 @@
 //import CML.ListElem from "./CML.ListElem.js";
 /** @private */
 CML.State = class extends CML.ListElem {
-    // functions
-    //------------------------------------------------------------
-    constructor(type_ = CML.State.ST_NORMAL) {
+    constructor(key) {
         super();
-        this.$ = [];
+        const ope = CML.State.operators[key];
+        if (!ope)
+            throw Error(key + " command not defined !");
+        this.key = key;
+        this.$ = new Array(ope.argc).fill(0);
+        this.func = ope.func;
+        this.type = ope.type;
         this.jump = null;
-        this.type = type_;
         this.formula = new CML.Formula();
-        switch (this.type) {
-            case CML.State.ST_RAPID:
-                this.func = this._rapid_fire;
-                break;
-            case CML.State.ST_BARRAGE:
-                this.func = this._initialize_barrage;
-                break;
-            case CML.State.ST_INIT4INT:
-                this.func = this._initialize_interplation;
-                break;
-            case CML.State.ST_W4D:
-                this.func = this._wait4destruction;
-                this.next = this;
-                break;
-            default:
-                this.func = this._nop;
-                break;
-        }
     }
     /*override*/
     clear() {
@@ -41,627 +26,25 @@ CML.State = class extends CML.ListElem {
         this.jump = null;
         super.clear();
     }
-    /** set command */
-    setCommand(cmd) { return this._setCommand(cmd); }
     /** finalize after all arguments are set */
     construct() {
-        /**/
-        // formula.answerCount, this.$.length ... ?
         if (!this.formula.construct()) return false;
         Object.assign(this.$, this.formula.calcStatic());
         return true;
+    }
+    /** execute */
+    execute(fiber) {
+        if (!this.formula.isStatic) {
+            Object.assign(this.$, this.formula.calcDynamic(fiber));
+        }
+        return this.func(this, this.$, fiber, fiber.object);
     }
     /** @private initialze call from CannonML first of all */
     static _initialize(globalVariables_) {
         CML.State._globalVariables = globalVariables_;
         CML.State._speed_ratio = globalVariables_.speedRatio;
     }
-    // private fuctions
-    //------------------------------------------------------------
-    /** set command by key string @private */
-    _setCommand(cmd) {
-        var idx;
-        switch (cmd) {
-            // waiting 
-            case "w":
-                /**/
-                // no good
-                this._resetParameters(1);
-                this.func = (isNaN(this.$[0])) ? this._w0 : this._w1;
-                break;
-            case "w?":
-                this.func = this._waitif;
-                break;
-            // sequence
-            case "}":
-                this.func = this._ret;
-                this.type = CML.State.ST_END;
-                break;
-            // repeat and branch
-            case "[":
-                this.func = this._block_start;
-                this.type = CML.State.ST_BLOCKSTART;
-                this._resetParameters(1);
-                break;
-            case "?":
-                this.func = this._if;
-                this.type = CML.State.ST_IF;
-                break;
-            case ":":
-                this.func = this._else;
-                this.type = CML.State.ST_ELSE;
-                this._resetParameters(1);
-                break;
-            case "]":
-                this.func = this._block_end;
-                this.type = CML.State.ST_BLOCKEND;
-                this._resetParameters(1);
-                break;
-            // interpolation
-            case "i":
-                this.func = this._i;
-                this._resetParameters(1);
-                break;
-            case "~":
-                this.func = this._wi;
-                this.type = CML.State.ST_INTERPOLATE;
-                break;
-            // position
-            case "p":
-                this.func = this._p;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(3);
-                break;
-            case "px":
-                this.func = this._px;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "py":
-                this.func = this._py;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "pz":
-                this.func = this._pz;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "pd":
-                this.func = this._pd;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(2);
-                break;
-            // velocity
-            case "v":
-                this.func = this._v;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(3);
-                break;
-            case "vx":
-                this.func = this._vx;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "vy":
-                this.func = this._vy;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "vz":
-                this.func = this._vz;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "vd":
-                this.func = this._vd;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(2);
-                break;
-            // accelaration
-            case "a":
-                this.func = this._a;
-                this._resetParameters(3);
-                break;
-            case "ax":
-                this.func = this._ax;
-                this._resetParameters(1);
-                break;
-            case "ay":
-                this.func = this._ay;
-                this._resetParameters(1);
-                break;
-            case "az":
-                this.func = this._az;
-                this._resetParameters(1);
-                break;
-            case "ad":
-                this.func = this._ad;
-                this._resetParameters(2);
-                break;
-            // rotation
-            case "r":
-                this.func = this._r;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(2);
-                break;
-            case "rc":
-                this.func = this._rc;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            // gravity
-            case "gp":
-                this.func = this._gp;
-                this._resetParameters(3);
-                break;
-            // bml
-            case "cd":
-                this.func = this._cd;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(2);
-                break;
-            case "csa":
-                this.func = this._csa;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(2);
-                break;
-            case "csr":
-                this.func = this._csr;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(2);
-                break;
-            case "css":
-                this.func = this._css;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(2);
-                break;
-            // kill object
-            case "ko":
-                this.func = this._ko;
-                this._resetParameters(1);
-                break;
-            // sub routine
-            case "&":
-                this.func = this._gosub;
-                this.type = CML.State.STF_CALLREF;
-                break;
-            // fiber
-            case "@":
-                this.func = this._at;
-                this._resetParameters(1);
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            case "@o":
-                this.func = this._ato;
-                this._resetParameters(1);
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            case "@ko":
-                this.func = this._atko;
-                this._resetParameters(1);
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            case "^@":
-                this.func = this._fat;
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            case "kf":
-                this.func = this._kf;
-                break;
-            // new
-            case "n":
-                this.func = this._n;
-                this._resetParameters(1);
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            case "nc":
-                this.func = this._nc;
-                this._resetParameters(1);
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            case "^n":
-                this.func = this._fn;
-                this._resetParameters(1);
-                this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
-                break;
-            // fire
-            case "f":
-                this._resetParameters(2);
-                this.func = (isNaN(this.$[0])) ? this._f0 : this._f1;
-                this.type = CML.State.STF_CALLREF;
-                break;
-            case "fc":
-                this._resetParameters(2);
-                this.func = (isNaN(this.$[0])) ? this._fc0 : this._fc1;
-                this.type = CML.State.STF_CALLREF;
-                break;
-            case "^f":
-                this._resetParameters(2);
-                this.func = (isNaN(this.$[0])) ? this._ff0 : this._ff1;
-                this.type = CML.State.STF_CALLREF;
-                break;
-            // fiber position
-            case "q":
-                this.func = this._q;
-                this._resetParameters(2);
-                break;
-            case "qx":
-                this.func = this._qx;
-                this._resetParameters(1);
-                break;
-            case "qy":
-                this.func = this._qy;
-                this._resetParameters(1);
-                break;
-            // head
-            case "ha":
-                this.func = this._ha;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "hp":
-                this.func = this._hp;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "ht":
-                this.func = this._ht;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "ho":
-                this.func = this._ho;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "hv":
-                this.func = this._hv;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            case "hs":
-                this.func = this._hs;
-                this.type = CML.State.STF_BE_INTERPOLATED;
-                this._resetParameters(1);
-                break;
-            // barrage
-            case "bm":
-                this.func = this._bm;
-                this._resetParameters(4);
-                this.type = CML.State.ST_BARRAGE;
-                break;
-            case "bs":
-                this.func = this._bs;
-                this._resetParameters(4);
-                this.type = CML.State.ST_BARRAGE;
-                break;
-            case "br":
-                this.func = this._br;
-                this._resetParameters(4);
-                this.type = CML.State.ST_BARRAGE;
-                break;
-            case "bv":
-                this.func = this._bv;
-                this._resetParameters(1);
-                break;
-            // target
-            case "td":
-                this.func = this._td;
-                break;
-            case "tp":
-                this.func = this._tp;
-                break;
-            case "to":
-                this.func = this._to;
-                this._resetParameters(1);
-                break;
-            // mirror
-            case "m":
-                this.func = this._m;
-                this._resetParameters(1);
-                break;
-            default:
-                throw Error("Unknown command; " + cmd + " ?");
-        }
-        // set undefined augments to 0.
-        for (idx = 0; idx < this.$.length; idx++) {
-            if (isNaN(this.$[idx]))
-                this.$[idx] = 0;
-        }
-        return this;
-    }
-    // set default arguments
-    _resetParameters(argc) {
-        var ibegin = this.$.length, i;
-        if (ibegin < argc) {
-            this.$.length = argc;
-            for (i = ibegin; i < argc; i++) {
-                this.$[i] = Number.NaN;
-            }
-        }
-    }
-    /** execute */
-    execute(fbr) {
-        if (!this.formula.isStatic) {
-            Object.assign(this.$, this.formula.calcDynamic(fbr));
-        }
-        return this.func(fbr);
-    }
-
-    // command executer
-    //------------------------------------------------------------
-    // set invertion flag (call from CML.Fiber.execute())
-    static _setInvertionFlag(invt_) {
-        CML.State._invert_flag = invt_;
-    }
-    // no operation or end
-    _nop(fbr) { return true; }
-    // looping, branching
-    _block_start(fbr) {
-        fbr.lcnt.unshift(0);
-        return true;
-    }
-    _if(fbr) {
-        // loopconter < 0 means branch. true=-1, false=-2
-        fbr.lcnt[0] = (this.prev.$[0]) ? -1: -2;
-        if (fbr.lcnt[0] == -2) 
-            fbr._pointer = this.jump.prev;
-        return true;
-    }
-    _else(fbr) {
-        if (fbr.lcnt[0] == -1) {
-            fbr._pointer = this.jump;
-            while (fbr._pointer.type != CML.State.ST_BLOCKEND)
-                fbr._pointer = fbr._pointer.jump;
-            fbr._pointer = fbr._pointer.prev;
-        } else if (fbr.lcnt[0] == -2 && this.prev.type == CML.State.ST_FORMULA)
-            this.prev.execute(fbr);
-        return true;
-    }
-    _block_end(fbr) {
-        if (fbr.lcnt[0] >= 0)  { // loopconter < 0 means branch
-            var lmax = Math.floor(this.$[0] || this.jump.$[0]);
-            if (++fbr.lcnt[0] != lmax) { // jump to block_start
-                fbr._pointer = this.jump;
-                return true;
-            }
-        }
-        fbr.lcnt.shift();
-        return true;
-    }
-    // wait
-    _w0(fbr) { fbr.wcnt = fbr.wtm1; return false; }
-    _w1(fbr) { fbr.wtm1 = this.$[0]; fbr.wcnt = fbr.wtm1; return false; }
-    _waitif(fbr) {
-        if (this.$[0] == 0)
-            return true;
-        fbr._pointer = (this.prev.type == CML.State.ST_FORMULA) ? this.prev.prev : this.prev;
-        return false;
-    }
-    // set interpolation term
-    _i(fbr) {
-        fbr.chgt = Math.floor(this.$[0]);
-        fbr.wtm2 = fbr.chgt;
-        return true;
-    }
-    // wait with interpolation
-    _wi(fbr) {
-        while (fbr._pointer.next.type & CML.State.STF_BE_INTERPOLATED) {
-            fbr._pointer = fbr._pointer.next;
-            fbr._pointer.execute(fbr);
-        }
-        fbr.wcnt = fbr.wtm2;
-        return (fbr.wcnt == 0);
-    }
-    _initialize_interplation(fbr) {
-        const _chgt = fbr.chgt;
-        fbr.chgt = 0;
-        while (fbr._pointer.next.type & CML.State.STF_BE_INTERPOLATED) {
-            fbr._pointer = fbr._pointer.next;
-            fbr._pointer.execute(fbr);
-        }
-        fbr.chgt = _chgt;
-        return true;
-    }
-    // mirroring
-    _m(fbr) {
-        // invert flag
-        CML.State._invert_flag = fbr.invt ^ (((this.$[0]) + 1) >> 0);
-        // execute next statement
-        fbr._pointer = fbr._pointer.next;
-        const res = fbr._pointer.execute(fbr);
-        // reset flag
-        CML.State._invert_flag = fbr.invt;
-        return res;
-    }
     // position of fiber
-    _q(fbr) { fbr.fx = this._invertX(this.$[0]); fbr.fy = this._invertY(this.$[1]); return true; }
-    _qx(fbr) { fbr.fx = this._invertX(this.$[0]); return true; }
-    _qy(fbr) { fbr.fy = this._invertY(this.$[0]); return true; }
-    // position
-    _p(fbr) { fbr.object.setPosition(this._invertX(this.$[0]), this._invertY(this.$[1]), this.$[2], fbr.chgt); return true; }
-    _px(fbr) { fbr.object.setPosition(this._invertX(this.$[0]), fbr.object._getY(), fbr.object._getZ(), fbr.chgt); return true; }
-    _py(fbr) { fbr.object.setPosition(fbr.object._getX(), this._invertY(this.$[0]), fbr.object._getZ(), fbr.chgt); return true; }
-    _pz(fbr) { fbr.object.setPosition(fbr.object._getX(), fbr.object._getY(), this.$[0], fbr.chgt); return true; }
-    _pd(fbr) {
-        var iang, sin = CML.State._globalVariables._sin;
-        if (fbr.hopt != CML.State.HO_SEQ)
-            iang = sin.index(fbr._getAngleForRotationCommand() + CML.State._globalVariables.scrollAngle);
-        else
-            iang = sin.index(fbr.object.anglePosition - fbr._getAngleForRotationCommand());
-        var c = sin[iang + sin.cos_shift], s = sin[iang];
-        fbr.object.setPosition(c * this.$[0] - s * this.$[1], s * this.$[0] + c * this.$[1], fbr.object._getZ(), fbr.chgt);
-        return true;
-    }
-    // velocity
-    _v(fbr) { fbr.object.setVelocity(this._invertX(this.$[0] * CML.State._speed_ratio), this._invertY(this.$[1] * CML.State._speed_ratio), this.$[2] * CML.State._speed_ratio, fbr.chgt); return true; }
-    _vx(fbr) { fbr.object.setVelocity(this._invertX(this.$[0] * CML.State._speed_ratio), fbr.object.vy, fbr.object.vz, fbr.chgt); return true; }
-    _vy(fbr) { fbr.object.setVelocity(fbr.object.vx, this._invertY(this.$[0] * CML.State._speed_ratio), fbr.object.vz, fbr.chgt); return true; }
-    _vz(fbr) { fbr.object.setVelocity(fbr.object.vx, fbr.object.vy, this.$[0] * CML.State._speed_ratio, fbr.chgt); return true; }
-    _vd(fbr) {
-        var iang, sin = CML.State._globalVariables._sin;
-        if (fbr.hopt != CML.State.HO_SEQ)
-            iang = sin.index(fbr._getAngleForRotationCommand() + CML.State._globalVariables.scrollAngle);
-        else
-            iang = sin.index(fbr.object.angleVelocity - fbr._getAngle(0));
-        var c = sin[iang + sin.cos_shift], s = sin[iang], h = this.$[0] * CML.State._speed_ratio, v = this.$[1] * CML.State._speed_ratio;
-        fbr.object.setVelocity(c * h - s * v, s * h + c * v, fbr.object.vz, fbr.chgt);
-        return true;
-    }
-    // acceleration
-    _a(fbr) { fbr.object.setAccelaration(this._invertX(this.$[0] * CML.State._speed_ratio), this._invertY(this.$[1] * CML.State._speed_ratio), this.$[1] * CML.State._speed_ratio, 0); return true; }
-    _ax(fbr) { fbr.object.setAccelaration(this._invertX(this.$[0] * CML.State._speed_ratio), fbr.object._getAy(), fbr.object._getAz(), 0); return true; }
-    _ay(fbr) { fbr.object.setAccelaration(fbr.object._getAx(), this._invertY(this.$[0] * CML.State._speed_ratio), fbr.object._getAz(), 0); return true; }
-    _az(fbr) { fbr.object.setAccelaration(fbr.object._getAx(), fbr.object._getAy(), this.$[0] * CML.State._speed_ratio, 0); return true; }
-    _ad(fbr) {
-        var iang, sin = CML.State._globalVariables._sin;
-        if (fbr.hopt != CML.State.HO_SEQ)
-            iang = sin.index(fbr._getAngleForRotationCommand() + CML.State._globalVariables.scrollAngle);
-        else
-            iang = sin.index(fbr.object.angleAccel - fbr._getAngle(0));
-        var c = sin[iang + sin.cos_shift], s = sin[iang], h = this.$[0] * CML.State._speed_ratio, v = this.$[1] * CML.State._speed_ratio;
-        fbr.object.setAccelaration(c * h - s * v, s * h + c * v, fbr.object._getAz(), 0);
-        return true;
-    }
-    // gravity
-    _gp(fbr) {
-        fbr.chgt = 0;
-        fbr.object.setGravity(this.$[0] * CML.State._speed_ratio, this.$[1] * CML.State._speed_ratio, this.$[2]);
-        return true;
-    }
-    // It's very tough to implement bulletML...('A`)
-    _csa(fbr) { fbr.object.setChangeSpeed(this.$[0] * CML.State._speed_ratio, fbr.chgt); return true; }
-    _csr(fbr) { fbr.object.setChangeSpeed(this.$[0] * CML.State._speed_ratio + fbr.object.velocity, fbr.chgt); return true; }
-    _css(fbr) {
-        if (fbr.chgt == 0)
-            fbr.object.setChangeSpeed(this.$[0] * CML.State._speed_ratio + fbr.object.velocity, 0);
-        else
-            fbr.object.setChangeSpeed(this.$[0] * CML.State._speed_ratio * fbr.chgt + fbr.object.velocity, fbr.chgt);
-        return true;
-    }
-    _cd(fbr) {
-        fbr.object.setChangeDirection(fbr._getAngleForRotationCommand(), fbr.chgt, this.$[0] * CML.State._speed_ratio, fbr._isShortestRotation());
-        return true;
-    }
-    // rotation
-    _r(fbr) {
-        fbr.object.setRotation(fbr._getAngleForRotationCommand(), fbr.chgt, this.$[0], this.$[1], fbr._isShortestRotation());
-        return true;
-    }
-    _rc(fbr) {
-        fbr.object.setConstantRotation(fbr._getAngleForRotationCommand(), fbr.chgt, this.$[0] * CML.State._speed_ratio, fbr._isShortestRotation());
-        return true;
-    }
-    // kill object
-    _ko(fbr) {
-        fbr.object.destroy(this.$[0]);
-        return false;
-    }
-    // kill all children fiber
-    _kf(fbr) {
-        fbr.destroyAllChildren();
-        return true;
-    }
-    // initialize barrage
-    _initialize_barrage(fbr) { fbr.barrage.clear(); return true; }
-    // multiple barrage
-    _bm(fbr) { fbr.barrage.appendMultiple(this.$[0], this._invertRotation(this.$[1]), this.$[2], this.$[3]); return true; }
-    // sequencial barrage
-    _bs(fbr) { fbr.barrage.appendSequence(this.$[0], this._invertRotation(this.$[1]), this.$[2], this.$[3]); return true; }
-    // random barrage
-    _br(fbr) { fbr.barrage.appendRandom(this.$[0], this._invertRotation(this.$[1]), this.$[2], this.$[3]); return true; }
-    // bullet sequence of verocity
-    _bv(fbr) { fbr.bul.setSpeedStep(this.$[0] * CML.State._speed_ratio); return true; }
-    // head angle
-    _ha(fbr) { fbr.hang = this._invertAngle(this.$[0]); fbr.hopt = CML.State.HO_ABS; return true; }
-    _ho(fbr) { fbr.hang = this._invertAngle(this.$[0]); fbr.hopt = CML.State.HO_REL; return true; }
-    _hp(fbr) { fbr.hang = this._invertAngle(this.$[0]); fbr.hopt = CML.State.HO_PAR; return true; }
-    _ht(fbr) { fbr.hang = this._invertAngle(this.$[0]); fbr.hopt = CML.State.HO_AIM; return true; }
-    _hv(fbr) { fbr.hang = this._invertAngle(this.$[0]); fbr.hopt = CML.State.HO_VEL; return true; }
-    _hs(fbr) { fbr.hang = this._invertRotation(this.$[0]); fbr.hopt = CML.State.HO_SEQ; return true; }
-    // set target
-    _td(fbr) { fbr.target = null; return true; }
-    _tp(fbr) { fbr.target = fbr.object.parent; return true; }
-    _to(fbr) { fbr.target = fbr.object.findChild(this.$[0] >> 0); return true; }
-    // call sequence (create new fiber directry)
-    // gosub
-    _gosub(fbr) {
-        // execution error
-        if (fbr.jstc.length > CML.Fiber._stacmax) {
-            throw new Error("CML Execution error. The '&' command calls deeper than stac limit.");
-        }
-        // next statement is referential sequence
-        var ref = (this.next);
-        var seq = (ref.jump != null) ? ref.jump : (fbr.seqSub);
-        fbr.jstc.push(ref);
-        fbr._unshiftInvertion(CML.State._invert_flag);
-        fbr._unshiftVariables(ref.$);
-        fbr._pointer = seq;
-        return true;
-    }
-    // return
-    _ret(fbr) {
-        // pop jump stac
-        if (fbr.jstc.length > 0) {
-            fbr._shiftVariables();
-            fbr._shiftInvertion();
-            fbr._pointer = fbr.jstc.pop();
-            fbr.seqSub = this.jump;
-        }
-        return true;
-    }
-    // execute new fiber, fiber on child
-    _at(fbr) { this._fiber(fbr, this.$[0]); return true; }
-    _ato(fbr) { this._fiber_child(fbr, fbr.object, this.$); return true; }
-    _fat(fbr) { if (this.next.jump != null)
-        fbr.seqExec = this.next.jump; return true; }
-    _atko(fbr) { this._fiber_destruction(fbr, this.$[0]); return true; }
-    // new
-    _n(fbr) { this._new(fbr, Math.floor(this.$[0]), false); return true; }
-    _nc(fbr) { this._new(fbr, Math.floor(this.$[0]), true); return true; }
-    _fn(fbr) { if (this.next.jump != null) fbr.seqNew = this.next.jump; return true; }
-    // fire
-    _f0(fbr) { this._fire(fbr, Math.floor(this.$[1]), false); fbr.bul.update(); return true; }
-    _f1(fbr) { fbr.bul.speed = this.$[0] * CML.State._speed_ratio; this._fire(fbr, Math.floor(this.$[1]), false); fbr.bul.update(); return true; }
-    _fc0(fbr) { this._fire(fbr, Math.floor(this.$[1]), true); fbr.bul.update(); return true; }
-    _fc1(fbr) { fbr.bul.speed = this.$[0] * CML.State._speed_ratio; this._fire(fbr, Math.floor(this.$[1]), true); fbr.bul.update(); return true; }
-    // fake fire
-    _ff0(fbr) {
-        var refer = this.next;
-        if (refer.jump != null)
-            fbr.seqFire = refer.jump;
-        fbr.fang = fbr._getAngle(fbr.fang);
-        fbr._pointer = refer;
-        fbr.bul.update();
-        return true;
-    }
-    _ff1(fbr) {
-        fbr.bul.speed = this.$[0] * CML.State._speed_ratio;
-        return this._ff0(fbr);
-    }
-    // statement for rapid fire
-    _rapid_fire(fbr) {
-        // end
-        if (fbr.bul.isEnd())
-            return false;
-        // create new bullet object and initialize
-        this._create_multi_bullet(fbr, fbr.wtm1, Boolean(fbr.wtm2), null);
-        // calc bullet and set wait counter
-        fbr.bul.update();
-        fbr.wcnt = fbr.bul.interval;
-        // repeat
-        fbr._pointer = CML.Sequence.rapid();
-        return false;
-    }
-    // statement to wait for destruction
-    _wait4destruction(fbr) {
-        if (fbr.object.destructionStatus == fbr._access_id) {
-            fbr._pointer = this.jump;
-            return true;
-        }
-        return false;
-    }
     // invertion
     //--------------------------------------------------
     _invertAngle(ang) {
@@ -669,10 +52,10 @@ CML.State = class extends CML.ListElem {
             ang = -ang;
         if (CML.State._invert_flag & (1 + CML.State._globalVariables.vertical))
             ang = 180 - ang;
-        return ang;
+        return ang * 0.017453292519943295;
     }
     _invertRotation(rot) {
-        return (CML.State._invert_flag == 1 || CML.State._invert_flag == 2) ? -rot : rot;
+        return ((CML.State._invert_flag == 1 || CML.State._invert_flag == 2) ? -rot : rot) * 0.017453292519943295;
     }
     _invertX(x) {
         return (CML.State._invert_flag & (2 - CML.State._globalVariables.vertical)) ? -x : x;
@@ -680,150 +63,159 @@ CML.State = class extends CML.ListElem {
     _invertY(y) {
         return (CML.State._invert_flag & (1 + CML.State._globalVariables.vertical)) ? -y : y;
     }
-    // creating routine
-    //--------------------------------------------------
+    // command executer
+    //------------------------------------------------------------
+    // no operation or end
+    _nop(state, $, fiber, object) {
+        return true;
+    }
+    // initialize interpolation
+    _initialize_interplation(fiber) {
+        const _chgt = fiber.chgt;
+        fiber.chgt = 0;
+        while (fiber._pointer.next.type & CML.State.STF_BE_INTERPOLATED) {
+            fiber._pointer = fiber._pointer.next;
+            fiber._pointer.execute(fiber);
+        }
+        fiber.chgt = _chgt;
+        return true;
+    }
+    // statement for rapid fire
+    _rapid_fire(fiber) {
+        // end
+        if (fiber.bul.isEnd())
+            return false;
+        // create new bullet object and initialize
+        this._create_multi_bullet(fiber, fiber.wtm1, Boolean(fiber.wtm2), null);
+        // calc bullet and set wait counter
+        fiber.bul.update();
+        fiber.wcnt = fiber.bul.interval;
+        // repeat
+        fiber._pointer = CML.Sequence.rapid();
+        return false;
+    }
+    // statement to wait for destruction
+    _wait4destruction(fiber) {
+        if (fiber.object.destructionStatus == fiber._access_id) {
+            fiber._pointer = this.jump;
+            return true;
+        }
+        return false;
+    }
     // run new fiber
-    _fiber(fbr, fiber_id) {
-        var ref = this.next; // next statement is referential sequence
-        var seq = (ref.jump != null) ? ref.jump : (fbr.seqExec); // executing sequence
-        fbr._newChildFiber(seq, fiber_id, CML.State._invert_flag, ref.$, (seq.type == CML.State.ST_NO_LABEL)); // create and initialize fiber
-        fbr.seqExec = seq; // update executing sequence
-        fbr._pointer = ref; // skip next statement
+    _fiber(fiber, fiber_id) {
+        const ref = this.next; // next statement is referential sequence
+        const seq = (ref.jump != null) ? ref.jump : (fiber.seqFiber); // executing sequence
+        fiber._newChildFiber(seq, fiber_id, CML.State._invert_flag, ref.$, (seq.type == CML.State.ST_NO_LABEL)); // create and initialize fiber
+        fiber.seqFiber = seq; // update executing sequence
+        fiber._pointer = ref; // skip next statement
     }
     // run new destruction fiber
-    _fiber_destruction(fbr, destStatus) {
-        var ref = this.next; // next statement is referential sequence
-        var seq = (ref.jump != null) ? ref.jump : (fbr.seqExec); // executing sequence
-        fbr._newDestFiber(seq, destStatus, CML.State._invert_flag, ref.$); // create and initialize destruction fiber
-        fbr.seqExec = seq; // update executing sequence
-        fbr._pointer = ref; // skip next statement
+    _fiber_destruction(fiber, destStatus) {
+        const ref = this.next; // next statement is referential sequence
+        const seq = (ref.jump != null) ? ref.jump : (fiber.seqFiber); // executing sequence
+        fiber._newDestFiber(seq, destStatus, CML.State._invert_flag, ref.$); // create and initialize destruction fiber
+        fiber.seqFiber = seq; // update executing sequence
+        fiber._pointer = ref; // skip next statement
     }
     // run new fiber on child object
-    _fiber_child(fbr, obj, object_id) {
-        var ref = this.next; // next statement is referential sequence
-        var seq = (ref.jump != null) ? ref.jump : (fbr.seqExec); // executing sequence
-        var idxmax = object_id.length - 1;
+    _fiber_child(fiber, obj, object_id) {
+        const ref = this.next; // next statement is referential sequence
+        const seq = (ref.jump != null) ? ref.jump : (fiber.seqFiber); // executing sequence
+        const idxmax = object_id.length - 1;
         _reflective_fiber_creation(obj, 0); // find child by object_id and create new fiber
-        fbr.seqExec = seq; // update executing sequence
-        fbr._pointer = ref; // skip next statement
+        fiber.seqFiber = seq; // update executing sequence
+        fiber._pointer = ref; // skip next statement
         // ('A`) chaos...
         function _reflective_fiber_creation(_parent, _idx) {
             this._parent.findAllChildren(object_id[_idx], (_idx == idxmax) ? this.__nof : this.__rfc);
-            function __nof(obj) { fbr._newObjectFiber(obj, seq, CML.State._invert_flag, ref.$); return false; }
+            function __nof(obj) { fiber._newObjectFiber(obj, seq, CML.State._invert_flag, ref.$); return false; }
             function __rfc(obj) { _reflective_fiber_creation(obj, _idx + 1); return false; }
         }
     }
-    // new
-    _new(fbr, access_id, isParts) {
-        var sin = CML.State._globalVariables._sin, sang, cang, x, y;
-        // next statement is referential sequence
-        var ref = this.next;
-        // update new pointer, ref.jump shows executing sequence            
-        if (ref.jump != null)
-            fbr.seqNew = ref.jump;
-        // creating center position
-        x = fbr.fx;
-        y = fbr.fy;
-        // calculate fiber position on absolute coordinate, when it's not relative creation.
-        if (!isParts) {
-            sang = sin.index(fbr.object.angleOnScreen);
-            cang = sang + sin.cos_shift;
-            x = fbr.object.x + sin[cang] * fbr.fx - sin[sang] * fbr.fy;
-            y = fbr.object.y + sin[sang] * fbr.fx + sin[cang] * fbr.fy;
-        }
-        // create object
-        var childObject = fbr.object.onNewObject(fbr.seqNew);
-        if (childObject == null)
-            return;
-        childObject._initialize(fbr.object, isParts, access_id, x, y, 0, 0, 0);
-        // create fiber
-        fbr._newObjectFiber(childObject, fbr.seqNew, CML.State._invert_flag, ref.$);
-        // skip next statement
-        fbr._pointer = ref;
-    }
     // fire
-    _fire(fbr, access_id, isParts) {
+    _fire(fiber, access_id, isParts) {
         // next statement is sequence referene 
         const ref = this.next;
         // update fire pointer, ref.jump shows executing sequence
-        if (ref.jump) fbr.seqFire = ref.jump;
+        if (ref.jump) fiber.seqFired = ref.jump;
         // create multi bullet
-        this._create_multi_bullet(fbr, access_id, isParts, ref.$);
+        this._create_multi_bullet(fiber, access_id, isParts, ref.$);
         // skip next statement
-        fbr._pointer = ref;
+        fiber._pointer = ref;
     }
     // fire reflective implement
-    _create_multi_bullet(fbr, access_id, isParts, args) {
+    _create_multi_bullet(fiber, access_id, isParts, args) {
         // creating center position
         let cx, cy;
         // calculate fiber position on absolute coordinate, when it's not relative creation.
         if (isParts) {
-            cx = fbr.fx;
-            cy = fbr.fy;
+            cx = fiber.fx;
+            cy = fiber.fy;
         } else {
             const sin = CML.State._globalVariables._sin,
-                  sang = sin.index(fbr.object.angleOnScreen),
+                  sang = sin.index(fiber.object.angleOnScreen),
                   cang = sang + sin.cos_shift;
-            cx = fbr.object.x + sin[cang] * fbr.fx - sin[sang] * fbr.fy;
-            cy = fbr.object.y + sin[sang] * fbr.fx + sin[cang] * fbr.fy;
+            cx = fiber.object.x + sin[cang] * fiber.fx - sin[sang] * fiber.fy;
+            cy = fiber.object.y + sin[sang] * fiber.fx + sin[cang] * fiber.fy;
         }
         // calculate angle
-        fbr.fang = fbr._getAngle(fbr.fang);
+        fiber.firedAngle = fiber._getAngle(fiber.firedAngle);
         // create bullets
-        if (fbr.barrage.qrtList.isEmpty()) {
+        if (fiber.barrage.qrtList.isEmpty()) {
             // create single bullet
-            this.__create_bullet(fbr, access_id, isParts, args, cx, cy, fbr.fang + fbr.bul.angle, fbr.bul.speed);
+            this.__create_bullet(fiber, access_id, isParts, args, cx, cy, fiber.firedAngle + fiber.bul.angle, fiber.bul.speed);
         }
         else {
             // reflexive call
-            fbr.bul.next = fbr.barrage.qrtList.head;
-            this.__reflexive_call(fbr, access_id, isParts, args, cx, cy, fbr.bul, fbr.barrage.qrtList.end);
+            fiber.bul.next = fiber.barrage.qrtList.head;
+            this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, fiber.bul, fiber.barrage.qrtList.end);
         }
     }
     // create object reflexively
-    __reflexive_call(fbr, access_id, isParts, args, cx, cy, bul, end) {
+    __reflexive_call(fiber, access_id, isParts, args, cx, cy, bul, end) {
         if (bul.next.interval == 0) {
             const b = bul.next;
             if (b.next == end) {
                 // create bullet
                 for (b.init(bul); !b.isEnd(); b.update()) 
-                    this.__create_bullet(fbr, access_id, isParts, args, cx, cy, fbr.fang + b.angle, b.speed);
+                    this.__create_bullet(fiber, access_id, isParts, args, cx, cy, fiber.firedAngle + b.angle, b.speed);
             }
             else {
                 // reflexive call
                 for (b.init(bul); !b.isEnd(); b.update()) 
-                    this.__reflexive_call(fbr, access_id, isParts, args, cx, cy, b, end);
+                    this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, b, end);
             }
         }
         else {
             // create new fiber and initialize
-            const newfiber = fbr._newChildFiber(CML.Sequence.rapid(), 0, CML.State._invert_flag, null, false);
+            const newfiber = fiber._newChildFiber(CML.Sequence.rapid(), 0, CML.State._invert_flag, null, false);
             // copy bullet setting and bullet multiplyer
             newfiber.bul.copy(bul.next);
             newfiber.bul.init(bul);
             for (let elem = bul.next.next; elem != end; elem = elem.next) 
                 newfiber.barrage._appendElementCopyOf(elem);
             // copy other parameters
-            newfiber.fx = fbr.fx;
-            newfiber.fy = fbr.fy;
-            newfiber.hopt = fbr.hopt;
-            newfiber.hang = (fbr.hopt == CML.State.HO_SEQ) ? 0 : fbr.hang;
-            newfiber.fang = fbr.fang;
-            newfiber.seqFire = fbr.seqFire;
+            newfiber.fx = fiber.fx;
+            newfiber.fy = fiber.fy;
+            newfiber.hopt = fiber.hopt;
+            newfiber.headAngle = (fiber.hopt == CML.State.HO_SEQ) ? 0 : fiber.headAngle;
+            newfiber.firedAngle = fiber.firedAngle;
+            newfiber.seqFired = fiber.seqFired;
             newfiber.wtm1 = access_id;
             newfiber.wtm2 = (isParts) ? 1 : 0;
         }
     }
     // internal function to create object
-    __create_bullet(fbr, access_id, isParts, args, cx, cy, angle, velocity) {
+    __create_bullet(fiber, access_id, isParts, args, cx, cy, angle, velocity) {
         const sin = CML.State._globalVariables._sin,
               sang = sin.index(angle + CML.State._globalVariables.scrollAngle),
               vx = velocity * sin[sang + sin.cos_shift],
               vy = velocity * sin[sang],
-              obj = fbr.object.onFireObject(fbr.seqFire);
+              obj = fiber.object.onFireObject(fiber.seqFired);
         if (!obj) return;
-        obj._initialize(fbr.object, isParts, access_id, cx, cy, vx, vy, angle);  // create object
-        fbr._newObjectFiber(obj, fbr.seqFire, CML.State._invert_flag, args);   // create fiber
+        obj._initialize(fiber.object, isParts, access_id, cx, cy, vx, vy, angle);  // create object
+        fiber._newObjectFiber(obj, fiber.seqFired, CML.State._invert_flag, args);   // create fiber
     }
 }
 // Status Types
@@ -858,6 +250,588 @@ CML.State._invert_flag = 0;
 // speed ratio
 CML.State._speed_ratio = 1;
 // command regular expressions
-CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|ko|i|m|cd|csa|csr|css|\\^@|@ko|@o|@|\\^n|nc|n|\\^f|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to|kf)";
+CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|k|i|my|mx|cd|csa|csr|css|@k|@o|@|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to)";
 // global variables
 CML.State._globalVariables = null;
+// operators
+CML.State.operators = {
+//---- wait
+    "w":{ // wait
+        argc: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            if (state.formula.answerCount > 0)
+                fiber.wtm1 = $[0];
+            fiber.wcnt = fiber.wtm1;
+            return false;
+        }
+    },
+    "w?":{ // waitif
+        argc: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            if ($[0]) { // wait if $[0] != 0
+                fiber._pointer = state.prev;
+                return false;
+            }
+            return true;
+        }
+    },
+//---- sequence operation
+    "}":{ // return
+        argc: 0,
+        type: CML.State.ST_END,
+        func(state, $, fiber, object) {
+            if (fiber.jstc.length > 0) { // pop jump stac
+                fiber._popInvertion();
+                fiber._popVariables();
+                fiber._pointer = fiber.jstc.pop();
+            }
+            return true;
+        }
+    },
+    "[":{ // block or loop start
+        argc: 1,
+        type: CML.State.ST_BLOCKSTART,
+        func(state, $, fiber, object) {
+            fiber.lcnt.unshift(0);
+            return true;
+        }
+    },
+    "?":{ // if branch
+        argc: 0,
+        type: CML.State.ST_IF,
+        func(state, $, fiber, object) {
+            // loopconter < 0 means branch. true=-1, false=-2
+            fiber.lcnt[0] = (state.prev.$[0]) ? -1: -2;
+            if (fiber.lcnt[0] == -2) 
+                fiber._pointer = state.jump.prev;
+            return true;
+        }
+    },
+    ":":{ // else if 
+        argc: 1,
+        type: CML.State.ST_ELSE,
+        func(state, $, fiber, object) {
+            if (fiber.lcnt[0] == -1) {
+                fiber._pointer = state.jump;
+                while (fiber._pointer.type != CML.State.ST_BLOCKEND)
+                    fiber._pointer = fiber._pointer.jump;
+                fiber._pointer = fiber._pointer.prev;
+            } else if (fiber.lcnt[0] == -2 && state.prev.type == CML.State.ST_FORMULA)
+                state.prev.execute(fiber);
+            return true;
+        }
+    },
+    "]":{ // block or loop end
+        argc: 1,
+        type: CML.State.ST_BLOCKEND,
+        func(state, $, fiber, object) {
+            if (fiber.lcnt[0] >= 0)  { // loopconter < 0 means branch
+                var lmax = Math.floor($[0] || state.jump.$[0]);
+                if (++fiber.lcnt[0] != lmax) { // jump to block_start
+                    fiber._pointer = state.jump;
+                    return true;
+                }
+            }
+            fiber.lcnt.shift();
+            return true;
+        }
+    },
+//---- interpolation
+    "i":{ // interpolating frames
+        argc: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.chgt = Math.floor($[0]);
+            fiber.wtm2 = fiber.chgt;
+            return true;
+        }
+    },
+    "~":{ // wait with interpolation
+        argc: 0,
+        type: CML.State.ST_INTERPOLATE,
+        func(state, $, fiber, object) {
+            while (fiber._pointer.next.type & CML.State.STF_BE_INTERPOLATED) {
+                fiber._pointer = fiber._pointer.next;
+                fiber._pointer.execute(fiber);
+            }
+            fiber.wcnt = fiber.wtm2;
+            return (fiber.wcnt == 0);
+        }
+    },
+//---- position
+    "p":{
+        argc: 3,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            if (state.formula.answerCount == 1) {
+                const angle = fiber._getAngle(object.anglePositionOnScreen, false);
+                object.setPositionByDirection(angle, $[0], $[1], fiber.chgt);
+            } else
+                object.setPosition(state._invertX($[0]), state._invertY($[1]), $[2], fiber.chgt);
+            return true;
+        }
+    },
+    "px":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setPositionX(state._invertX($[0]), fiber.chgt);
+            return true;
+        }
+    },
+    "py":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setPositionY(state._invertY($[0]), fiber.chgt);
+            return true;
+        }
+    },
+    "pz":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setPositionZ($[0], fiber.chgt);
+            return true;
+        }
+    },
+    "pd":{
+        argc: 2,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const angle = fiber._getAngle(object.anglePositionOnScreen, false);
+            object.setPositionByDirection(angle, $[0], $[1], fiber.chgt);
+            return true;
+        }
+    },
+//---- velocity
+    "v":{
+        argc: 3,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const r = CML.State._speed_ratio;
+            if (state.formula.answerCount == 1) {
+                const angle = fiber._getAngle(object.angleVelocityOnScreen, false);
+                object.setVelocityByDirection(angle, $[0]*r, $[1]*r, fiber.chgt);
+            } else
+                object.setVelocity(state._invertX($[0]*r), state._invertY($[1]*r), $[2]*r, fiber.chgt);
+            return true;
+        }
+    },
+    "vx":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setVelocityX(state._invertX($[0]*CML.State._speed_ratio), fiber.chgt);
+            return true;
+        }
+    },
+    "vy":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setVelocityY(state._invertY($[0]*CML.State._speed_ratio), fiber.chgt);
+            return true;
+        }
+    },
+    "vz":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setVelocityZ($[0]*CML.State._speed_ratio, fiber.chgt);
+            return true;
+        }
+    },
+    "vd":{
+        argc: 2,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const angle = fiber._getAngle(object.angleVelocityOnScreen, false),
+                  r = CML.State._speed_ratio;
+            object.setVelocityByDirection(angle, $[0]*r, $[1]*r, fiber.chgt);
+            return true;
+        }
+    },
+//---- accelaration
+    "a":{
+        argc: 3,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const r = CML.State._speed_ratio;
+            if (state.formula.answerCount == 1) {
+                const angle = fiber._getAngle(object.angleAccelOnScreen, false);
+                object.setAccelByDirection(angle, $[0]*r, $[1]*r);
+            } else
+                object.setAccel(state._invertX($[0]*r), state._invertY($[1]*r), $[2]*r);
+            return true;
+        }
+    },
+    "ax":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setAccelX(state._invertX($[0]*CML.State._speed_ratio));
+            return true;
+        }
+    },
+    "ay":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setAccelY(state._invertY($[0]*CML.State._speed_ratio));
+            return true;
+        }
+    },
+    "az":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setAccelZ($[0]*CML.State._speed_ratio);
+            return true;
+        }
+    },
+    "ad":{
+        argc: 2,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const angle = fiber._getAngle(object.angleAccelOnScreen, false),
+                  r = CML.State._speed_ratio;
+            object.setAccelByDirection(angle, $[0]*r, $[1]*r);
+            return true;
+        }
+    },
+//---- rotation
+    "r":{
+        argc: 2,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const angle = fiber._getAngle(object.angleOnScreen, false);
+            object.setRotation(state._invertRotation(angle), fiber.chgt, $[0], $[1], fiber._isShortestRotation());
+            return true;
+        }
+    },
+    "rc":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const angle = fiber._getAngle(object.angleOnScreen, false);
+            object.setConstantRotation(state._invertRotation(angle), fiber.chgt, $[0] * CML.State._speed_ratio, fiber._isShortestRotation());
+            return true;
+        }
+    },
+//---- gravity motion
+    "gp":{
+        argc: 3,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.chgt = 0;
+            object.setGravity($[0] * CML.State._speed_ratio, $[1] * CML.State._speed_ratio, $[2]);
+            return true;
+        }
+    },
+//---- bulletml based
+    "cd":{
+        argc: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            const angle = fiber._getAngle(object.angleOnScreen, false);
+            object.setChangeDirection(angle, fiber.chgt, $[0] * CML.State._speed_ratio, fiber._isShortestRotation());
+            return true;
+        }
+    },
+    "csa":{
+        argc: 2,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setChangeSpeed($[0] * CML.State._speed_ratio, fiber.chgt);
+            return true;
+        }
+    },
+    "csr":{
+        argc: 2,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            object.setChangeSpeed($[0] * CML.State._speed_ratio + object.velocity, fiber.chgt);
+            return true;
+        }
+    },
+    "css":{
+        argc: 2,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            if (fiber.chgt == 0)
+                object.setChangeSpeed($[0] * CML.State._speed_ratio + object.velocity, 0);
+            else
+                object.setChangeSpeed($[0] * CML.State._speed_ratio * fiber.chgt + object.velocity, fiber.chgt);
+            return true;
+        }
+    },
+//---- kill object
+    "k":{
+        args: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            object.destroy($[0]);
+            return true;
+        }
+    },
+//---- call reference fiber
+    "&":{
+        args: 0,
+        type: CML.State.STF_CALLREF,
+        func(state, $, fiber, object) {
+            // execution error
+            if (fiber.jstc.length > CML.Fiber._stacmax) 
+                throw new Error("CML Execution error. '&' call stac overflow.");
+            // next statement is referential sequence
+            const ref = state.next;
+            fiber.jstc.push(ref);
+            fiber._pushInvertion(CML.State._invert_flag);
+            fiber._pushVariables(ref.$);
+            fiber._pointer = ref.jump;
+            return true;
+        }
+    },
+    "@":{
+        args: 1,
+        type: CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
+        func(state, $, fiber, object) {
+            state._fiber(fiber, $[0]); 
+            return true;
+        }
+    },
+    "@o":{
+        args: 1,
+        type: CML.State.ST_RESTRICT | CML.State.STF_CALLREF,
+        func(state, $, fiber, object) {
+            state._fiber_child(fiber, object, $[0]);
+            return true;
+        }
+    },
+    "@k":{
+        args: 1,
+        type: CML.State.ST_RESTRICT | CML.State.STF_CALLREF,
+        func(state, $, fiber, object) {
+            state._fiber_destruction(fiber, $[0]);
+            return true;
+        }
+    },
+//---- create new object (fire bullet)
+    "f":{
+        args: 2,
+        type: CML.State.STF_CALLREF,
+        func(state, $, fiber, object) {
+            if (state.forumla.answerCount > 0) 
+                fiber.bul.speed = $[0] * CML.State._speed_ratio;
+            state._fire(fiber, Math.floor($[1]), false);
+            fiber.bul.update();
+            return true;
+        }
+    },
+    "fc":{
+        args: 2,
+        type: CML.State.STF_CALLREF,
+        func(state, $, fiber, object) {
+            if (state.forumla.answerCount > 0) 
+                fiber.bul.speed = $[0] * CML.State._speed_ratio;
+            state._fire(fiber, Math.floor($[1]), true);
+            fiber.bul.update();
+            return true;
+        }
+    },
+//---- fiber center
+    "q":{
+        args: 2,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.fx = state._invertX($[0]);
+            fiber.fy = state._invertY($[1]);
+            return true;
+        }
+    },
+    "qx":{
+        args: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.fx = state._invertX($[0]);
+            return true;
+        }
+    },
+    "qy":{
+        args: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.fy = state._invertY($[0]);
+            return true;
+        }
+    },
+//---- head angle options
+    "ha":{
+        args: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            fiber._setHeadAngle(CML.State.HO_ABS, state._invertAngle($[0]));
+            return true;
+        }
+    },
+    "hp":{
+        args: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            fiber._setHeadAngle(CML.State.HO_PAR, state._invertAngle($[0]));
+            return true;
+        }
+    },
+    "ht":{
+        args: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            fiber._setHeadAngle(CML.State.HO_AIM, state._invertAngle($[0]));
+            return true;
+        }
+    },
+    "ho":{
+        args: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            fiber._setHeadAngle(CML.State.HO_REL, state._invertAngle($[0]));
+            return true;
+        }
+    },
+    "hv":{
+        args: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            fiber._setHeadAngle(CML.State.HO_VEL, state._invertAngle($[0]));
+            return true;
+        }
+    },
+    "hs":{
+        args: 1,
+        type: CML.State.STF_BE_INTERPOLATED,
+        func(state, $, fiber, object) {
+            fiber._setHeadAngle(CML.State.HO_SEQ, state._invertRotation($[0]));
+            return true;
+        }
+    },
+//---- barrage setting
+    "bm":{
+        args: 4,
+        type: CML.State.ST_BARRAGE,
+        func(state, $, fiber, object) {
+            fiber.barrage.appendMultiple($[0], state._invertRotation($[1]), $[2] * CML.State._speed_ratio, $[3]); 
+            return true;
+        }
+    },
+    "bs":{
+        args: 4,
+        type: CML.State.ST_BARRAGE,
+        func(state, $, fiber, object) {
+            fiber.barrage.appendSequence($[0], state._invertRotation($[1]), $[2] * CML.State._speed_ratio, $[3]);
+            return true;
+        }
+    },
+    "br":{
+        args: 4,
+        type: CML.State.ST_BARRAGE,
+        func(state, $, fiber, object) {
+            fiber.barrage.appendRandom($[0], state._invertRotation($[1]), $[2] * CML.State._speed_ratio, $[3]); 
+            return true;
+        }
+    },
+    "bv":{
+        args: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.bul.setSpeedStep($[0] * CML.State._speed_ratio);
+            return true;
+        }
+    },
+//---- target change
+    "td":{ // set target to degault
+        args: 0,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.target = null;
+            return true;
+        }
+    },
+    "tp":{ // set target to parent
+        args: 0,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.target = object.parent;
+            return true;
+        }
+    },
+    "to":{ // set target to child object
+        args: 1,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.target = object.findChild($[0] >> 0);
+            return true;
+        }
+    },
+//---- mirror
+    "mx":{
+        args: 0,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            CML.State._invert_flag = fiber.invt ^ 1;
+            fiber._pointer = fiber._pointer.next;
+            const res = fiber._pointer.execute(fiber);
+            CML.State._invert_flag = fiber.invt;
+            return true;
+        }
+    },
+    "my":{
+        args: 0,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            CML.State._invert_flag = fiber.invt ^ 2;
+            fiber._pointer = fiber._pointer.next;
+            const res = fiber._pointer.execute(fiber);
+            CML.State._invert_flag = fiber.invt;
+            return true;
+        }
+    },
+//---- internal command
+    "$rapid":{
+        args: 0,
+        type:  CML.State.ST_RAPID,
+        func(state, $, fiber, object) {
+            return state._rapid_fire(fiber);
+        }
+    },
+    "$barrage":{
+        args: 0,
+        type: CML.State.ST_BARRAGE,
+        func(state, $, fiber, object) {
+            fiber.barrage.clear(); 
+            return true; 
+        }
+    },
+    "$init4int":{
+        args: 0,
+        type: CML.State.ST_INIT4INT,
+        func(state, $, fiber, object) {
+            return state._initialize_interplation(fiber);
+        }
+    },
+    "$w4d":{
+        args: 0,
+        type: CML.State.ST_W4D,
+        func(state, $, fiber, object) {
+            return state._wait4destruction(state, $, fiber, object);
+        }
+    },
+    "$end":{
+        args: 0,
+        type: CML.State.ST_END,
+        func(state, $, fiber, object) {
+            return true;
+        }
+    }
+};

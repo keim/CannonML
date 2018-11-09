@@ -277,7 +277,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
                 }
                 if (cmd_verify.type != CML.State.ST_INTERPOLATE) {
                     // insert interpolation initialize command first of all
-                    new_cmd = new CML.State(CML.State.ST_INIT4INT);
+                    new_cmd = new CML.State("$init4int");
                     new_cmd.insert_after(cmd_verify);
                 }
             }
@@ -285,7 +285,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             // verify barrage commands
             if (cmd.type == CML.State.ST_BARRAGE) {
                 // insert barrage initialize command first
-                new_cmd = new CML.State(CML.State.ST_BARRAGE);
+                new_cmd = new CML.State("$barrage");
                 new_cmd.insert_before(cmd);
                 // skip formula and barrage command
                 cmd_verify = cmd_next;
@@ -307,11 +307,11 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     /** @private */
     static nop() {
         if (!CML.Sequence._nop) {
-            var cmd = new CML.State(CML.State.ST_END);
+            var cmdNop = new CML.State("$end");
             CML.Sequence._nop = new CML.Sequence();
-            CML.Sequence._nop.next = cmd;
-            cmd.prev = CML.Sequence._nop;
-            cmd.jump = CML.Sequence._nop;
+            CML.Sequence._nop.next = cmdNop;
+            cmdNop.prev = CML.Sequence._nop;
+            cmdNop.jump = CML.Sequence._nop;
             CML.Sequence._nop._setCommand(null);
         }
         return CML.Sequence._nop;
@@ -320,7 +320,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     /** @private */
     static rapid() {
         if (!CML.Sequence._rapid) {
-            var rap = new CML.State(CML.State.ST_RAPID);
+            var rap = new CML.State("$rapid");
             CML.Sequence._rapid = new CML.Sequence();
             CML.Sequence._rapid.next = rap;
             rap.prev = CML.Sequence._rapid;
@@ -332,10 +332,11 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     // sequence to wait for object destruction. call from CML.Fiber
     /** @private */
     static newWaitDestruction() {
-        var seq = new CML.Sequence(), cmd = new CML.State(CML.State.ST_W4D);
+        var seq = new CML.Sequence(), cmd = new CML.State("$w4d");
         seq.next = cmd;
         cmd.prev = seq;
         cmd.jump = seq;
+        cmd.next = cmd;
         return seq;
     }
 }

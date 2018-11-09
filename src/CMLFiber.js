@@ -49,17 +49,15 @@ CML.Fiber = class extends CML.ListElem {
         /** @private _cml_fiber_internal */ this.fx = 0; // fiber position
         /** @private _cml_fiber_internal */ this.fy = 0;
         /** @private _cml_fiber_internal */ this.chgt = 0; // pos/vel/rot changing time
-        /** @private _cml_fiber_internal */ this.hopt = CML.State.HO_AIM; // head option
-        /** @private _cml_fiber_internal */ this.hang = 0; // head angle [degree]
-        /** @private _cml_fiber_internal */ this.fang = 0; // previous fired angle (due to the compatiblity with bulletML)
+        /** @private _cml_fiber_internal */ this.headAngleOption = CML.State.HO_AIM; // head option
+        /** @private _cml_fiber_internal */ this.headAngle = 0;  // head angle [degree]
+        /** @private _cml_fiber_internal */ this.firedAngle = 0; // previous fired angle (due to the compatiblity with bulletML)
         /** @private _cml_fiber_internal */ this.bul = new CML.BarrageElem(); // primary setting of bullet
         /** @private _cml_fiber_internal */ this.invt = 0; // invertion flag (0=no, 1=x_reverse, 2=y_reverse, 3=xy_reverse)
         /** @private _cml_fiber_internal */ this.wtm1 = 1; // waiting time for "w"
         /** @private _cml_fiber_internal */ this.wtm2 = 1; // waiting time for "~"
-        /** @private _cml_fiber_internal */ this.seqSub = null; // previous calling sequence from "&"
-        /** @private _cml_fiber_internal */ this.seqExec = null; // previous calling sequence from "@"
-        /** @private _cml_fiber_internal */ this.seqNew = null; // previous calling sequence from "n"
-        /** @private _cml_fiber_internal */ this.seqFire = null; // previous calling sequence from "f"
+        /** @private _cml_fiber_internal */ this.seqFiber = null; // previous calling sequence from "@"
+        /** @private _cml_fiber_internal */ this.seqFired = null; // previous calling sequence from "f"
         // runtime parameters
         /** @private _cml_fiber_internal */ this.wcnt = 0; // waiting counter
         /** @private _cml_fiber_internal */ this.lcnt = []; // loop counter
@@ -100,7 +98,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
 </listing>
      */
     get string() {
-        var stateString = this._pointer.next;
+        const stateString = this._pointer.next;
         return (stateString != null) ? stateString._string : null;
     }
     /** Sequence argument. <br/>
@@ -108,7 +106,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
      *  When the next statement of user command is not sequence. outputs parsing error. Or, when the next statement is '{.}', returns null.
      */
     get sequence() {
-        var stateRefer = this._pointer.next;
+        const stateRefer = this._pointer.next;
         return (stateRefer != null) ? (stateRefer.jump) : null;
     }
     /** Is active ? When this property shows false, this fiber is already destroyed. */
@@ -217,7 +215,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.jstc.length = 0; // clear sub-routine call stac
         this.istc.length = 0; // clear invertion stac
         this._firstDest = this._listChild.end; // reset last child
-        this._unshiftVariables(args_); // set argument
+        this._pushVariables(args_); // set argument
         return (this._gene < CML.Fiber._stacmax);
     }
     // finalizer 
@@ -239,20 +237,17 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.fx = 0; // fiber position
         this.fy = 0;
         this.chgt = 0; // changing time
-        this.hopt = CML.State.HO_AIM; // head option
-        this.hang = 0; // head angle [degree]
-        this.fang = 0; // previous fired angle (due to the compatiblity with bulletML)
+        this.headAngleOption = CML.State.HO_AIM; // head option
+        this.headAngle = 0; // head angle [degree]
+        this.firedAngle = 0; // previous fired angle (due to the compatiblity with bulletML)
         this.bul.setSequence(1, 0, 0, 0);
         this._barrage.clear();
         this.invt = 0; // invertion flag
         this.wtm1 = 1; // waiting time for "w"
         this.wtm2 = 1; // waiting time for "~"
         this.vars.length = 0;
-        var nop = CML.Sequence.nop();
-        this.seqSub = nop;
-        this.seqExec = nop;
-        this.seqNew = nop;
-        this.seqFire = nop;
+        this.seqFiber = CML.Sequence.nop();
+        this.seqFired = CML.Sequence.nop();
     }
     // copy parameters
     _copy_param(src) {
@@ -260,67 +255,59 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.fx = src.fx; // fiber position
         this.fy = src.fy;
         this.chgt = src.chgt; // changing time
-        this.hopt = src.hopt; // head option
-        this.hang = src.hang; // head angle [degree]
-        this.fang = src.fang; // previous fired angle (due to the compatiblity with bulletML)
+        this.headAngleOption = src.headAngleOption; // head option
+        this.headAngle = src.headAngle; // head angle [degree]
+        this.firedAngle = src.firedAngle; // previous fired angle (due to the compatiblity with bulletML)
         this.bul.copy(src.bul);
         this._barrage.appendCopyOf(src._barrage);
         this.wtm1 = src.wtm1; // waiting time for "w"
         this.wtm2 = src.wtm2; // waiting time for "~"
-        this.seqSub = src.seqSub;
-        this.seqExec = src.seqExec;
-        this.seqNew = src.seqNew;
-        this.seqFire = src.seqFire;
+        this.seqFiber = src.seqFiber;
+        this.seqFired = src.seqFired;
         return this;
     }
     // execution in 1 frame and returns next fiber
     _onUpdate() {
         // next fiber
-        var nextElem = this.next;
+        let nextElem = this.next;
         // kill fiber, if object was destroyed.
         if (this._object.id != this._object_id) {
             this.destroy();
             return nextElem;
         }
         // set target to default, if target was destroyed.
-        if (this._target.id != this._target_id) {
+        if (this._target.id != this._target_id) 
             this._setTarget(CML.Fiber._defaultTarget);
-        }
         // execution
         CML.State._setInvertionFlag(this.invt); // set invertion flag
         if (--this.wcnt <= 0) { // execute only if waiting counte<=0
-            var i = 0;
-            var res = true;
-            while (res && this._pointer != null) {
-                res = this._pointer.execute(this); // execute CML.State function
+            let loopCounter = 0, executeNext = true;
+            while (executeNext && this._pointer) {
+                executeNext = this._pointer.execute(this); // execute CML.State function
                 this._pointer = this._pointer.next; // increment pointer
                 // too many loops error, script may has no wait.
-                if (++i == CML.Fiber._loopmax) {
+                if (++loopCounter == CML.Fiber._loopmax) 
                     throw new Error("CML Exection error. No wait command in the loop ?");
-                }
             }
         }
         // run all children
-        var elem = this._listChild.begin, elem_end = this._listChild.end;
-        while (elem != elem_end) {
+        let elem = this._listChild.begin;
+        while (elem != this._listChild.end)
             elem = elem._onUpdate();
-        }
         // update next fiber
         nextElem = this.next;
         // destroy if no children and no pointer
-        if (this._pointer == null && this._listChild.isEmpty()) {
+        if (this._pointer == null && this._listChild.isEmpty())
             this.destroy();
-        }
         // return next fiber
         return nextElem;
     }
     // destroy by object
     _destroyByObject(obj) {
         // check all children
-        var elem = this._listChild.begin, elem_end = this._listChild.end;
-        while (elem != elem_end) {
+        let elem = this._listChild.begin;
+        while (elem != this._listChild.end) 
             elem = elem._destroyByObject(obj);
-        }
         elem = this.next;
         if (this._object === obj)
             this.destroy();
@@ -328,73 +315,56 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     }
     // push arguments
     /** @private _cml_fiber_internal */
-    _unshiftVariables(argArray = null) {
+    _pushVariables(argArray = null) {
         this.vars.unshift(Object.assign(new Array(9).fill(0), argArray));
     }
     // pop arguments
     /** @private _cml_fiber_internal */
-    _shiftVariables() {
+    _popVariables() {
         this.vars.shift();
     }
     // push invertion
     /** @private _cml_fiber_internal */
-    _unshiftInvertion(invt_) {
+    _pushInvertion(invt_) {
         this.istc.unshift(this.invt);
         this.invt = invt_;
     }
     // pop invertion
     /** @private _cml_fiber_internal */
-    _shiftInvertion() {
+    _popInvertion() {
         this.invt = this.istc.shift();
     }
     // return fiber's head angle (angle in this game's screen, the scroll direction is 0[deg]).
     /** @private _cml_fiber_internal */
-    _getAngle(base) {
-        switch (this.hopt) {
+    _getAngle(base, fromCenter=false) {
+        switch (this.headAngleOption) {
             case CML.State.HO_AIM:
-                base = this._object.getAimingAngle(this._target, this.fx, this.fy);
-                break; // based on the angle to the target
+                if (fromCenter) return this._object.getAimingAngle(this._target) + this.headAngle;
+                return this._object.getAimingAngle(this._target, this.fx, this.fy) + this.headAngle;
             case CML.State.HO_ABS:
-                base = 0;
-                break; // based on the angle in the absolute coordination
-            case CML.State.HO_FIX:
-                base = 0;
-                break; // based on the fixed angle
+                return this.headAngle;
             case CML.State.HO_REL:
-                base = this._object.angleOnScreen;
-                break; // based on the angle of this object
+                return this._object.angleOnScreen + this.headAngle;
             case CML.State.HO_PAR:
-                base = this._object.angleParentOnScreen;
-                break; // based on the angle of the parent object
+                return this._object.angleParentOnScreen + this.headAngle;
             case CML.State.HO_VEL:
-                base = this._object.angleVelocity;
-                break; // based on the angle of velocity
-            case CML.State.HO_SEQ: break; // sequencial do nothing
+                return this._object.angleVelocity + this.headAngle;
+            case CML.State.HO_SEQ:
+                return base + this.headAngle;
             default:
                 throw new Error("BUG!! unknown error in CML.Fiber._getAngle()"); // ???
         }
-        return base + this.hang;
+        return 0;
     }
-    // return angle for rotation command(r, rc, cd). HO_AIM is aiming angle from the object.
     /** @private _cml_fiber_internal */
-    _getAngleForRotationCommand() {
-        switch (this.hopt) {
-            case CML.State.HO_AIM: return this._object.getAimingAngle(this._target) + this.hang; // based on the angle to the target
-            case CML.State.HO_ABS: return this.hang; // based on the angle in the absolute coordination
-            case CML.State.HO_FIX: return this.hang; // based on the fixed angle
-            case CML.State.HO_REL: return this._object.angleOnScreen + this.hang; // based on the angle of this object
-            case CML.State.HO_PAR: return this._object.angleParentOnScreen + this.hang; // based on the angle of the parent object
-            case CML.State.HO_VEL: return this._object.angleVelocity + this.hang; // based on the angle of velocity
-            case CML.State.HO_SEQ: return this._object.angleOnScreen + this.hang * this.chgt; // sequencial
-            default:
-                throw new Error("BUG!! unknown error in CML.Fiber._getAngle()"); // ???
-        }
-        //return 0;
+    _setHeadAngle(option, angle) {
+        this.headAngleOption = option;
+        this.headAngle = angle;
     }
     // rotate object in minimum rotation (call from CML.State.r())
     /** @private _cml_fiber_internal */
     _isShortestRotation() {
-        return (this.hopt == CML.State.HO_AIM || this.hopt == CML.State.HO_VEL || this.hopt == CML.State.HO_FIX);
+        return (this.headAngleOption == CML.State.HO_AIM || this.headAngleOption == CML.State.HO_VEL);
     }
     // static function
     //------------------------------------------------------------
