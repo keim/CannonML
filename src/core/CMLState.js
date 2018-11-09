@@ -35,7 +35,8 @@ CML.State = class extends CML.ListElem {
                 break;
         }
     }
-    /*override*/ clear() {
+    /*override*/
+    clear() {
         this.$.length = 0;
         this.jump = null;
         super.clear();
