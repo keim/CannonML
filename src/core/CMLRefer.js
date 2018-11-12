@@ -13,13 +13,11 @@ CML.Refer = class extends CML.State {
     // label=define, jump=define means solved label call
     // functions
     //------------------------------------------------------------
-    constructor(pointer = null, label_ = null) {
-        super(CML.State.ST_REFER);
+    constructor(pointer = null, label = null) {
+        super(null);
+        this.type = CML.State.ST_REFER;
         this.jump = pointer;
-        this._label = label_;
-    }
-    _setCommand(cmd) {
-        return this;
+        this._label = label;
     }
     isLabelUnsolved() {
         return (this.jump == null && this._label != null);

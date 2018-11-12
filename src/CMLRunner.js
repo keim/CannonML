@@ -10,12 +10,10 @@ CML.Runner = class extends CML.Object {
     // constructor
     //------------------------------------------------------------
     /** @private constractor call in CannonML._newCMLRunner() */
-    constructor(createdby_, sequence_, isCreatedByFireCommand_) {
+    constructor(createdby_, sequence_) {
         super();
         // executing sequence
         this._sequence = sequence_;
-        // which command has been called to create this insatance, true="f" command, false="n" command.
-        this._isCreatedByFireCommand = isCreatedByFireCommand_;
         // created by
         this._createdby = createdby_;
         // callback functions
@@ -28,8 +26,6 @@ CML.Runner = class extends CML.Object {
     //------------------------------------------------------------
     /** executing sequence */
     get sequence() { return this._sequence; }
-    /** which command has been called to create this insatance, true="f" command, false="n" command. */
-    get isCreatedByFireCommand() { return this._isCreatedByFireCommand; }
     /** set callback functions
      *  @param hash Hash indludes callback functions 'onCreateNewRunner', 'onDestroy' and 'onUpdate'. The callback functions give the CML.Runnner insatnace to move your object.
      */
@@ -83,17 +79,13 @@ CML.Runner = class extends CML.Object {
         if (this.destructionStatus < 0 && this.scopeEnabled) {
             const hw = CML.Object._globalVariables._halfScreenWidth,
                   hh = CML.Object._globalVariables._halfScreenHeight;
-            if (this.x < -hw || hw < this.x || this.y < -hh || hh < this.y) 
+            if (this.pos.x < -hw || hw < this.pos.x || this.pos.y < -hh || hh < this.pos.y) 
                 this.destroy(CML.Runner.ESCAPE_STATUS);
         }
     }
     /** @private */
-    onNewObject(seq) {
-        return new CML.Runner(this, seq, false);
-    }
-    /** @private */
     onFireObject(seq) {
-        return new CML.Runner(this, seq, true);
+        return new CML.Runner(this, seq);
     }
 }
 

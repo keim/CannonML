@@ -23,12 +23,10 @@ class Actor {
   }
 
   onUpdate() {
-    this.mesh.position.x = this.runner.x; 
-    this.mesh.position.y = this.runner.y; 
-    this.mesh.position.z = this.runner.z;
-    this.mesh.rotation.x = this.runner.bank;
-    this.mesh.rotation.y = this.runner.pitch;
-    this.mesh.rotation.z = (this.runner.angleOnScreen+180) * 0.017453292519943295;
+    this.mesh.position.copy(this.runner.pos); 
+    this.mesh.rotation.x = this.runner.euler.x;
+    this.mesh.rotation.y = this.runner.euler.y;
+    this.mesh.rotation.z = this.runner.euler.z - Math.PI/2;
   }
 }
 

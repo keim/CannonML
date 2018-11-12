@@ -242,11 +242,11 @@ target_object = null;                   // target object was destroyed.
     // create / destroy
     //------------------------------------------------------------
     /** Create new object on the CML stage.
-     *  @param x_         X value of this object on a stage or parent(if its a part of parent).
-     *  @param y_         Y value of this object on a stage or parent(if its a part of parent).
+     *  @param x         X value of this object on a stage or parent(if its a part of parent).
+     *  @param y         Y value of this object on a stage or parent(if its a part of parent).
      *  @param parent_    The instance of parent object. Pass null to set this object as a child of root.
      *  @param isPart_    True to set this object as a part of parent.
-     *  @param access_id_ Access ID from parent.
+     *  @param access_id Access ID from parent.
      *  @return this instance.
      */
     create(x, y, parent = null, isPart = false, access_id = CML.Object.ID_NOT_SPECIFYED) {
@@ -294,9 +294,9 @@ target_object = null;                   // target object was destroyed.
      * @param offy Y position offset to calculate angle.
      * @return Angle.
      */
-    getAimingAngle(target, offx = 0, offy = 0) {
+    getAimingAngleOnScreen(target, offx = 0, offy = 0) {
         const vec2 = this._calcFiberPosition(offx, offy);
-        return Math.atan2(target.projected.y - vec2.y, target.projected.x - vec2.x) - CML.Object._globalVariables._scrollRadian;
+        return Math.atan2(target.projected.y - vec2.y, target.projected.x - vec2.x);
     }
     /** Count all children with access id.
      *  @return The count of child objects with access id.
@@ -383,8 +383,8 @@ target_object = null;                   // target object was destroyed.
             const v = new CML.Vector(vx, vy, vz);
             if ((this._motion_type & CML.Object.MT_PART_FILTER) == CML.Object.MT_INTERPOL) {
                 // interlopation
-                //this._ax -= vx_ * t * 2;
-                //this._bx += vx_ * t * t * 6;
+                //this._ax -= vx * t * 2;
+                //this._bx += vx * t * t * 6;
                 this.acc.addScaledVector(v,-t*2);
                 this.bez.addScaledVector(v, t*t*6);
                 this.counter = frames;
@@ -392,7 +392,7 @@ target_object = null;                   // target object was destroyed.
             }
             else {
                 // accelaration
-                //this._ax = (vx_ - this.vx) * t;
+                //this._ax = (vx - this.vx) * t;
                 this.acc.copy(v).sub(this.vel).multiplyScalar(t);
                 this.counter = frames;
                 this._changeMotionType(CML.Object.MT_ACCEL);
@@ -430,7 +430,7 @@ target_object = null;                   // target object was destroyed.
     /** &lt;changeDirection type='absolute'&gt; of bulletML.
      *  @param dir Direction to change.
      *  @param frames Frames to change direction.
-     *  @param rmax Maxmum speed of rotation [degrees/frame].
+     *  @param rmax Maxmum speed of rotation [radians/frame].
      *  @param shortest_rot Flag to rotate on shortest rotation.
      *  @return this object
      */
@@ -534,7 +534,7 @@ target_object = null;                   // target object was destroyed.
     /** Set constant rotation. You can specify the maximum speed.
      *  @param end_angle Final angle when the rotation finished, based on scrolling direction.
      *  @param frames Frames to rotate.
-     *  @param rmax Maximum speed of rotation [degrees/frame].
+     *  @param rmax Maximum speed of rotation [radians/frame].
      *  @param isShortestRotation Rotate with shortest rotation or not.
      *  @return this object
      */
@@ -553,7 +553,7 @@ target_object = null;                   // target object was destroyed.
         }
         // restriction
         if (rmax != 0) 
-            diff = (diff < -rmax) ? -rmax : (diff > rmax) : rmax : diff;
+            diff = (diff < -rmax) ? -rmax : (diff > rmax) ? rmax : diff;
         if (frames == 0) {
             this.head += diff;
             this._rott = 0;
@@ -567,7 +567,7 @@ target_object = null;                   // target object was destroyed.
         return this;
     }
     /** Change parent. */
-    changeParent(parent_ = null, isPart_ = false, access_id_ = CML.Object.ID_NOT_SPECIFYED) {
+    changeParent(parent_ = null, isPart_ = false, access_id = CML.Object.ID_NOT_SPECIFYED) {
         // check parent availability
         isPart_ = (parent_ != null) && isPart_;
         // remove this from a parents IDed children list.
@@ -584,8 +584,8 @@ target_object = null;                   // target object was destroyed.
         // change parameters
         this._parent = parent_ || CML.Object._root;
         this._parent_id = this._parent._id;
-        this._access_id = (parent_) ? access_id_ : CML.Object.ID_NOT_SPECIFYED;
-        if (access_id_ != CML.Object.ID_NOT_SPECIFYED) {
+        this._access_id = (parent_) ? access_id : CML.Object.ID_NOT_SPECIFYED;
+        if (access_id != CML.Object.ID_NOT_SPECIFYED) {
             this._parent._IDedChildren.push(this);
         }
         // when this WILL BE a part object ...
@@ -632,7 +632,7 @@ target_object = null;                   // target object was destroyed.
             this.pos.addVectors(this.related, this.parent.pos);
         }
         else {
-            /**/
+            /**/ // with rotation
             this.pos.addVectors(this.parent.pos, new CML.Vector().copy(this.related).applyQuat(this.parent.quat));
         }
     }
@@ -733,9 +733,9 @@ target_object = null;                   // target object was destroyed.
     // initialize and finalize
     //------------------------------------------------------------
     /** @private initializer */
-    _initialize(parent_, isPart_, access_id_, x_, y_, vx_, vy_, head_) {
+    _initialize(parent_, isPart_, access_id, x, y, vx, vy, head) {
         // clear some parameters
-        this.vel.set(vx_, vy_, 0);
+        this.vel.set(vx, vy, 0);
         this._age = 0;
         this.head = head;
         this._rotd = 0;
@@ -746,19 +746,19 @@ target_object = null;                   // target object was destroyed.
         this._IDedChildren.length = 0;
         this._partChildren.length = 0;
         // add this to the parent id list
-        this._access_id = access_id_;
-        if (access_id_ != CML.Object.ID_NOT_SPECIFYED) {
+        this._access_id = access_id;
+        if (access_id != CML.Object.ID_NOT_SPECIFYED) {
             this._parent._IDedChildren.push(this);
         }
         // push the active objects list, initialize position and motion.
         if (isPart_) {
             this._parent._partChildren.push(this);
-            this.relative.set(x_, y_, 0);
+            this.relative.set(x, y, 0);
             this.calcAbsPosition();
             this._motion_type = CML.Object.MT_PART_CONST;
         }
         else {
-            this.pos.set(x_, y_, 0);
+            this.pos.set(x, y, 0);
             this._motion_type = CML.Object.MT_CONST;
         }
         CML.Object._activeObjects.push(this);
@@ -870,6 +870,7 @@ target_object = null;                   // target object was destroyed.
             this.quat.euler2Quat(this.euler);
             this.euler.changed = false;
         }
+        this.projected.copy(this.pos);
         this._age++;
         this.onUpdate();
     }

@@ -1,11 +1,11 @@
 CML.Vector = class {
-  constructor(x, y, x) {
+  constructor(x, y, z) {
     this.x = x || 0;
     this.y = y || 0;
     this.z = z || 0;
   }
 
-  set(x, y, x) {
+  set(x, y, z) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -141,18 +141,19 @@ CML.Vector = class {
     return this.divideScalar(w);
   }
 
-  applyEuler(e) {
+  euler2Quat(e){
     const c1 = Math.cos(e.x/2), c2 = Math.cos(e.y/2), c3 = Math.cos(e.z/2),
           s1 = Math.sin(e.x/2), s2 = Math.sin(e.y/2), s3 = Math.sin(e.z/2);
-    return this.applyQuaternion(
-      s1 * c2 * c3 + c1 * s2 * s3,
-      c1 * s2 * c3 - s1 * c2 * s3,
-      c1 * c2 * s3 + s1 * s2 * c3,
-      c1 * c2 * c3 - s1 * s2 * s3);
+    this.x = s1 * c2 * c3 + c1 * s2 * s3;
+    this.y = c1 * s2 * c3 - s1 * c2 * s3;
+    this.z = c1 * c2 * s3 + s1 * s2 * c3;
+    this.w = c1 * c2 * c3 - s1 * s2 * s3;
+    return this;
   }
 
-  applyQuaternion(qx, qy, qz, qw) {
+  applyQuat(q) {
     const x = this.x, y = this.y, z = this.z;
+    const qx = q.x, qy = q.y, qz = q.z, qw = q.w;
     const ix =  qw * x + qy * z - qz * y;
     const iy =  qw * y + qz * x - qx * z;
     const iz =  qw * z + qx * y - qy * x;
@@ -193,7 +194,7 @@ CML.Vector = class {
 
   dot(v) {
     return this.x * v.x + this.y * v.y + this.z * v.z;
-  },
+  }
 
   lengthSq() {
     return this.x * this.x + this.y * this.y + this.z * this.z;

@@ -9,7 +9,7 @@ CML.Assign = class extends CML.State {
     // functions
     //------------------------------------------------------------
     constructor(str) {
-        super(CML.State.ST_NORMAL);
+        super(null);
         // variables
         //------------------------------------------------------------
         this._index = 0;
@@ -41,9 +41,6 @@ CML.Assign = class extends CML.State {
                 default: throw Error("BUG!! unknown error in assign");
             }
         }
-    }
-    _setCommand(cmd) {
-        return this;
     }
     _asgr(fbr) { fbr.object.rank = this.$[0]; return true; }
     _addr(fbr) { fbr.object.rank += this.$[0]; return true; }
