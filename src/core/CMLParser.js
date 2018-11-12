@@ -268,6 +268,7 @@ CML.Parser = class {
     _new_reference(seq, label) {
         // append "@" or "&" command, when previous command isn't STF_CALLREF.
         if ((this.listState.tail.type & CML.State.STF_CALLREF) == 0) {
+            /**/
             this._append_statement(new CML.State((label)?"&":"@"));
         }
         // create reference 

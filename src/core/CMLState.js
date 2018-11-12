@@ -236,7 +236,7 @@ CML.State = class extends CML.ListElem {
 /** @private */ CML.State.HO_VEL = 4; // amgle is based on moving direction
 /** @private */ CML.State.HO_SEQ = 5; // angle is calculated from previous frame
 // command regular expressions
-CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|ko|i|my|mx|cd|csa|csr|css|@ko|@o|@|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to)";
+CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|kf|ko|i|my|mx|cd|csa|csr|css|@ko|@o|@|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to)";
 // global variables
 CML.State._globalVariables = null;
 // operators
@@ -563,6 +563,15 @@ CML.State.operators = {
         type: CML.State.ST_NORMAL,
         func(state, $, fiber, object) {
             object.destroy($[0]);
+            return true;
+        }
+    },
+    "kf":{
+        argc: 0,
+        type: CML.State.ST_NORMAL,
+        func(state, $, fiber, object) {
+            fiber.destroyAllChildren();
+            fiber.destroy();
             return true;
         }
     },

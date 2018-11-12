@@ -17,9 +17,28 @@ CML.Refer = class extends CML.State {
         super(null);
         this.type = CML.State.ST_REFER;
         this.jump = pointer;
+        //this.func = this.call;
+        this.createNewFiber = false;
         this._label = label;
     }
     isLabelUnsolved() {
         return (this.jump == null && this._label != null);
+    }
+    call(state, $, fiber, object) {
+        if (this.createNewFiber) {
+            /**/
+            state._fiber(fiber, CML.Fiber.ID_NOT_SPECIFYED);
+        } else {
+            // execution error
+            if (fiber.jstc.length > CML.Fiber._stacmax) 
+                throw new Error("CML Execution error. '&' call stac overflow.");
+            // next statement is referential sequence
+            const ref = state.next;
+            fiber.jstc.push(ref);
+            fiber._pushInvertion();
+            fiber._pushVariables(ref.$);
+            fiber._pointer = ref.jump;
+        }
+        return true;
     }
 }
