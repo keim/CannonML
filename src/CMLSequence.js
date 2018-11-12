@@ -43,7 +43,7 @@ CML.Sequence = class extends CML.State {
      *  @param globalSequence Flag of global sequence.
      */
     constructor(data = null, globalSequence = false) {
-        super(CML.State.ST_NO_LABEL);
+        super(null);
         // variables
         //------------------------------------------------------------
         this._label = null;
@@ -92,11 +92,6 @@ var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you canno
     get isEmpty() {
         var cmd = this.next;
         return (this.next == null || cmd.type == CML.State.ST_END);
-    }
-    /** @private */
-    _setCommand(cmd) {
-        //_resetParameters(CML.Object._argumentCountOfNew);
-        return this;
     }
     // static functions
     //------------------------------------------------------------
@@ -242,13 +237,8 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             else 
             // check a sequence after CML.State.STF_CALLREF (&,@,f and n commands).
             if (cmd.type & CML.State.STF_CALLREF) {
-                // skip formula command
-                cmd_verify = cmd_next;
-                while (cmd_verify.type == (CML.State.ST_FORMULA | CML.State.STF_BE_INTERPOLATED)) {
-                    cmd_verify = cmd_verify.next;
-                }
                 // if there are no references, ... 
-                if (cmd_verify.type != CML.State.ST_REFER) {
+                if (cmd.next.type != CML.State.ST_REFER) {
                     if ((cmd.type & CML.State.ST_RESTRICT) != 0) {
                         // throw error
                         throw Error("No sequences after @ ?");
@@ -259,22 +249,14 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
                         new_cmd.insert_after(cmd);
                     }
                 }
-                else 
-                // if there are fomulas between call and reference, shift the call command after fomulas.
-                if (cmd_verify != cmd_next) {
-                    cmd.remove_from_list();
-                    cmd.insert_before(cmd_verify);
-                    cmd_next = cmd_verify;
-                }
             }
             else 
             // verify interplation
             if (cmd.type == CML.State.ST_INTERPOLATE) {
                 // search bark command
                 cmd_verify = cmd.prev;
-                while (cmd_verify.type & CML.State.STF_BE_INTERPOLATED) {
+                while (cmd_verify.type & CML.State.STF_BE_INTERPOLATED) 
                     cmd_verify = cmd_verify.prev;
-                }
                 if (cmd_verify.type != CML.State.ST_INTERPOLATE) {
                     // insert interpolation initialize command first of all
                     new_cmd = new CML.State("$init4int");
@@ -285,14 +267,11 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             // verify barrage commands
             if (cmd.type == CML.State.ST_BARRAGE) {
                 // insert barrage initialize command first
-                new_cmd = new CML.State("$barrage");
+                new_cmd = new CML.State("$init4barrage");
                 new_cmd.insert_before(cmd);
-                // skip formula and barrage command
-                cmd_verify = cmd_next;
-                while (cmd_verify.type == CML.State.ST_FORMULA || cmd_verify.type == CML.State.ST_BARRAGE) {
-                    cmd_verify = cmd_verify.next;
-                }
-                cmd_next = cmd_verify;
+                // skip barrage command
+                while (cmd_next.type == CML.State.ST_BARRAGE) 
+                    cmd_next = cmd_next.next;
             }
             cmd = cmd_next;
         }
@@ -312,7 +291,6 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             CML.Sequence._nop.next = cmdNop;
             cmdNop.prev = CML.Sequence._nop;
             cmdNop.jump = CML.Sequence._nop;
-            CML.Sequence._nop._setCommand(null);
         }
         return CML.Sequence._nop;
     }
@@ -325,7 +303,6 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
             CML.Sequence._rapid.next = rap;
             rap.prev = CML.Sequence._rapid;
             rap.jump = CML.Sequence._rapid;
-            CML.Sequence._rapid._setCommand(null);
         }
         return CML.Sequence._rapid;
     }

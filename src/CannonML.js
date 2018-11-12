@@ -9,13 +9,13 @@ class CannonML {
     //------------------------------------------------------------
     /** Create one CannonML instance first of all
      *  @param vertical_ Flag of scrolling direction
-     *  @param speedRatio_ Value of (frame rate to calculate speed) / (updating frame rate).
+     *  @param callbacks callback functions
      */
-    constructor(vertical_ = true, speedRatio_ = 1, callbacks = {}) {
+    constructor(vertical_ = true, callbacks = {}) {
         if (CannonML._mutex) throw new Error("CannonML is singleton class !!");
         CannonML._mutex = this;
 
-        this.globalVariables = new CML.Global(vertical_, speedRatio_);
+        this.globalVariables = new CML.Global(vertical_);
         this.rootRunner = new CML.Runner(null, null, false);
         this.rootRunner.setCallbackFunctions(callbacks);
 

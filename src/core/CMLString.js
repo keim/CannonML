@@ -12,10 +12,8 @@ CML.String = class extends CML.State {
     // functions
     //------------------------------------------------------------
     constructor(str) {
-        super(CML.State.ST_STRING);
+        super(null);
+        this.type = CML.State.ST_STRING;
         this._string = str;
-    }
-    _setCommand(cmd) {
-        return this;
     }
 }

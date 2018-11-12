@@ -24,6 +24,9 @@ CML.FormulaOperator = class {
               r1 = (this.oprcnt == 2) ? (this.opr1.calcStatic(resultStac)) : 0;
         return this.func(r0, r1, resultStac);
     }
+    get isStatic() {
+        return this.opr0.isStatic && (!this.opr1 || this.opr1.isStatic);
+    }
 }
 /** @type {String} Regular expressions */
 CML.FormulaOperator.prefix_rex = "([-!(]|\\$sin|\\$cos|\\$tan|\\$asn|\\$acs|\\$atn|\\$sqr|\\$i\\?|\\$i\\?\\?|\\$int|\\$abs)";

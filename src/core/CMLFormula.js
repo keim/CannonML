@@ -103,11 +103,13 @@ CML.Formula = class {
     calcStatic() {
         if (!this._rootOperator) 
             return null;
+        this.isStatic = this._rootOperator.isStatic;
         const answers = [];
-        answers.push(this._rootOperator.calcStatic(answers));
-        this.isStatic = answers.every(num=>!isNaN(num));
-        this.answerCount = answers.length;
-        return (this.isStatic) ? answers : null;
+        if (this.isStatic) {
+            answers.push(this._rootOperator.calcStatic(answers));
+            this.answerCount = answers.length;
+        }
+        return answers;
     }
     calcDynamic(fbr) {
         const answers = [];

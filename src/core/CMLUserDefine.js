@@ -9,20 +9,16 @@ CML.UserDefine = class extends CML.State {
     // functions
     //------------------------------------------------------------
     constructor(obj) {
-        super(CML.State.ST_NORMAL);
+        super(null);
         this._funcUserDefine = obj.func;
-        this._argumentCount = obj.argc;
+        this.$ = new Array(ope.argc).fill(0);
         this._requireSequence = obj.reqseq;
         if (this._requireSequence)
             this.type = CML.State.ST_RESTRICT | CML.State.STF_CALLREF;
         this.func = this._call;
     }
-    _setCommand(cmd) {
-        this._resetParameters(this._argumentCount);
-        return this;
-    }
-    _call(fbr) {
-        this._funcUserDefine(fbr, this.$);
+    _call(fiber) {
+        this._funcUserDefine(this, this.$, fiber, fiber.object);
         return true;
     }
 }
