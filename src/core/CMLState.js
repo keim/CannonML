@@ -97,36 +97,44 @@ CML.State = class extends CML.ListElem {
         }
         return false;
     }
+    // run as subroutine
+    _gosub(fiber) {
+        // execution error
+        if (fiber.jstc.length > CML.Fiber._stacmax) 
+            throw new Error("CML Execution error. '&' call stac overflow.");
+        const ref = this.next; // next statement is referential sequence
+        fiber.jstc.push(ref);
+        fiber._pushInvertion();
+        fiber._pushVariables(ref.$);
+        fiber._pointer = ref.jump;
+        return true;
+    }
     // run new fiber
     _fiber(fiber, fiber_id) {
         const ref = this.next; // next statement is referential sequence
-        const seq = (ref.jump != null) ? ref.jump : (fiber.seqFiber); // executing sequence
+        const seq = ref.jump || fiber.seqFiber; // executing sequence
         fiber._newChildFiber(seq, fiber_id, fiber.invertFlag, ref.$, (seq.type == CML.State.ST_NO_LABEL)); // create and initialize fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
+        return true;
     }
     // run new destruction fiber
     _fiber_destruction(fiber, destStatus) {
         const ref = this.next; // next statement is referential sequence
-        const seq = (ref.jump != null) ? ref.jump : (fiber.seqFiber); // executing sequence
+        const seq = ref.jump || fiber.seqFiber; // executing sequence
         fiber._newDestFiber(seq, destStatus, fiber.invertFlag, ref.$); // create and initialize destruction fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
+        return true;
     }
     // run new fiber on child object
     _fiber_child(fiber, obj, object_id) {
         const ref = this.next; // next statement is referential sequence
-        const seq = (ref.jump != null) ? ref.jump : (fiber.seqFiber); // executing sequence
-        const idxmax = object_id.length - 1;
-        _reflective_fiber_creation(obj, 0); // find child by object_id and create new fiber
+        const seq = ref.jump || fiber.seqFiber; // executing sequence
+        obj.findAllChildren(object_id).forEach(child=>fiber._newObjectFiber(child, seq, fiber.invertFlag, ref.$));
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
-        // ('A`) chaos...
-        function _reflective_fiber_creation(_parent, _idx) {
-            this._parent.findAllChildren(object_id[_idx], (_idx == idxmax) ? this.__nof : this.__rfc);
-            function __nof(obj) { fiber._newObjectFiber(obj, seq, fiber.invertFlag, ref.$); return false; }
-            function __rfc(obj) { _reflective_fiber_creation(obj, _idx + 1); return false; }
-        }
+        return true;
     }
     // fire
     _fire(fiber, access_id, isParts) {
@@ -236,7 +244,7 @@ CML.State = class extends CML.ListElem {
 /** @private */ CML.State.HO_VEL = 4; // amgle is based on moving direction
 /** @private */ CML.State.HO_SEQ = 5; // angle is calculated from previous frame
 // command regular expressions
-CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|kf|ko|i|my|mx|cd|csa|csr|css|@ko|@o|@|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to)";
+CML.State.command_rex = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|gp|gt|rc|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to)";
 // global variables
 CML.State._globalVariables = null;
 // operators
@@ -521,7 +529,7 @@ CML.State.operators = {
         }
     },
 //---- bulletml based
-    "cd":{
+    "cd":{ // changeDirection
         argc: 1,
         type: CML.State.STF_BE_INTERPOLATED,
         func(state, $, fiber, object) {
@@ -530,7 +538,7 @@ CML.State.operators = {
             return true;
         }
     },
-    "csa":{
+    "cs":{ // changeSpeed
         argc: 2,
         type: CML.State.STF_BE_INTERPOLATED,
         func(state, $, fiber, object) {
@@ -538,26 +546,7 @@ CML.State.operators = {
             return true;
         }
     },
-    "csr":{
-        argc: 2,
-        type: CML.State.STF_BE_INTERPOLATED,
-        func(state, $, fiber, object) {
-            object.setChangeSpeed($[0] + object.velocity, fiber.chgt);
-            return true;
-        }
-    },
-    "css":{
-        argc: 2,
-        type: CML.State.STF_BE_INTERPOLATED,
-        func(state, $, fiber, object) {
-            if (fiber.chgt == 0)
-                object.setChangeSpeed($[0] + object.velocity, 0);
-            else
-                object.setChangeSpeed($[0] * fiber.chgt + object.velocity, fiber.chgt);
-            return true;
-        }
-    },
-//---- kill object
+//---- kill object or fibers
     "ko":{
         argc: 1,
         type: CML.State.ST_NORMAL,
@@ -571,49 +560,22 @@ CML.State.operators = {
         type: CML.State.ST_NORMAL,
         func(state, $, fiber, object) {
             fiber.destroyAllChildren();
-            fiber.destroy();
             return true;
         }
     },
 //---- call reference fiber
-    "&":{
-        argc: 0,
-        type: CML.State.STF_CALLREF,
-        func(state, $, fiber, object) {
-            // execution error
-            if (fiber.jstc.length > CML.Fiber._stacmax) 
-                throw new Error("CML Execution error. '&' call stac overflow.");
-            // next statement is referential sequence
-            const ref = state.next;
-            fiber.jstc.push(ref);
-            fiber._pushInvertion();
-            fiber._pushVariables(ref.$);
-            fiber._pointer = ref.jump;
-            return true;
-        }
-    },
-    "@":{
-        argc: 1,
-        type: CML.State.ST_RESTRICT | CML.State.STF_CALLREF,
-        func(state, $, fiber, object) {
-            state._fiber(fiber, $[0]); 
-            return true;
-        }
-    },
     "@o":{
         argc: 1,
         type: CML.State.ST_RESTRICT | CML.State.STF_CALLREF,
         func(state, $, fiber, object) {
-            state._fiber_child(fiber, object, $[0]);
-            return true;
+            return state._fiber_child(fiber, object, $[0]);
         }
     },
     "@ko":{
         argc: 1,
         type: CML.State.ST_RESTRICT | CML.State.STF_CALLREF,
         func(state, $, fiber, object) {
-            state._fiber_destruction(fiber, $[0]);
-            return true;
+            return state._fiber_destruction(fiber, $[0]);
         }
     },
 //---- create new object (fire bullet)
@@ -790,6 +752,20 @@ CML.State.operators = {
         }
     },
 //---- internal command
+    "$calllabel":{
+        argc: 0,
+        type: CML.State.STF_CALLREF,
+        func(state, $, fiber, object) {
+            return state._gosub(fiber);
+        }
+    },
+    "$nonlabel":{
+        argc: 1,
+        type: CML.State.STF_CALLREF,
+        func(state, $, fiber, object) {
+            return state._fiber(fiber, $[0]); 
+        }
+    },
     "$rapid":{
         argc: 0,
         type:  CML.State.ST_RAPID,

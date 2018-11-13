@@ -235,7 +235,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
                 }
             }
             else 
-            // check a sequence after CML.State.STF_CALLREF (&,@,f and n commands).
+            // check a sequence after CML.State.STF_CALLREF (@ko, @o, f commands).
             if (cmd.type & CML.State.STF_CALLREF) {
                 // if there are no references, ... 
                 if (cmd.next.type != CML.State.ST_REFER) {

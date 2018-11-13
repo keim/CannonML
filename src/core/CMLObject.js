@@ -311,12 +311,7 @@ target_object = null;                   // target object was destroyed.
      *  @see CML.Object#create()
      */
     countIDedChildren(id) {
-        var count = 0, obj, key;
-        for (key in this._IDedChildren) {
-            obj = this._IDedChildren[key];
-            count += (obj._access_id == id) ? 1 : 0;
-        }
-        return count;
+        return this._IDedChildren.reduce((count, obj)=>count+((obj._access_id==id) ? 1 : 0), 0);
     }
     // set parameters
     //------------------------------------------------------------
@@ -665,46 +660,15 @@ target_object = null;                   // target object was destroyed.
      *  @see CML.Object#create()
      */
     findChild(id) {
-        var key, obj;
-        for (key in this._IDedChildren) {
-            obj = this._IDedChildren[key];
-            if (obj._access_id == id)
-                return obj;
-        }
-        return null;
+        return this._IDedChildren.find(obj=>obj._access_id==id);
     }
-    /** Find all child and callback. <br/>
+    /** Find all children with specifyed id <br/>
      *  @param id Access id specifyed in create() or "n*" command.
-     *  @param func The call back function to operate objects. The type is function(obj:CML.Object):Boolean. Stop finding when this returns true.
-     *  @return The count of the executions of call back function.
+     *  @return The Array of CML.Object
      *  @see CML.Object#create()
      */
-    findAllChildren(id, func) {
-        var count = 0, key, obj;
-        for (key in this._IDedChildren) {
-            obj = this._IDedChildren[key];
-            if (obj._access_id == id) {
-                ++count;
-                if (func(obj))
-                    break;
-            }
-        }
-        return count;
-    }
-    /** Find all parts and callback. <br/>
-     *  @param func The call back function to operate objects. The type is function(obj:CML.Object):Boolean. Stop finding when this returns true.
-     *  @return The count of the executions of call back function.
-     *  @see CML.Object#create()
-     */
-    findAllParts(func) {
-        var key, count = 0;
-        for (key in this._partChildren) {
-            var obj = this._partChildren[key];
-            ++count;
-            if (func(obj))
-                break;
-        }
-        return count;
+    findAllChildren(id) {
+        return this._IDedChildren.filter(obj=>obj._access_id==id);
     }
     // back door ...
     /** @private _cml_internal */ _getX() { return (this.isPart) ? this.relative.x : this.pos.x; }
@@ -779,11 +743,7 @@ target_object = null;                   // target object was destroyed.
             }
         }
         // destroy all parts
-        var key;
-        for (key in this._partChildren) {
-            var obj = this._partChildren[key];
-            obj._destructionStatus = this._destructionStatus;
-        }
+        this._partChildren.forEach(child=>child._destructionStatus=this._destructionStatus);
         // callback
         this.onDestroy();
         // remove from list
@@ -870,6 +830,7 @@ target_object = null;                   // target object was destroyed.
             this.quat.euler2Quat(this.euler);
             this.euler.changed = false;
         }
+        /**/
         this.projected.copy(this.pos);
         this._age++;
         this.onUpdate();
