@@ -4,3 +4,8 @@ Desktop.ini
 cml.sublime-project
 cml.sublime-workspace
 _release
+
+# first-reader runs (local-only, do not commit)
+.first-reader/
+node_modules
+dist

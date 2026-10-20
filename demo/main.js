@@ -1,4 +1,7 @@
-var cml, ctrl, enemyActor, playerActor, playerGeomBase, playerGeom;
+import { CannonML } from "../dist/index.js";
+import { Actor } from "./actor.js";
+
+var cml, ctrl, editor, enemyActor, playerActor, playerGeomBase, playerGeom;
 
 class Control {
   constructor() {this._ = [];this.enabled=true;this.isPlaying=false;}

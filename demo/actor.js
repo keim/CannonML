@@ -1,4 +1,4 @@
-class Actor {
+export class Actor {
   constructor(avatarid, runner) {
     const avator = Actor.avatars[avatarid];
     this.mesh = new THREE.Mesh(avator.geometory, avator.material);
