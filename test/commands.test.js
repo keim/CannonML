@@ -121,8 +121,7 @@ describe("式", () => {
     expect(spawned[0].pos.y).toBe(7);
   });
 
-  // 既知の不具合: FormulaLiteral が parseFloat で読むため 0x.. が 0 になる
-  it.fails("16 進リテラル 0xff", () => {
+  it("16 進リテラル 0xff", () => {
     expect(last("px0xff")[0]).toBe(255);
   });
 });
@@ -177,28 +176,26 @@ describe("シーケンス呼び出し・fiber", () => {
     expect(spawned[0].pos.x).toBe(10);
   });
 
-  // 既知の不具合: 仕様どおり `&A 7` と空白を入れると引数として認識されない（正規表現中の "\s" がエスケープ漏れ）
-  it.fails("コマンドと引数の間に空白を許す: &A 7", () => {
+  it("コマンドと引数の間に空白を許す: &A 7", () => {
     expect(last("#A{px$1} &A 7")).toEqual([7, 0]);
   });
 
-  // 既知の不具合: 同上
+  // 既知の不具合: 無名シーケンス {...} の直後の引数が $ に入らず 0 になる（{px$1}9 も同じ。Refer が引数より先に確定している）
   it.fails("無名シーケンスの直後の引数: &{px$1}9", () => {
     expect(last("&{px$1}9")).toEqual([9, 0]);
   });
 });
 
 describe("l$N= 代入", () => {
-  // 既知の不具合: CML.Assign の func は (state,$,fiber) で呼ばれるが、実装は (fbr) を受ける前提で第 1 引数が State になる
-  it.fails("l$1= で変数に代入して $1 で参照", () => {
+  it("l$1= で変数に代入して $1 で参照", () => {
     expect(last("l$1=5 px$1")).toEqual([5, 0]);
   });
 
-  it.fails("l$1+= 演算つき代入", () => {
+  it("l$1+= 演算つき代入", () => {
     expect(last("l$1=2 [3 l$1+=3] px$1")).toEqual([11, 0]);
   });
 
-  it.fails("l$r= で rank に代入", () => {
+  it("l$r= で rank に代入", () => {
     expect(last("l$r=1 px$r")).toEqual([1, 0]);
   });
 });
@@ -276,8 +273,7 @@ describe("オブジェクト生成: f / q / h / b", () => {
     expect(counts).toEqual([1, 1, 2, 2, 3, 3]);
   });
 
-  // 既知の不具合: bm の 360 度全方位は angle をラジアンに変換した後で `== 360` を比較しているため特例が効かない
-  it.fails("bm4,360: 全方位に等間隔（90 度ごと）で撃つ", () => {
+  it("bm4,360: 全方位に等間隔（90 度ごと）で撃つ", () => {
     const v = vels(run("bm4,360 f2").spawned);
     const angles = v.map(([x, y]) => Math.round(Math.atan2(y, x) * 180 / Math.PI));
     const step = a => ((a % 360) + 360) % 360;
@@ -338,8 +334,7 @@ describe("オブジェクト破棄・画面外", () => {
     expect(fiber.isActive).toBe(false);
   });
 
-  // 既知の不具合: `$w4d` が State から (state,$,fiber,object) で呼ばれるが _wait4destruction(state,$,fiber,object) として受けず例外になる
-  it.fails("@ko: 破棄時に指定ステータスのシーケンスを実行", () => {
+  it("@ko: 破棄時に指定ステータスのシーケンスを実行", () => {
     run("@ko1{px9} ko1", 2);
   });
 });
@@ -358,8 +353,7 @@ describe("コメント・文字列", () => {
     expect(last("/*c*/px1//x\n")).toEqual([1, 0]);
   });
 
-  // 既知の不具合: `'...'` 文字列コマンドは State._nop を参照するが未定義(this.func is not a function)
-  it.fails("'...' 文字列は無視して続行する", () => {
+  it("'...' 文字列は無視して続行する", () => {
     expect(last("'abc' px1")).toEqual([1, 0]);
   });
 });

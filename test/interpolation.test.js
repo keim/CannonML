@@ -46,8 +46,7 @@ describe("interpolation", () => {
     expect(i.calc(1)).toBeCloseTo(at1);
   });
 
-  // 既知の不具合: 係数が Lagrange 補間になっておらず、等差数列でも曲線になる（P=2, Q=-3）。修正されたらこの .fails を外す
-  it.fails("setLagrange: 等差数列は直線になる", () => {
+  it("setLagrange: 等差数列は直線になる", () => {
     const i = I().setLagrange(0, 1, 2, 3);
     expect(i.calc(0.25)).toBeCloseTo(1.25);
     expect(i.calc(0.75)).toBeCloseTo(1.75);

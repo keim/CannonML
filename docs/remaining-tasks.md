@@ -15,34 +15,18 @@ TS 化（段階 1〜5）は完了。ここには、TS 化の範囲外として�
 | # | 症状 | 原因と直し方（案） | 固定しているテスト |
 |---|---|---|---|
 | 1 | `l$1=5` などの代入で例外 | `Assign` の `_asg` 系は `fbr` を第 1 引数に取るが、`State.execute` は `(state, $, fiber, object)` で呼ぶので state が渡る。`this.func = (_s, _$, fiber) => this._asg(fiber)` のように包む。`src/core/CMLAssign.ts` | `commands.test.js` の「l$N= 代入」3 件 |
-| 2 | `&A 7` のように、コマンドと引数の間に空白を入れると引数にならない。`&{...}9` も解析できない | `CMLParser._createCMLRegExp` の文字列リテラル中の `"\s*"` が `"\\s*"` になっていない（2 か所）。`src/core/CMLParser.ts` | `commands.test.js` の「コマンドと引数の間に空白」「無名シーケンスの直後の引数」 |
-| 3 | `'abc'` 文字列で `this.func is not a function` | `State` のコンストラクタが `State._nop`（static）を参照するが、実体はインスタンスメソッド。static にするか `State.prototype._nop` を使う。`src/core/CMLState.ts:45` | `commands.test.js` の「'...' 文字列は無視して続行する」 |
-| 4 | `@ko` で例外 | `$w4d` が `state._wait4destruction(state, $, fiber, object)` と 4 引数で呼ぶが、定義は `(fiber)`。`state._wait4destruction(fiber)` に直す。`src/core/CMLState.ts:834` | `commands.test.js` の「@ko」 |
-| 5 | `0xff` が 0 になる | `FormulaLiteral` が `parseFloat` で読む。`Number()` にする。`src/core/CMLFormulaLiteral.ts` | `commands.test.js` の「16 進リテラル」 |
-| 6 | `bm4,360`（全方位）が等間隔にならない | `BarrageElem.setMultiple` の `angle_ == 360` 判定が、ラジアン変換後の値に対して行われている。判定を `2π` に合わせるか、変換前に判定する。`src/core/CMLBarrageElem.ts` | `commands.test.js` の「bm4,360」 |
-| 7 | `setLagrange` が Lagrange 補間になっていない | 係数 P, Q の式が誤り（`0,1,2,3` で曲線になる）。`src/core/interpolation.ts` | `interpolation.test.js` |
-| 8 | `cml.runner(x, y, z)` の z が反映されない | z を `create()` の第 3 引数（parent）に渡している。`src/CannonML.ts:59` | `cannonml.test.js` |
+| 2 | `&{px$1}9` のように無名シーケンス `{...}` の直後の引数が `$` に入らず、0 になる（`{px$1}9` も同じ） | `_parseNonLabeledSequenceCall` が `Refer` を引数より先に確定（construct）しているため、後から付いた引数が反映されない。引数を反映させる順序に直す。`src/core/CMLParser.ts` | `commands.test.js` の「無名シーケンスの直後の引数」 |
 
 ### 1-2. `@ts-expect-error` だけで固定（テストなし）
 
-直す前に、まず再現するテストを書くこと。
-
-| 場所 | 症状 |
-|---|---|
-| `src/CannonML.ts:57` | `runner()` が `new Runner(seq, false)`。引数は `(createdby, sequence)` なので、seq が createdby に入る |
-| `src/CMLFiber.ts:384` | `hv`（速度方向基準の角度）が `angleVelocity`（存在しない。正しくは `angleVelocityOnScreen`）を参照し NaN になる |
-| `src/core/CMLState.ts:129` | `&` 呼び出しで `fiber._pushInvertion()` の引数が欠けており、`invertFlag` が undefined になる（ミラーが呼び出し先に引き継がれるか仕様を確認） |
-| `src/core/CMLState.ts:225,227` | 時間差発射で `fiber.hopt`（存在しない。`headAngleOption`）をコピーしている |
-| `src/core/CMLObject.ts` `reset()` | `setScaler`（typo。`setScalar`）。呼ぶと例外 |
-| `src/core/CMLObject.ts` `setChangeDirection` / `setChangeSpeed` | `this.conter`（typo。`counter`）。BulletML 系の `cd` / `cs` で `counter` が更新されない |
-| `src/core/CMLObject.ts` `calcAbsPosition` / `calcRelatedPosition` / `update` | `related`（typo。`relative`）、`nagate`（`negate`）、`his`（`this`）。親に対する相対配置（`nc` / `fc`、`changeParent`）が壊れている。下の `_initialize` の typo のため `fc` では相対にならず、`changeParent` では例外 |
-| `src/core/CMLObject.ts:699` | `_initialize` が `this.isRelative`（正しくは `_isRelative`）に代入する |
+なし（2026-10-22 時点。ソース中の `known bug` 印はすべて外した）。
 
 ## 2. 仕様との差
 
 `docs/reference/v2/cannonML_e.html` を基準に確認が要るもの。
 
-- 仕様にある `n`（`nc`）と `m`（ミラー）が、`CMLState.operators` / `command_rex` に無い（`n{}` は `n ?`、`m0` は `m ?` の構文エラー）。`@` 単独も同様に要確認。テストは現行の実装にあるコマンドだけを書いている。
+- 仕様にある `m`（ミラー）が、`CMLState.operators` / `command_rex` に無い（`m0` は `m ?` の構文エラー）。`@` 単独も同様に要確認。テストは現行の実装にあるコマンドだけを書いている。
+- `n` / `nc` / `^n` は仕様から削除済み（生成は `f` / `fc` に統一）。
 - `mx` は内部で Y 反転、`my` は X 反転。名前と軸が逆に見える。仕様のミラー軸の定義と突き合わせる（現状の挙動は `commands.test.js` の「ミラー」で固定）。
 - 画面サイズ未設定（`setScreenSize` を呼ばない）だと、Runner が最初の `update` で画面外として破棄される。仕様か、既定値を決めるかを検討する。
 

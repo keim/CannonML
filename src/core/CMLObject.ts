@@ -243,7 +243,7 @@ target_object = null;                   // target object was destroyed.
         CMLObject._globalVariables = globalVariables_;
         CMLObject._root = _rootObject || new CMLObject();
         CMLObject.destroyAll(-1);
-        CMLObject._root.create(0, 0, CMLObject._root);
+        CMLObject._root.create(0, 0, 0, CMLObject._root);
     }
     /** @private update all call from CannonML.update */
     static _updateAll() {
@@ -263,15 +263,16 @@ target_object = null;                   // target object was destroyed.
     /** Create new object on the CML stage.
      *  @param x          X value of this object on a stage or parent(if its a part of parent).
      *  @param y          Y value of this object on a stage or parent(if its a part of parent).
+     *  @param z          Z value of this object on a stage or parent(if its a part of parent).
      *  @param parent     The instance of parent object. Pass null to set this object as a child of root.
      *  @param isRelative True to set this object as a part of parent.
      *  @param access_id Access ID from parent.
      *  @return this instance.
      */
-    create(x: number, y: number, parent: CMLObject | null = null, isRelative = false, access_id = CMLObject.ID_NOT_SPECIFYED): this {
+    create(x: number, y: number, z: number, parent: CMLObject | null = null, isRelative = false, access_id = CMLObject.ID_NOT_SPECIFYED): this {
         if (this.isActive)
             throw new Error("CMLObject.create() must be called from inactive CMLObject.");
-        this._initialize(parent || CMLObject._root, isRelative, access_id, x, y, 0, 0, 0);
+        this._initialize(parent || CMLObject._root, isRelative, access_id, x, y, z, 0, 0, 0);
         return this;
     }
     /** Destroy this object. The onDestroy() is called when the next CML.Object.update().
@@ -288,16 +289,11 @@ target_object = null;                   // target object was destroyed.
         this._motionType = CMLObject.MT_CONST;
         this._isRelative = false;
         this.setPosition(x, y, z); // pos, relative, projected
-        // @ts-expect-error known bug: Vector has setScalar, not setScaler
-        this.vel.setScaler(0);
-        // @ts-expect-error known bug: Vector has setScalar, not setScaler
-        this.acc.setScaler(0);
-        // @ts-expect-error known bug: Vector has setScalar, not setScaler
-        this.bez.setScaler(0);
-        // @ts-expect-error known bug: Vector has setScalar, not setScaler
-        this.euler.setScaler(0);
-        // @ts-expect-error known bug: Vector has setScalar, not setScaler
-        this.quat.setScaler(0);
+        this.vel.setScalar(0);
+        this.acc.setScalar(0);
+        this.bez.setScalar(0);
+        this.euler.setScalar(0);
+        this.quat.setScalar(0);
         this.counter = 0;
         this.bmlVelocity = 0;
         this.bmlAccel = 0;
@@ -450,8 +446,7 @@ target_object = null;                   // target object was destroyed.
         this.setConstantRotation(dir, frames, rmax, shortest_rot);
         this.bmlVelocity = this.velocity;
         this.bmlAccel = 0;
-        // @ts-expect-error known bug: typo of `counter`
-        this.conter = 0;
+        this.counter = 0;
         this._motionType = CMLObject.MT_BULLETML;
         return this;
     }
@@ -465,15 +460,13 @@ target_object = null;                   // target object was destroyed.
             // turn velocity vector to head direction
             this.bmlVelocity = speed;
             this.bmlAccel = 0;
-            // @ts-expect-error known bug: typo of `counter`
-            this.conter = 0;
+            this.counter = 0;
         }
         else {
             // set verocity
             this.bmlVelocity = this.velocity;
             this.bmlAccel = (speed - this.velocity) / frames;
-            // @ts-expect-error known bug: typo of `counter`
-            this.conter = frames;
+            this.counter = frames;
         }
         this._motionType = CMLObject.MT_BULLETML;
         return this;
@@ -605,28 +598,23 @@ target_object = null;                   // target object was destroyed.
      */
     calcAbsPosition() {
         if (this.parent.euler.isZero()) {
-            // @ts-expect-error known bug: typo of `relative`
-            this.pos.addVectors(this.related, this.parent.pos);
+            this.pos.addVectors(this.relative, this.parent.pos);
         }
         else {
             /**/ // with rotation
-            // @ts-expect-error known bug: typo of `relative`
-            this.pos.addVectors(this.parent.pos, new Vector().copy(this.related).applyQuat(this.parent.quat));
+            this.pos.addVectors(this.parent.pos, new Vector().copy(this.relative).applyQuat(this.parent.quat));
         }
     }
     /** Calculate parent related position from absolute position.
      */
     calcRelatedPosition() {
         if (this.parent.euler.isZero()) {
-            // @ts-expect-error known bug: typo of `relative`
-            this.related.subVectors(this.pos, this.parent.pos);
+            this.relative.subVectors(this.pos, this.parent.pos);
         }
         else {
             /**/
-            // @ts-expect-error known bug: typo of `negate`
-            const q = new Vector().copy(this.parent.quat).nagate();
-            // @ts-expect-error known bug: typo of `relative`
-            this.pos.addVectors(this.parent.pos, new Vector().copy(this.related).applyQuat(q));
+            const q = new Vector().copy(this.parent.quat).negate();
+            this.pos.addVectors(this.parent.pos, new Vector().copy(this.relative).applyQuat(q));
         }
     }
     /** Rotate haed in 1 frame, if rotd &gt; 0. The _motion() is a typical usage exapmle. @see CML.Object#_motion()*/
@@ -680,7 +668,7 @@ target_object = null;                   // target object was destroyed.
     // initialize and finalize
     //------------------------------------------------------------
     /** @private initializer */
-    _initialize(parent: CMLObject, isRelative: boolean, access_id: number, x: number, y: number, vx: number, vy: number, head: number): this {
+    _initialize(parent: CMLObject, isRelative: boolean, access_id: number, x: number, y: number, z: number, vx: number, vy: number, head: number): this {
         // clear some parameters
         this._age = 0;
         this.head = head;
@@ -696,11 +684,10 @@ target_object = null;                   // target object was destroyed.
         if (access_id != CMLObject.ID_NOT_SPECIFYED) 
             this._parent._accessibleChildren.push(this);
         // push the active objects list, initialize position and motion.
-        // @ts-expect-error known bug: typo of `_isRelative`
-        this.isRelative = isRelative;
+        this._isRelative = isRelative;
         if (isRelative) 
             this._parent._relativeChildren.push(this);
-        this.setPosition(x, y, 0); // set motion type inside
+        this.setPosition(x, y, z); // set motion type inside
         this.vel.set(vx, vy, 0);
         CMLObject._activeObjects.push(this);
         // callback
@@ -731,8 +718,7 @@ target_object = null;                   // target object was destroyed.
     //------------------------------------------------------------
     /** update position and angle */
     update() {
-        // @ts-expect-error known bug: typo of `relative`
-        const pos = (this._isRelative) ? this.related : this.pos;
+        const pos = (this._isRelative) ? this.relative : this.pos;
         switch (this._motionType) {
             case CMLObject.MT_CONST:
                 pos.add(this.vel);
@@ -764,8 +750,7 @@ target_object = null;                   // target object was destroyed.
                 break;
         }
         if (this._isRelative)
-            // @ts-expect-error known bug: typo of `this`
-            his.calcAbsPosition();
+            this.calcAbsPosition();
         if (this._rotd != 0)
             this.rotateHead();
         if (this.euler.changed) {

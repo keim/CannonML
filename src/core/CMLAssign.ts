@@ -1,5 +1,5 @@
 import type { Fiber } from "../CMLFiber.js"
-import { State, type StateFunc } from "./CMLState.js"
+import { State } from "./CMLState.js"
 
 //----------------------------------------------------------------------------------------------------
 // CML statement for assign class
@@ -11,8 +11,6 @@ export class Assign extends State {
     // functions
     //------------------------------------------------------------
     _index: number
-    // 以下の _asg 系は fiber を第 1 引数に取る想定だが、State.execute は (state, $, fiber, object) で呼ぶため
-    // 実際には state が渡る（既知の不具合。テストで固定）。型だけ StateFunc にキャストしている
     constructor(str: string) {
         super(null);
         // variables
@@ -26,35 +24,35 @@ export class Assign extends State {
             this._index = parseInt(indexStr) - 1;
         }
         if (str.length == 1) {
-            this.func = ((this._index == -1) ? this._asgr : this._asg) as unknown as StateFunc;
+            this.func = (this._index == -1) ? this._asgr : this._asg;
         }
         else {
             const ope = (str.charAt(1));
             switch (ope) {
                 case '+':
-                    this.func = ((this._index == -1) ? this._addr : this._add) as unknown as StateFunc;
+                    this.func = (this._index == -1) ? this._addr : this._add;
                     break;
                 case '-':
-                    this.func = ((this._index == -1) ? this._subr : this._sub) as unknown as StateFunc;
+                    this.func = (this._index == -1) ? this._subr : this._sub;
                     break;
                 case '*':
-                    this.func = ((this._index == -1) ? this._mulr : this._mul) as unknown as StateFunc;
+                    this.func = (this._index == -1) ? this._mulr : this._mul;
                     break;
                 case '/':
-                    this.func = ((this._index == -1) ? this._divr : this._div) as unknown as StateFunc;
+                    this.func = (this._index == -1) ? this._divr : this._div;
                     break;
                 default: throw Error("BUG!! unknown error in assign");
             }
         }
     }
-    _asgr(fbr: Fiber) { fbr.object.rank = this.$[0]; return true; }
-    _addr(fbr: Fiber) { fbr.object.rank += this.$[0]; return true; }
-    _subr(fbr: Fiber) { fbr.object.rank -= this.$[0]; return true; }
-    _mulr(fbr: Fiber) { fbr.object.rank *= this.$[0]; return true; }
-    _divr(fbr: Fiber) { fbr.object.rank /= this.$[0]; return true; }
-    _asg(fbr: Fiber) { fbr.vars[0][this._index] = this.$[0]; return true; }
-    _add(fbr: Fiber) { fbr.vars[0][this._index] += this.$[0]; return true; }
-    _sub(fbr: Fiber) { fbr.vars[0][this._index] -= this.$[0]; return true; }
-    _mul(fbr: Fiber) { fbr.vars[0][this._index] *= this.$[0]; return true; }
-    _div(fbr: Fiber) { fbr.vars[0][this._index] /= this.$[0]; return true; }
+    _asgr(_: State, $: number[], fiber: Fiber) { fiber.object.rank = $[0]; return true; }
+    _addr(_: State, $: number[], fiber: Fiber) { fiber.object.rank += $[0]; return true; }
+    _subr(_: State, $: number[], fiber: Fiber) { fiber.object.rank -= $[0]; return true; }
+    _mulr(_: State, $: number[], fiber: Fiber) { fiber.object.rank *= $[0]; return true; }
+    _divr(_: State, $: number[], fiber: Fiber) { fiber.object.rank /= $[0]; return true; }
+    _asg(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] = $[0]; return true; }
+    _add(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] += $[0]; return true; }
+    _sub(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] -= $[0]; return true; }
+    _mul(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] *= $[0]; return true; }
+    _div(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] /= $[0]; return true; }
 }

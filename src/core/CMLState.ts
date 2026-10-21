@@ -42,8 +42,7 @@ export class State extends ListElem {
         } else {
             this.key = "";
             this.$ = [];
-            // @ts-expect-error known bug: _nop is an instance method, so State._nop is undefined (pinned by test)
-            this.func = State._nop;
+            this.func = this._nop;
             this.type = State.ST_NORMAL;
         }
         this.jump = null;
@@ -112,9 +111,9 @@ export class State extends ListElem {
         return false;
     }
     // statement to wait for destruction
-    _wait4destruction(fiber: Fiber) {
+    _wait4destruction(state: State, _$: number[], fiber: Fiber, _object: CMLObject) {
         if (fiber.object.destructionStatus == fiber._access_id) {
-            fiber._pointer = this.jump!;
+            fiber._pointer = state.jump!;
             return true;
         }
         return false;
@@ -126,8 +125,7 @@ export class State extends ListElem {
             throw new Error("CML Execution error. '&' call stac overflow.");
         const ref = this.next; // next statement is referential sequence
         fiber.jstc.push(ref);
-        // @ts-expect-error known bug: the flag argument is missing, so invertFlag becomes undefined
-        fiber._pushInvertion();
+        fiber._pushInvertion(fiber.invertFlag);
         fiber._pushVariables(ref.$);
         fiber._pointer = ref.jump!;
         return true;
@@ -222,10 +220,8 @@ export class State extends ListElem {
             // copy other parameters
             newfiber.fx = fiber.fx;
             newfiber.fy = fiber.fy;
-            // @ts-expect-error known bug: Fiber has no `hopt` (it is `headAngleOption`), so this copies undefined
-            newfiber.hopt = fiber.hopt;
-            // @ts-expect-error known bug: same as above (fiber.hopt is always undefined)
-            newfiber.headAngle = (fiber.hopt == State.HO_SEQ) ? 0 : fiber.headAngle;
+            newfiber.headAngleOption = fiber.headAngleOption;
+            newfiber.headAngle = (fiber.headAngleOption == State.HO_SEQ) ? 0 : fiber.headAngle;
             newfiber.firedAngle = fiber.firedAngle;
             newfiber.seqFired = fiber.seqFired;
             newfiber.wtm1 = access_id;
@@ -238,7 +234,7 @@ export class State extends ListElem {
               vy = velocity * Math.sin(angle),
               obj = fiber.object.onFireObject(fiber.seqFired);
         if (!obj) return;
-        obj._initialize(fiber.object, isParts, access_id, cx, cy, vx, vy, angle);  // create object
+        obj._initialize(fiber.object, isParts, access_id, cx, cy, 0, vx, vy, angle);  // create object
         fiber._newObjectFiber(obj, fiber.seqFired, fiber.invertFlag, args);   // create fiber
     }
 
@@ -720,7 +716,7 @@ export class State extends ListElem {
             argc: 4,
             type: State.ST_BARRAGE,
             func(_state, $, fiber) {
-                fiber.barrage.appendMultiple($[0], fiber._invertRotation($[1]*0.017453292519943295), $[2], $[3]); 
+                fiber.barrage.appendMultiple($[0], fiber._invertRotation($[1]), $[2], $[3]); 
                 return true;
             }
         },
@@ -728,7 +724,7 @@ export class State extends ListElem {
             argc: 4,
             type: State.ST_BARRAGE,
             func(_state, $, fiber) {
-                fiber.barrage.appendSequence($[0], fiber._invertRotation($[1]*0.017453292519943295), $[2], $[3]);
+                fiber.barrage.appendSequence($[0], fiber._invertRotation($[1]), $[2], $[3]);
                 return true;
             }
         },
@@ -736,7 +732,7 @@ export class State extends ListElem {
             argc: 4,
             type: State.ST_BARRAGE,
             func(_state, $, fiber) {
-                fiber.barrage.appendRandom($[0], fiber._invertRotation($[1]*0.017453292519943295), $[2], $[3]); 
+                fiber.barrage.appendRandom($[0], fiber._invertRotation($[1]), $[2], $[3]); 
                 return true;
             }
         },
@@ -831,7 +827,6 @@ export class State extends ListElem {
             argc: 0,
             type: State.ST_W4D,
             func(state, $, fiber, object) {
-                // @ts-expect-error known bug: _wait4destruction takes only (fiber), so "@ko" crashes (pinned by test)
                 return state._wait4destruction(state, $, fiber, object);
             }
         },

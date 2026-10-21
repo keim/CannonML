@@ -47,9 +47,9 @@ export class Interpolation {
     }
     // lagrange interpolation
     setLagrange(x0: number, x1: number, x2: number, x3: number): this {
-        this.P = x3 - x2 - x0 + x1;
-        this.Q = x0 - x1 - this.P;
-        this.R = x2 - x0;
+        this.P = (-x0 + x1 * 3 - x2 * 3 + x3) / 6;
+        this.Q = (x0 - x1 * 2 + x2) * 0.5;
+        this.R = -x0 / 3 - x1 * 0.5 + x2 - x3 / 6;
         this.S = x1;
         return this;
     }

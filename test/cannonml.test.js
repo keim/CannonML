@@ -35,8 +35,7 @@ describe("CannonML", () => {
     expect(r.isActive).toBe(true);
   });
 
-  // 既知の不具合: runner() は z を CML.Object.create() の第 3 引数（parent）に渡してしまい z が反映されない
-  it.fails("runner(x, y, z) の z が反映される", () => {
+  it("runner(x, y, z) の z が反映される", () => {
     const { cml } = createCML();
     expect(cml.runner(3, 4, 5).pos.z).toBe(5);
   });

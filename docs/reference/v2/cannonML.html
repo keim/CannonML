@@ -138,7 +138,7 @@
       <DIV class="discription">
         シーケンスとは，オブジェクトの動きを，一連のコマンド列によって表現したものです．<br/>
         CMLでは，一連のコマンド列を中括弧"{ }"で括る事で，一つのシーケンスを定義します．<br/>
-        シーケンスは，&(シーケンス呼出), @*(ファイバ起動), n*/f* (オブジェクト生成) コマンドの直後で使用できます．<br/>
+        シーケンスは，&(シーケンス呼出), @*(ファイバ起動), f* (オブジェクト生成) コマンドの直後で使用できます．<br/>
         また，"@0" の省略が可能のため，上記コマンドを指定せずにシーケンスのみ記述した場合，ファイバを起動します．<br/><br/>
         "{"の直後に数値を置く事で，プログラム内からこの数値を参照できます．<br/>
         例えば "f{1 hoa0.1} f{2 hoa0.1}" と指定した場合，fコマンドにより CMLObject.fireObject() が呼び出される際，その引数で定数"1"/"2"を参照する事が出来ます．<br/>
@@ -150,7 +150,7 @@
         <ul>
           <li><a href="#exec_call"   onclick="return exp('exec','call');">& (シーケンス呼出)</a></li>
           <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (ファイバ起動)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (オブジェクト生成)</a></li>
           <li><a href="#exec_other" onclick="return exp('exec','other');">{.} (シーケンスの再呼び出し)</a></li>
           <li><a href="#exec_other" onclick="return exp('exec','other');">kf (ファイバの停止)</a></li>
           <li><a href="#sub_mirror" onclick="return exp('sub','mirror');">m (反転実行)</a></li>
@@ -310,14 +310,14 @@
         $o, $o1, $o2,... $o9
       </DIV>
       <DIV class="outline">
-        (<U>O</U>bject count) nコマンドでオブジェクト生成時にID指定した子オブジェクトの数を返します．
+        (<U>O</U>bject count) fコマンドでオブジェクト生成時にID指定した子オブジェクトの数を返します．
       </DIV>
       <DIV class="discription">
         "$o1～$o9" は各IDを持った子オブジェクトの数を返し，"$o" はID指定した子オブジェクトの総数を返します．<br/>
-        例えば，"n{}n1{}n1{}n2{}"と子オブジェクト4個生成した場合(3個はID指定)，$o1=2，$o2=1, $o=3 を返します．<br/>
+        例えば，"f0,0{}f0,1{}f0,1{}f0,2{}"と子オブジェクト4個生成した場合(3個はID指定)，$o1=2，$o2=1, $o=3 を返します．<br/>
       </DIV>
       <DIV class="reference">
-        <ul><li><a href="#create_single" onclick="return exp('create','single');">n* (単体オブジェクト生成)</a></li></ul>
+        <ul><li><a href="#create_multi" onclick="return exp('create','multi');">f* (オブジェクト生成)</a></li></ul>
       </DIV>
     </DIV>
 
@@ -557,7 +557,7 @@
       <DIV class="discription">
         <i>({(sequence)}|ラベル)</i> の内容を実行するファイバを起動します．ファイバとは他言語におけるスレッドのような概念で，記述内容は並走して実行されます．<br/>
         例えば，"&{[5f4w3]}a0.1" は弾を5連射<u>後に</u>加速するのに対し， "@{[5f4w3]}a0.1" では弾を5連射<u>しながら</u>加速します．<br/><br/>
-        また "@0" は省略可能です．つまり f*, n*, &, @* コマンドを指定せずに{...}またはラベルを記述した場合，"@0"が指定されたものとして実行されます．<br/><br/>
+        また "@0" は省略可能です．つまり f*, &, @* コマンドを指定せずに{...}またはラベルを記述した場合，"@0"が指定されたものとして実行されます．<br/><br/>
         引数で[排他実行ID]>=1を指定した場合，同IDを持つファイバを停止して起動します．[排他実行ID]=0(デフォルト)の場合，他ファイバを停止しません．<br/><br/>
         {(sequence)} 形式で記述した場合，補助コマンドのパラメータは引き継がれます．<br/>
         ラベル 形式の場合，補助コマンドのパラメータは初期値にリセットされます．<br/>
@@ -567,10 +567,10 @@
         @o <i>[オブジェクトID]</i> (, <i>[オブジェクトID]</i> , ...) <i>({(sequence)}|ラベル)</i>
       </DIV>
       <DIV class="outline">
-        (execute <U>O</U>bject) n,f コマンドで生成時に指定した<i>[オブジェクトID]</i>を持つ子オブジェクトに対して，新規ファイバを起動します．
+        (execute <U>O</U>bject) f コマンドで生成時に指定した<i>[オブジェクトID]</i>を持つ子オブジェクトに対して，新規ファイバを起動します．
       </DIV>
       <DIV class="discription">
-        n,nc,f,fc コマンドで<i>[オブジェクトID]</i>を指定して生成した場合，指定<i>[オブジェクトID]</i>を持つ子オブジェクトに対して新規ファイバを起動します．<br/>
+        f,fc コマンドで<i>[オブジェクトID]</i>を指定して生成した場合，指定<i>[オブジェクトID]</i>を持つ子オブジェクトに対して新規ファイバを起動します．<br/>
         引数で複数<i>[オブジェクトID]</i>を指定した場合，孫オブジェクトに対してファイバを起動します．例えば，"@o1,2{...}"は"@o1{@o2{...}}"と同等です．<br/>
         @oコマンドでは，補助コマンドのパラメータは常にリセットされます．また，<i>[排他実行ID]</i>の指定は出来ません．
       </DIV>
@@ -580,7 +580,7 @@
           <li><a href="#exec_other" onclick="return exp('exec','other');">{.} (シーケンスの再呼び出し)</a></li>
           <li><a href="#exec_other" onclick="return exp('exec','other');">kf (ファイバの停止)</a></li>
           <li><a href="#sub_mirror" onclick="return exp('sub','mirror');">m (反転実行)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (オブジェクト生成)</a></li>
         </ul>
       </DIV>
 
@@ -629,9 +629,9 @@
         前回呼び出したシーケンスを再度呼び出します．
       </DIV>
       <DIV class="discription">
-        &, @*, f*, n* の後置シーケンスで有効です．前回呼び出したシーケンスが再度呼び出されます．<br/>
-        呼び出されたシーケンスは，&, @*, f*, n* の各コマンド毎にファイバが保持しています．<br/>
-        例えば "n{seqA} f{seqB} n{.} f{.}" では，"n{.}","f{.}" は それぞれ seqA, seqB が呼び出されます．<br/>
+        &, @*, f* の後置シーケンスで有効です．前回呼び出したシーケンスが再度呼び出されます．<br/>
+        呼び出されたシーケンスは，&, @*, f* の各コマンド毎にファイバが保持しています．<br/>
+        例えば "f{seqA} @{seqB} f{.} @{.}" では，"f{.}","@{.}" は それぞれ seqA, seqB が呼び出されます．<br/>
         また，"f{seqC} @{f{.}}" では，ファイバのパラメータとして呼出シーケンスも引き継がれるため，"f{.}"では seqC が呼び出されます．
       </DIV>
       <DIV class="reference">
@@ -639,7 +639,7 @@
         <ul>
           <li><a href="#exec_call"   onclick="return exp('exec','call');">& (シーケンス呼出)</a></li>
           <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (ファイバ起動)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (オブジェクト生成)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -749,7 +749,7 @@
         【被参照コマンド】
         <ul>
           <li>
-            <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f*(オブジェクト生成)</a>
+            <a href="#create_multi" onclick="return exp('create','multi');">f* (オブジェクト生成)</a>
             コマンドの新規オブジェクトの初期位置．
           </li>
           <li>
@@ -1012,7 +1012,7 @@
           <li>
             <a href="#exec_call"   onclick="return exp('exec','call');">& (シーケンス呼出)</a>,
             <a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (ファイバ起動)</a>,
-            <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a>
+            <a href="#create_multi" onclick="return exp('create','multi');">f* (オブジェクト生成)</a>
             内部シーケンス全て．
           </li>
         </ul>
@@ -1022,7 +1022,7 @@
         </ul>
         このコマンドは，他の補助コマンドと異なり，シーケンス上の次コマンドのみに作用します．<br/>
         引数は，0;スクロール方向軸で反転，1;スクロール方向の垂直軸で反転，2;原点対称反転です．<br/>
-        &(シーケンス呼出), @*(ファイバ生成), n*/f*(オブジェクト生成)に対して使用すると，シーケンス内のコマンド全てが反転します．<br/>
+        &(シーケンス呼出), @*(ファイバ生成), f*(オブジェクト生成)に対して使用すると，シーケンス内のコマンド全てが反転します．<br/>
         反転させるコマンドは必ず次に記述する必要があります．例えば，条件分岐などで "[?$x<0 m]n..." のように記述する事は出来ません．
       </DIV>
     </DIV>
@@ -1037,68 +1037,10 @@
     オブジェクト生成コマンド
   </A>
   <DIV class="discription">
-    新規オブジェクトを生成するコマンド群です．単数オブジェクト生成と複数オブジェクト一括生成の二種類のコマンドがあります．
+    新規オブジェクトを生成するコマンドです．複数オブジェクトの一括生成(f*)があります．
   </DIV>
 </H3>
 <DIV id="create" class="close">
-  <H4 id="create_single">
-    <A id="expantion" href="#DUMMY" onclick="return sw('single');">
-      単体オブジェクトの生成 (n*)
-    </A>
-  </H4>
-  <DIV id="single" class="close">
-    <DIV class="command">
-      <DIV class="statement">
-        n <i>[オブジェクトID]</i> <i>({(sequence)}|ラベル)</i>
-      </DIV>
-      <DIV class="outline">
-        (<U>N</U>ew) オブジェクトIDを指定して，単体の子オブジェクトを生成します．
-      </DIV>
-      <DIV class="discription">
-        単体のオブジェクトを，q コマンドで指定した相対位置に，初速度0で，生成します．<br/>
-        引数 [オブジェクトID] は，@o(ファイバ生成) コマンドや to(ターゲット指定), $co*(オブジェクト数の参照) で特定オブジェクトを参照するために指定します．<br/>
-        [オブジェクトID]>=1 を指定する事で，上記コマンドによるオブジェクトの参照が可能となります．<br/><br/>
-        このコマンドは，実装上 CMLObject.newObject() を呼び出してオブジェクトを生成します．<br/>
-      </DIV>
-
-      <DIV class="statement">
-        nc <i>[オブジェクトID]</i> <i>({(sequence)}|ラベル)</i>
-      </DIV>
-      <DIV class="outline">
-        (<U>N</U>ew <U>C</U>hild) オブジェクトIDを指定して，相対位置に配置される単体の子オブジェクトを生成します．
-      </DIV>
-      <DIV class="discription">
-        単体のオブジェクトを，q コマンドで指定した相対位置に，初速度0で，生成します．<br/>
-        このコマンドで生成されたオブジェクトは，常に親オブジェクトの相対位置に配置されます．<br/>
-        引数 [オブジェクトID] は，@o(ファイバ生成) コマンドや to(ターゲット指定), $co*(オブジェクト数の参照) で特定オブジェクトを参照するために指定します．<br/>
-        [オブジェクトID]>=1 を指定する事で，上記コマンドによるオブジェクトの参照が可能となります．<br/><br/>
-        このコマンドは，実装上 CMLObject.newObject() を呼び出してオブジェクトを生成します．<br/>
-      </DIV>
-
-      <DIV class="reference">
-        【参照】
-        <ul>
-          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');"  >@o (子オブジェクトのファイバ起動)</a></li>
-          <li><a href="#exec_other"  onclick="return exp('exec','other');"  >{.} (シーケンスの再呼び出し)</a></li>
-          <li><a href="#sub_mirror"  onclick="return exp('sub','mirror');"  >m (反転実行)</a></li>
-          <li><a href="#sub_fiber_pos" onclick="return exp('sub','fiber_pos')">q* (ファイバ位置)</a></li>
-          <li><a href="#sub_target"  onclick="return exp('sub','target');"  >to (ターゲットオブジェクトの指定)</a></li>
-        </ul>
-      </DIV>
-
-      <DIV class="statement">
-        ^n <i>({(sequence)}|ラベル)</i>
-      </DIV>
-      <DIV class="outline">
-        (fake <U>N</U>ew) オブジェクトを生成せずに，"{.}"で呼び出されるシーケンスを差し替えます．
-      </DIV>
-      <DIV class="discription">
-        "n*{.}" で呼び出されるシーケンスを差し替えます．オブジェクトは生成しません．
-      </DIV>
-    </DIV>
-  </DIV>
-
-    
   <H4 id="create_multi">
     <A id="expantion" href="#DUMMY" onclick="return sw('multi');">
       複数オブジェクトの生成 (f*)
@@ -1121,7 +1063,7 @@
       </DIV>
 
       <DIV class="discription">
-        n*(オブジェクト生成)コマンドと同様，オブジェクトを生成しますが，
+        以下の特徴があります．
         <ul>
           <li>初速度を指定する点</li>
           <li>b*(複数射出指定)コマンドに従い複数オブジェクトを同時に生成する点</li>
@@ -1205,7 +1147,7 @@
         (<U>P</U>osition for head <U>D</U>irection) h*(角度指定)方向へのオブジェクトの位置を設定します．
       </DIV>
       <DIV class="discription">
-        座標値は nc/fc コマンドで生成したオブジェクトが操作対象の場合，親オブジェクトの相対位置となります．<br/>
+        座標値は fc コマンドで生成したオブジェクトが操作対象の場合，親オブジェクトの相対位置となります．<br/>
         それ以外の場合，スクリーン上の絶対位置(実装依存)となります．<br/>
         i(変遷時間指定)コマンドにより位置変遷時間を指定します．i0 の場合，即時変更します．<br/>
         変遷時間が指定されている場合は，３次スプラインにより補間されます．<br/>
@@ -1543,7 +1485,7 @@
       </DIV>
       <DIV class="discription">
         ラベル定義した名前をシーケンス内で直接指定すると，そのシーケンスが呼び出されます．<br/>
-        ラベルは，&(シーケンス呼出), @*(ファイバ起動), n*/f* (オブジェクト生成) コマンドの直後で使用できます．<br/>
+        ラベルは，&(シーケンス呼出), @*(ファイバ起動), f* (オブジェクト生成) コマンドの直後で使用できます．<br/>
         また，"@0" の省略が可能のため，上記コマンドを指定せずにラベルのみ記述した場合，ファイバを起動します．<br/>
         またラベル呼出時に引数を指定でき，シーケンス内部で"$1,$2..."として参照することが出来ます．<br/>
         ただし，数値はラベル名として認識してしまうため，引数とラベルの間に空白文字を入れるか，第一引数を括弧で囲う必要があります．<br/><br/>
@@ -1557,7 +1499,7 @@
         <ul>
           <li><a href="#exec_call"   onclick="return exp('exec','call');">& (シーケンス呼出)</a></li>
           <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (ファイバ起動)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (オブジェクト生成)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (オブジェクト生成)</a></li>
         </ul>
       </DIV>
     </DIV>

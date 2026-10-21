@@ -4,7 +4,7 @@ import { xy } from "./helpers/run.js";
 
 const setup = () => {
   const { cml, CML } = createCML();
-  const spawn = (x = 0, y = 0, ...rest) => new CML.Object().create(x, y, ...rest);
+  const spawn = (x = 0, y = 0, ...rest) => new CML.Object().create(x, y, 0, ...rest);
   return { cml, CML, spawn };
 };
 
@@ -14,7 +14,13 @@ describe("Object: 生成と破棄", () => {
     const o = spawn(3, 4);
     expect(o.isActive).toBe(true);
     expect(xy(o.pos)).toEqual([3, 4]);
-    expect(() => o.create(0, 0)).toThrow("inactive");
+    expect(() => o.create(0, 0, 0)).toThrow("inactive");
+  });
+
+  it("create の z は位置に反映される", () => {
+    const { CML } = setup();
+    const o = new CML.Object().create(3, 4, 5);
+    expect(o.pos.z).toBe(5);
   });
 
   it("親省略時の parent は root", () => {
@@ -49,7 +55,7 @@ describe("Object: 生成と破棄", () => {
       onUpdate() { log.push("update"); }
       onDestroy() { log.push("destroy"); }
     }
-    const t = new T().create(0, 0);
+    const t = new T().create(0, 0, 0);
     cml.update();
     t.destroy(0);
     cml.update();

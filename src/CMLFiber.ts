@@ -381,8 +381,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             case State.HO_PAR:
                 return this._object.angleParentOnScreen + this.headAngle;
             case State.HO_VEL:
-                // @ts-expect-error known bug: CMLObject has no `angleVelocity` (it is angleVelocityOnScreen), so "hv" yields NaN
-                return this._object.angleVelocity + this.headAngle;
+                return this._object.angleVelocityOnScreen + this.headAngle;
             case State.HO_SEQ:
                 return base + this.headAngle;
             default:

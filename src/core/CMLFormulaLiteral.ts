@@ -18,7 +18,7 @@ export class FormulaLiteral implements FormulaNode {
         const m = opr.match(/\$(.*?)(\d)?$/);
         if (!m) {
             this.idx = 0;
-            this.num = parseFloat(opr);
+            this.num = Number(opr);
             this.func = ()=>this.num;
             this.isStatic = true;
         } else {

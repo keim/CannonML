@@ -56,7 +56,7 @@ export class Barrage {
     }
     /** Append append new element "bs"
      *  @param count_ bullet count.
-     *  @param angle_ center angle of fan-shaped barrage.
+     *  @param angle_ center angle of fan-shaped barrage (degree).
      *  @param speed_ speed difference of barrage.
      *  @param interval_ rapid interval frame.
      */
@@ -65,7 +65,7 @@ export class Barrage {
     }
     /** Append append new element "bm"
      *  @param count_ bullet count.
-     *  @param angle_ center angle of fan-shaped barrage.
+     *  @param angle_ center angle of fan-shaped barrage (degree).
      *  @param speed_ speed difference of barrage.
      *  @param interval_ rapid interval frame.
      */
@@ -74,7 +74,7 @@ export class Barrage {
     }
     /** Append append new element "br"
      *  @param count_ bullet count.
-     *  @param angle_ center angle of fan-shaped barrage.
+     *  @param angle_ center angle of fan-shaped barrage (degree).
      *  @param speed_ speed difference of barrage.
      *  @param interval_ rapid interval frame.
      */

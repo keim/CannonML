@@ -1,6 +1,8 @@
 import type { Global } from "./CMLGlobal.js"
 import { ListElem } from "./CMLListElem.js"
 
+const DEG2RAD = Math.PI / 180;
+
 //--------------------------------------------------
 // CML barrage element class
 //  Copyright (c) 2007 keim All rights reserved.
@@ -41,7 +43,7 @@ export class BarrageElem extends ListElem {
     }
     // setting
     //--------------------------------------------------
-    // set sequencial step
+    // set sequencial step (angle_ in degree)
     setSequence(count_: number, angle_: number, speed_: number, interval_: number): this {
         this.count = (count_ > 0) ? count_ : ((interval_ > 0) ? -1 : 1);
         this.angle = 0;
@@ -49,7 +51,7 @@ export class BarrageElem extends ListElem {
         this.counter = this.count;
         this.angle_offset = 0;
         this.speed_offset = 0;
-        this.angle_step = angle_;
+        this.angle_step = angle_ * DEG2RAD;
         this.speed_step = speed_;
         this.interval = (interval_ > 0) ? interval_ : 0;
         this.random = false;
@@ -57,15 +59,16 @@ export class BarrageElem extends ListElem {
         this.update = this._update;
         return this;
     }
-    // set multiple parameters
+    // set multiple parameters (angle_ in degree)
     setMultiple(count_: number, angle_: number, speed_: number, interval_: number): this {
+        const angle = angle_ * DEG2RAD;
         this.count = (count_ > 0) ? count_ : 1;
         this.angle = 0;
         this.speed = 1;
         this.counter = this.count;
-        this.angle_offset = -angle_ * 0.5;
+        this.angle_offset = -angle * 0.5;
         this.speed_offset = -speed_ * 0.5;
-        this.angle_step = (angle_ == 360 || angle_ == -360) ? (angle_ / this.count) : ((this.count < 2) ? 0 : angle_ / (this.count - 1));
+        this.angle_step = (Math.abs(angle_) == 360) ? (angle / this.count) : ((this.count < 2) ? 0 : angle / (this.count - 1));
         this.speed_step = (this.count < 2) ? 0 : speed_ / (this.count - 1);
         this.interval = (interval_ > 0) ? interval_ : 0;
         this.random = false;
@@ -73,7 +76,7 @@ export class BarrageElem extends ListElem {
         this.update = this._update;
         return this;
     }
-    // set random parameters
+    // set random parameters (angle_ in degree)
     setRandom(count_: number, angle_: number, speed_: number, interval_: number): this {
         this.count = (count_ > 0) ? count_ : ((interval_ > 0) ? -1 : 1);
         this.angle = 0;
@@ -81,7 +84,7 @@ export class BarrageElem extends ListElem {
         this.counter = this.count;
         this.angle_offset = 0;
         this.speed_offset = 0;
-        this.angle_step = angle_;
+        this.angle_step = angle_ * DEG2RAD;
         this.speed_step = speed_;
         this.interval = (interval_ > 0) ? interval_ : 0;
         this.random = true;

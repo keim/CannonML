@@ -54,9 +54,7 @@ export class CannonML {
      *  @param seq default sequence to execute by new runner
      */
     runner(x=0, y=0, z=0, seq: Sequence | null = null, args: number[] | null = null, invFlag=0): Runner {
-        // @ts-expect-error known bug: arguments are (createdby, sequence), so the sequence is passed as createdby
-        const r = new Runner(seq, false);
-        // @ts-expect-error known bug: z is passed as the `parent` argument of create(), so z is ignored
+        const r = new Runner(null, seq);
         r.create(x, y, z);
         if (seq) r.execute(seq, args, invFlag);
         return r;

@@ -137,7 +137,7 @@
       <DIV class="discription">
         The sequence is a row of commands that defines a motion of an object. In cannon ML, a row of commands between "{" and "}" defines a sequence.
         The sequence can be set after <a href="#exec_call" onclick="return exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="return exp('exec','fiber');">@* (Create new fiber)</a> and
-        <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
+        <a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a>.
         And if you specify the sequence without any commands, the sequence is executed as "@0" command does.</br>
         The values after "{" can refer from your program, but <b>it cannot include any formula, only constant values are available.</b></br>
         For example, "f{1 hoa0.1} f{2 hoa0.1}" you can refer the values of "1" and "2" when the f command calls the function CMLObject.fireObject() in your program.
@@ -147,7 +147,7 @@
         <ul>
           <li><a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequence)</a></li>
           <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a></li>
           <li><a href="#exec_other" onclick="return exp('exec','other');">{.} (Recall sequence)</a></li>
           <li><a href="#exec_other" onclick="return exp('exec','other');">kf (Kill fiber)</a></li>
           <li><a href="#sub_mirror" onclick="return exp('sub','mirror');">m (Mirror execution)</a></li>
@@ -309,10 +309,10 @@
       </DIV>
       <DIV class="discription">
         "$o1-$o9" returns the object count with specifyed ID, "$o" returns the total count of objects with ID.<br/>
-        For example, "n{}n1{}n1{}n2{}" creates 4 objects (and 3 objects are specifyed object ID) and "$o1" returns 2, "$o2" returns 1, and "$o" returns 3.<br/>
+        For example, "f0,0{}f0,1{}f0,1{}f0,2{}" creates 4 objects (and 3 objects are specifyed object ID) and "$o1" returns 2, "$o2" returns 1, and "$o" returns 3.<br/>
       </DIV>
       <DIV class="reference">
-        <ul><li><a href="#create_single" onclick="return exp('create','single');">n* (Create new single object)</a></li></ul>
+        <ul><li><a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a></li></ul>
       </DIV>
     </DIV>
 
@@ -551,7 +551,7 @@
       <DIV class="discription">
         Execute the sequence on a new fiberÅD'Fiber' is a kind of thread in some othor languages, the sequence is executed simultaniously.
         For example, "&{[5f4w3]}a0.1" accelarates <u>after</u> firing 5 bullets, "@{[5f4w3]}a0.1" accelarates <u>with</u> firing 5 bullets.<br/><br/>
-        And you can omit "@0". If you write "{...}" or labels without f*, n*, & or @* command, "@0" is executed.<br/><br/>
+        And you can omit "@0". If you write "{...}" or labels without f*, & or @* command, "@0" is executed.<br/><br/>
         When <i>[exclusive execution ID]</i> &gt;= 1 is specifyed, stop the other fiber with same ID and execute new fiber.<br/><br/>
         Writing with a format of "{sequence}", All fiber parameters are copyed to the called sequence. On the other hand writing with a label, all fiber parameters are initialized.
         For example, "f4w10@{f}" fires 2 bullets with speed of 4, "#A{f} f4w10@A" fires 2 bullets with speed of 4 and 1 respectively.
@@ -560,10 +560,10 @@
         @o <i>[object ID]</i> (, <i>[object ID]</i> , ... )  <i>({(sequence)}|LABEL)</i>
       </DIV>
       <DIV class="outline">
-        (execute <U>O</U>bject) Execute a sequence with a new fiber on another objects created by n or f command with specifying <i>[Object ID]</i>.
+        (execute <U>O</U>bject) Execute a sequence with a new fiber on another objects created by f command with specifying <i>[Object ID]</i>.
       </DIV>
       <DIV class="discription">
-        When you create a new object by the 'n', 'nc', 'f' or 'fc' command with <i>[Object ID]</i>, the '@o' command executes the sequence on another objects that have specifyed <i>[Object ID]</i>.<br/>
+        When you create a new object by the 'f' or 'fc' command with <i>[Object ID]</i>, the '@o' command executes the sequence on another objects that have specifyed <i>[Object ID]</i>.<br/>
         If you specify plural <i>[Object ID]</i> in the arguments, the sequence is executed on grand-child object. For example, "@o1,2{...}" is same as "@o1{@o2{...}}"<br/>
         In the '@o' command, all fiber parameters are always initialized and you cannot specify the <i>[exclusive execution ID]</i>.
       </DIV>
@@ -573,7 +573,7 @@
           <li><a href="#exec_other" onclick="return exp('exec','other');">{.} (Recall sequence)</a></li>
           <li><a href="#exec_other" onclick="return exp('exec','other');">kf (Kill fiber)</a></li>
           <li><a href="#sub_mirror" onclick="return exp('sub','mirror');">m (Mirror execution)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a></li>
         </ul>
       </DIV>
 
@@ -621,9 +621,9 @@
         Refer the sequence called before.
       </DIV>
       <DIV class="discription">
-        This statement is available after &, @*, f* or n* and you can refer the sequence you called previously. 
-        The sequences called before are memoryed in a fiber for each command &, @*, f* or n*.
-        For example, in "n{seqA} f{seqB} n{.} f{.}" the "n{.}" and "f{.}" refer seqA and seqB respectively.
+        This statement is available after &, @* or f* and you can refer the sequence you called previously. 
+        The sequences called before are memoryed in a fiber for each command &, @* or f*.
+        For example, in "f{seqA} @{seqB} f{.} @{.}" the "f{.}" and "@{.}" refer seqA and seqB respectively.
         And in the case of "f{seqC} @{f{.}}", the sequence called before is copyed to the new fiber and the "f{.}" refers seqC.
       </DIV>
       <DIV class="reference">
@@ -631,7 +631,7 @@
         <ul>
           <li><a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequence)</a></li>
           <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a></li>
         </ul>
       </DIV>
     </DIV>
@@ -740,7 +740,7 @@
         [see also]
         <ul>
           <li>
-            <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
+            <a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a>
             Starting point of new objects is specifyed.
           </li>
           <li>
@@ -958,7 +958,7 @@
         [see also]
         <ul>
           <li><a href="#sub_head" onclick="return exp('sub','head')">ht (Specify the angle from the target direction)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');">n* (Create new object)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a></li>
         </ul>
         [default value]
         <ul>
@@ -999,7 +999,7 @@
           <li>
             <a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequence)</a>,
             <a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a>,
-            <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>
+            <a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a>
             All commands in the sequence are mirrored.
           </li>
         </ul>
@@ -1009,7 +1009,7 @@
         </ul>
         Differ from some other sub commands, <b>the m command mirror only the next command</b>.
         The <i>[mirroring axis]</i> means 0=mirroring by axis holizontal with scrolling direction, 1=mirroring by axis vertical with scrolling directionÅC2=mirroring by x and y axis.
-        The m command before &, @*, n* or f* command mirror all commands in the sequence.<br/>
+        The m command before &, @* or f* command mirror all commands in the sequence.<br/>
       </DIV>
     </DIV>
   </DIV>
@@ -1023,68 +1023,10 @@
     Creating commands
   </A>
   <DIV class="discription">
-    Commands to create new object. There are 2 types, single creation and multiple creation.
+    Commands to create new objects (multiple creation).
   </DIV>
 </H3>
 <DIV id="create" class="close">
-  <H4 id="create_single">
-    <A id="expantion" href="#DUMMY" onclick="return sw('single');">
-      Create single object (n*)
-    </A>
-  </H4>
-  <DIV id="single" class="close">
-    <DIV class="command">
-      <DIV class="statement">
-        n <i>[Object ID]</i> <i>({(sequence)}|LABEL)</i>
-      </DIV>
-      <DIV class="outline">
-        (<U>N</U>ew) Create single object.
-      </DIV>
-      <DIV class="discription">
-        The n command creates new object at the position specifyed by q command, with an initial speed of 0.<br/>
-        The <i>[Object ID]</i> is used to specify the object in @o, to and $co commands.
-        If you want to use these commands, specify <i>[Object ID]</i> &gt;= 1.
-        This command calls CMLObject.newObject() in your program.
-      </DIV>
-
-      <DIV class="statement">
-        nc <i>[Object ID]</i> <i>({(sequence)}|LABEL)</i>
-      </DIV>
-      <DIV class="outline">
-        (<U>N</U>ew <U>C</U>hild) Create single object in parents coordinate.
-      </DIV>
-      <DIV class="discription">
-        The nc command creates new object at the position specifyed by q command, with an initial speed of 0.
-        The object created by nc command is always set in parents coordinate.<br/>
-        The <i>[Object ID]</i> is used to specify the object in @o, to and $co commands.
-        If you want to use these commands, specify <i>[Object ID]</i> &gt;= 1.
-        This command calls CMLObject.newObject() in your program.
-      </DIV>
-
-      <DIV class="reference">
-        [see also]
-        <ul>
-          <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');"  >@o (Execute sequence on another object)</a></li>
-          <li><a href="#exec_other"  onclick="return exp('exec','other');"  >{.} (Refer the sequence executed before)</a></li>
-          <li><a href="#sub_mirror"  onclick="return exp('sub','mirror');"  >m (Mirror execution)</a></li>
-          <li><a href="#sub_fiber_pos" onclick="return exp('sub','fiber_pos')">q* (Specify creating point)</a></li>
-          <li><a href="#sub_target"  onclick="return exp('sub','target');"  >to (Set target object)</a></li>
-        </ul>
-      </DIV>
-
-      <DIV class="statement">
-        ^n <i>({(sequence)}|LABEL)</i>
-      </DIV>
-      <DIV class="outline">
-        (fake <U>N</U>ew) Do nothing, but change the sequence refered by "n*{.}" command.
-      </DIV>
-      <DIV class="discription">
-        Do nothing, but change the sequence refered by "n*{.}" command.
-      </DIV>
-    </DIV>
-  </DIV>
-
-    
   <H4 id="create_multi">
     <A id="expantion" href="#DUMMY" onclick="return sw('multi');">
       Create multiple objects (f*)
@@ -1107,7 +1049,7 @@
       </DIV>
 
       <DIV class="discription">
-        This command is similar to n* command, but its different in sevral points as,
+        This command creates new objects with the following features:
         <ul>
           <li>Specifys the initial speed of a new object,</li>
           <li>Creates plural objects simultaniously according to the b* (Specify a setting of the multiple creation) commands,</li>
@@ -1536,7 +1478,7 @@
       <DIV class="discription">
         Specifying the label name in a sequence directly, the sequence of specifyed label is executed as it is there.<br/>
         The label can be set after <a href="#exec_call" onclick="return exp('exec','call');">& (Call sequence)</a>, <a href="#exec_fiber" onclick="return exp('exec','fiber');">@* (Create new fiber)</a> and
-        <a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a>.
+        <a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a>.
         And if you specify the label without any command, the sequence of specifyed label is executed as "@0" command does.</br>
         You can specify the arguments when you refer the label and you can get the arguments by "$1,$2..." in the labeled sequence.
         But, because the numbers (0-9) can be used as the label name, a space is necessary between the label and number.<br/><br/>
@@ -1548,7 +1490,7 @@
         <ul>
           <li><a href="#exec_call"   onclick="return exp('exec','call');">& (Call sequenece)</a></li>
           <li><a href="#exec_fiber"  onclick="return exp('exec','fiber');">@* (Create new fiber)</a></li>
-          <li><a href="#create_single" onclick="return exp('create','single');exp('create','multi');">n*/f* (Create new object)</a></li>
+          <li><a href="#create_multi" onclick="return exp('create','multi');">f* (Create new multiple objects)</a></li>
         </ul>
       </DIV>
     </DIV>

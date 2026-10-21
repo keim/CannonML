@@ -244,10 +244,10 @@ export class Parser {
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula operator (res[5])
             rexstr += "|" + State.command_rex; // normal commands (res[6])
             rexstr += "|l\\$([1-9r][+\\-*/]?)="; // assign (res[7])
-            rexstr += "|&("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
-            rexstr += "|#([A-Za-z0-9_]+)\s*\\{"; // labeled sequence definition (res[9])
-            rexstr += "|(\\{)"; // non-labeled sequence call (res[10])
-            rexstr += ")\s*" + operandRegExpString + ")"; // argument(res[11,12];prefix, res[13,14];literal, res[15,16];postfix)
+            rexstr += "|&(?!\\{)("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
+            rexstr += "|#([A-Za-z0-9_]+)\\s*\\{"; // labeled sequence definition (res[9])
+            rexstr += "|&?(\\{)"; // non-labeled sequence call (res[10])
+            rexstr += ")\\s*" + operandRegExpString + ")"; // argument(res[11,12];prefix, res[13,14];literal, res[15,16];postfix)
             rexstr += "|([A-Za-z]+)"; // error (res[17])
             this._regexp = new RegExp(rexstr, "gm"); // "s" optoin not available on javascript
             this._globalVariables._requestUpdateRegExp = false;
