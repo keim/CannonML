@@ -48,6 +48,7 @@ export class CMLObject extends ListElem {
     _roti: Interpolation
     _rott: number
     _rotd: number
+    _variables: number[]
     constructor() {
         super();
         // public variables
@@ -80,6 +81,7 @@ export class CMLObject extends ListElem {
         this._roti = new Interpolation(); // rotation Interpolation
         this._rott = 0; // rotation parameter
         this._rotd = 0; // rotation parameter increament
+        this._variables = new Array(9).fill(0); // user defined variables
     }
     // public properties
     //------------------------------------------------------------
@@ -122,8 +124,7 @@ target_object = null;                   // target object was destroyed.
     /** Does this object have another object as a part ? */
     get hasRelativeChild() { return (this._relativeChildren.length != 0); }
     /** You can define the "$r" value for each object by overriding this property, Ussualy returns CML.Global.getRank(0). @see CML.Global#getRank */
-    get rank() { return CMLObject._globalVariables.getRank(0); }
-    set rank(r: number) { CMLObject._globalVariables.setRank(0, r); }
+    get rank() { return CMLObject._globalVariables.rank(); }
     /** age in frames */
     get age() { return this._age; }
     /** Destruction status. You can refer the argument of destroy() or the '&#64;ko' command. Returns -1 when the object isn't destroyed.
@@ -217,7 +218,7 @@ target_object = null;                   // target object was destroyed.
     /** Callback function from CML.Object.update(). This function is called after updating position. Override this to update own parameters.*/
     onUpdate() {}
     /** Statement "f" calls this when it needs. Override this to define the new CML.Object created by "f" command.
-     *  @param args The arguments of sequence.
+     *  @param _seq The sequence controlling new objects.
      *  @return The new CML.Object created by "n" command. You must not activate(call create()) returning CML.Object.
      */
     onFireObject(_seq: Sequence): CMLObject | null { return null; }
@@ -272,7 +273,7 @@ target_object = null;                   // target object was destroyed.
     create(x: number, y: number, z: number, parent: CMLObject | null = null, isRelative = false, access_id = CMLObject.ID_NOT_SPECIFYED): this {
         if (this.isActive)
             throw new Error("CMLObject.create() must be called from inactive CMLObject.");
-        this._initialize(parent || CMLObject._root, isRelative, access_id, x, y, z, 0, 0, 0);
+        this._initialize(parent || CMLObject._root, isRelative, access_id, x, y, z, 0, 0, 0, null);
         return this;
     }
     /** Destroy this object. The onDestroy() is called when the next CML.Object.update().
@@ -668,7 +669,7 @@ target_object = null;                   // target object was destroyed.
     // initialize and finalize
     //------------------------------------------------------------
     /** @private initializer */
-    _initialize(parent: CMLObject, isRelative: boolean, access_id: number, x: number, y: number, z: number, vx: number, vy: number, head: number): this {
+    _initialize(parent: CMLObject, isRelative: boolean, access_id: number, x: number, y: number, z: number, vx: number, vy: number, head: number, args: number[] | null): this {
         // clear some parameters
         this._age = 0;
         this.head = head;
@@ -687,6 +688,11 @@ target_object = null;                   // target object was destroyed.
         this._isRelative = isRelative;
         if (isRelative) 
             this._parent._relativeChildren.push(this);
+    
+        if (args)
+            this._variables.concat(args);
+        else 
+            this._variables.fill(0);
         this.setPosition(x, y, z); // set motion type inside
         this.vel.set(vx, vy, 0);
         CMLObject._activeObjects.push(this);

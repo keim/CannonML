@@ -24,7 +24,7 @@ export class Global {
     _mapUsrDefRef: Record<string, UserVariableFunc>
     /** @private user defined commands refer from Parser */
     _mapUsrDefCmd: Record<string, UserCommand>
-    _globalRank: RangeLimitNumber[]
+    _globalRank: RangeLimitNumber
     _sin: SinTable
     _funcRand: () => number
     _requestUpdateRegExp: boolean
@@ -36,11 +36,7 @@ export class Global {
     constructor(vertical_: boolean) {
         this._mapUsrDefRef = {};
         this._mapUsrDefCmd = {};
-        this._globalRank = new Array(10);
-        for (let i=0; i<this._globalRank.length; i++) {
-            this._globalRank[i] = new RangeLimitNumber();
-        }
-        this._globalRank[0].max = 1;
+        this._globalRank = new RangeLimitNumber(0, 0, 1);
         this._sin = new SinTable();
         this._funcRand = Math.random;
         this._requestUpdateRegExp = true;
@@ -59,25 +55,32 @@ export class Global {
         this._scrollRadian = this._scrollAngle * 0.017453292519943295;
     }
     /** Function for "$?/$??" variable, The type is function():Number. @default Math.random() */
-    get funcRand() { return this._funcRand; }
-    set funcRand(func: () => number) { this._funcRand = func; }
+    get funcRand(): () => number {
+        return this._funcRand;
+    }
+    set funcRand(func: () => number) {
+        this._funcRand = func;
+    }
     /** The return value is from funcRand. Call funcRand internally.
      *  @return The random number between 0-1.
      *  @see #funcRand
      */
-    rand() {
+    rand(): number {
         return this._funcRand();
     }
     /** get rank value */
-    getRank(index: number): number { return this._globalRank[index].val; }
+    rank(): number {
+        return this._globalRank.val;
+    }
     /** set rank value */
-    setRank(index: number, value: number) { this._globalRank[index].val = value; }
+    setRank(value: number) {
+        this._globalRank.val = value;
+    }
     /** Set the range of globalRank. The global rank value is limited in this range. */
-    setGlobalRankRange(index: number, min: number, max: number) {
-        const rank = this._globalRank[index];
-        rank.min = min;
-        rank.max = max;
-        rank.val = rank.val;
+    setRankRange(min: number, max: number) {
+        this._globalRank.min = min;
+        this._globalRank.max = max;
+        this._globalRank.val = this._globalRank.val;
     }
     /** Register user defined variable "$[a-z_]+".
      *  <p>

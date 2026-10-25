@@ -56,12 +56,11 @@ export class Runner extends CMLObject {
     //------------------------------------------------------------
     /** Execute a sequence.
      *  @param seq The sequencye to execute.
-     *  @param args The array of arguments to execute sequence.
      *  @param invertFlag The flag to invert execution same as 'm' command.
      *  @return Instance of fiber that execute the sequence.
      */
-    execute(seq: Sequence, args: number[] | null = null, invertFlag = 0): Fiber | null {
-        return Fiber._newRootFiber(this, seq, args, invertFlag);
+    execute(seq: Sequence, invertFlag = 0): Fiber | null {
+        return Fiber._newRootFiber(this, seq, invertFlag);
     }
     /** Stop all fibers of object. This function is slow.
      *  If you want to execute faster, keep returned CML.Fiber of CML.Object.execute() and call CML.Fiber.destroy() wherever possible.

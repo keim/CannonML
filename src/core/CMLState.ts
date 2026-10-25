@@ -126,7 +126,6 @@ export class State extends ListElem {
         const ref = this.next; // next statement is referential sequence
         fiber.jstc.push(ref);
         fiber._pushInvertion(fiber.invertFlag);
-        fiber._pushVariables(ref.$);
         fiber._pointer = ref.jump!;
         return true;
     }
@@ -134,7 +133,7 @@ export class State extends ListElem {
     _fiber(fiber: Fiber, fiber_id: number) {
         const ref = this.next; // next statement is referential sequence
         const seq = ref.jump || fiber.seqFiber; // executing sequence
-        fiber._newChildFiber(seq, fiber_id, fiber.invertFlag, ref.$, (seq.type == State.ST_NO_LABEL)); // create and initialize fiber
+        fiber._newChildFiber(seq, fiber_id, fiber.invertFlag, (seq.type == State.ST_NO_LABEL)); // create and initialize fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
         return true;
@@ -143,7 +142,7 @@ export class State extends ListElem {
     _fiber_destruction(fiber: Fiber, destStatus: number) {
         const ref = this.next; // next statement is referential sequence
         const seq = ref.jump || fiber.seqFiber; // executing sequence
-        fiber._newDestFiber(seq, destStatus, fiber.invertFlag, ref.$); // create and initialize destruction fiber
+        fiber._newDestFiber(seq, destStatus, fiber.invertFlag); // create and initialize destruction fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
         return true;
@@ -152,7 +151,7 @@ export class State extends ListElem {
     _fiber_child(fiber: Fiber, obj: CMLObject, object_id: number) {
         const ref = this.next; // next statement is referential sequence
         const seq = ref.jump || fiber.seqFiber; // executing sequence
-        obj.findAllChildren(object_id).forEach((child: CMLObject)=>fiber._newObjectFiber(child, seq, fiber.invertFlag, ref.$));
+        obj.findAllChildren(object_id).forEach((child: CMLObject)=>fiber._newObjectFiber(child, seq, fiber.invertFlag));
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
         return true;
@@ -211,7 +210,7 @@ export class State extends ListElem {
         }
         else {
             // create new fiber and initialize
-            const newfiber = fiber._newChildFiber(Sequence.rapid(), 0, fiber.invertFlag, null, false)!;
+            const newfiber = fiber._newChildFiber(Sequence.rapid(), 0, fiber.invertFlag, false)!;
             // copy bullet setting and bullet multiplyer
             newfiber.bul.copy(bul.next);
             newfiber.bul.init(bul);
@@ -234,8 +233,8 @@ export class State extends ListElem {
               vy = velocity * Math.sin(angle),
               obj = fiber.object.onFireObject(fiber.seqFired);
         if (!obj) return;
-        obj._initialize(fiber.object, isParts, access_id, cx, cy, 0, vx, vy, angle);  // create object
-        fiber._newObjectFiber(obj, fiber.seqFired, fiber.invertFlag, args);   // create fiber
+        obj._initialize(fiber.object, isParts, access_id, cx, cy, 0, vx, vy, angle, args);  // create object
+        fiber._newObjectFiber(obj, fiber.seqFired, fiber.invertFlag);   // create fiber
     }
 
     // Status Types
@@ -323,7 +322,6 @@ export class State extends ListElem {
             func(_state, _$, fiber) {
                 if (fiber.jstc.length > 0) { // pop jump stac
                     fiber._popInvertion();
-                    fiber._popVariables();
                     fiber._pointer = fiber.jstc.pop()!;
                 }
                 return true;

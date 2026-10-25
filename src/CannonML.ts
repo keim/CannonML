@@ -53,10 +53,10 @@ export class CannonML {
      *  @param z z position of new runner
      *  @param seq default sequence to execute by new runner
      */
-    runner(x=0, y=0, z=0, seq: Sequence | null = null, args: number[] | null = null, invFlag=0): Runner {
+    runner(x=0, y=0, z=0, seq: Sequence | null = null, invFlag=0): Runner {
         const r = new Runner(null, seq);
         r.create(x, y, z);
-        if (seq) r.execute(seq, args, invFlag);
+        if (seq) r.execute(seq, invFlag);
         return r;
     }
     /** create new CML.Sequence
