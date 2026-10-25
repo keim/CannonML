@@ -363,14 +363,9 @@ qy [y座標]
 
 (creating point Y) y座標を指定します。x座標値は前回指定値から変化しません。
 
-【被参照コマンド】
-
-- f\* (オブジェクト生成) コマンドの新規オブジェクトの初期位置。
-- ht(ターゲット方向との相対角度指定) コマンドで計算される角度の原点
-
 【初期値】
 
-- q0、0
+- q0,0
 
 指定値はオブジェクトからの相対位置です。
 
@@ -378,37 +373,39 @@ qy [y座標]
 
 ### 角度の指定 (h*)
 
-`ha [角度] hax [角度]`
+```
+ha [角度]
+```
 
 (set Head on Absolute angle) スクリーン上の絶対角度(スクロール方向を0)で指定します。
 
-(set Head on Absolute angle and fiX) ha と同じ意味です。
-
-`ho [角度] hox [角度]`
+```
+ho [角度]
+```
 
 (set Head relative to Object angle) オブジェクト角度との相対角度で指定します。
 
-(set Head relative to Object angle and fiX) その時点の角度で固定します。
-
-`hv [角度] hvx [角度]`
+```
+hv [角度]
+```
 
 (set Head on Velocity direction) オブジェクト進行方向との相対角度で指定します。
 
-(set Head on Velocity direction and fiX) その時点の角度で固定します。
-
-`hp [角度] hpx [角度]`
+```
+hp [角度]
+```
 
 (set Head relative to Parent object angle) 親オブジェクト角度との相対角度で指定します。
 
-(set Head relative to Parent object angle and fiX) その時点の角度で固定します。
-
-`ht [角度] htx [角度]`
+```
+ht [角度]
+```
 
 (set Head to Target) ターゲット方向との相対角度で指定します。
 
-(set Head to Target and fiX) その時点の角度で固定します。
-
-`hs [角度]`
+```
+hs [角度]
+```
 
 (set Head Sequencial) 前回指定角度からの相対値による指定ですが，参照するコマンドにより意味が変化します。
 
