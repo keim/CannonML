@@ -43,7 +43,7 @@ export class Fiber extends ListElem {
     fx: number
     fy: number
     chgt: number
-    headAngleOption: number
+    allowAngleRotation: boolean
     headAngle: number
     firedAngle: number
     bul: BarrageElem
@@ -81,9 +81,9 @@ export class Fiber extends ListElem {
         // setting parameters
         /** @private _cml_fiber_internal */ this.fx = 0; // fiber position
         /** @private _cml_fiber_internal */ this.fy = 0;
-        /** @private _cml_fiber_internal */ this.chgt = 0; // pos/vel/rot changing time
-        /** @private _cml_fiber_internal */ this.headAngleOption = State.HO_AIM; // head option
-        /** @private _cml_fiber_internal */ this.headAngle = 0;  // head angle [degree]
+        /** @private _cml_fiber_internal */ this.chgt = 0; // pos/vel/rot changing timeq
+        /** @private _cml_fiber_internal */ this.allowAngleRotation = true; // allow angle rotation. 360->0
+        /** @private _cml_fiber_internal */ this.headAngle = 0;  // head angle [radian]
         /** @private _cml_fiber_internal */ this.firedAngle = 0; // previous fired angle (due to the compatiblity with bulletML)
         /** @private _cml_fiber_internal */ this.bul = new BarrageElem(); // primary setting of bullet
         /** @private _cml_fiber_internal */ this.invertFlag = 0; // invertion flag (0=no, 1=x_reverse, 2=y_reverse, 3=xy_reverse)
@@ -109,8 +109,6 @@ export class Fiber extends ListElem {
     get target(): CMLObject { return this._target; }
     /** CML.Barrage that this fiber uses. */
     get barrage() { return this._barrage; }
-    /** Angle of this fiber. The value is set by "h*" commands. */
-    get angle() { return this._getAngle(0) + Fiber._globalVariables._scrollRadian; }
     /** String argument. <br/>
      *  This property is used in callback function of registerUserCommand().<br/>
      *  When the next statement of user command is not '...', this property shows null.
@@ -219,6 +217,9 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     getVariable(idx: number): number {
         return this._object._variables[idx];
     }
+    setVariable(idx: number, value: number) {
+        this._object._variables[idx] = value;
+    }
     /** Get the loop counter of this fiber.
      *  @param Nested loop index. The index of 0 means the most inner loop, and 1 means the loop 1 outside.
      *  @return Loop count. Start at 0, and end at [loop_count]-1.
@@ -268,8 +269,8 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.fx = 0; // fiber position
         this.fy = 0;
         this.chgt = 0; // changing time
-        this.headAngleOption = State.HO_AIM; // head option
-        this.headAngle = 0; // head angle [degree]
+        this.allowAngleRotation = true; // allow angle rotation. 360->0
+        this.headAngle = 0; // head angle [radian]
         this.firedAngle = 0; // previous fired angle (due to the compatiblity with bulletML)
         this.bul.setSequence(1, 0, 0, 0);
         this._barrage.clear();
@@ -285,8 +286,8 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.fx = src.fx; // fiber position
         this.fy = src.fy;
         this.chgt = src.chgt; // changing time
-        this.headAngleOption = src.headAngleOption; // head option
-        this.headAngle = src.headAngle; // head angle [degree]
+        this.allowAngleRotation = src.allowAngleRotation; // allow angle rotation. 360->0
+        this.headAngle = src.headAngle; // head angle [radian]
         this.firedAngle = src.firedAngle; // previous fired angle (due to the compatiblity with bulletML)
         this.bul.copy(src.bul);
         this._barrage.appendCopyOf(src._barrage);
@@ -355,31 +356,44 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     }
     // return fiber's head angle (angle in this game's screen, the scroll direction is 0[deg]).
     /** @private _cml_fiber_internal */
-    _getAngle(base: number, fromCenter=false): number {
-        switch (this.headAngleOption) {
+    setHeadAngle(headAngleOption:number, angle:number): number {
+        switch (headAngleOption) {
             case State.HO_AIM:
-                if (fromCenter) return this._object.getAimingAngleOnScreen(this._target) + this.headAngle;
-                return this._object.getAimingAngleOnScreen(this._target, this.fx, this.fy) + this.headAngle;
+                this.allowAngleRotation = true;
+                this.headAngle = this._object.getAimingAngleOnScreen(this._target, this.fx, this.fy) + angle;
+                break;
             case State.HO_ABS:
-                return this.headAngle;
+                this.allowAngleRotation = false;
+                this.headAngle = angle;
+                break;
             case State.HO_REL:
-                return this._object.angleOnScreen + this.headAngle;
+                this.allowAngleRotation = false;
+                this.headAngle = this._object.angleOnScreen + angle;
+                break;
             case State.HO_PAR:
-                return this._object.angleParentOnScreen + this.headAngle;
+                this.allowAngleRotation = false;
+                this.headAngle = this._object.angleParentOnScreen + angle;
+                break;
             case State.HO_VEL:
-                return this._object.angleVelocityOnScreen + this.headAngle;
+                this.allowAngleRotation = true;
+                this.headAngle = this._object.angleVelocityOnScreen + angle;
+                break;
             case State.HO_SEQ:
-                return base + this.headAngle;
+                this.allowAngleRotation = false;
+                this.headAngle += angle;
+                break;
             default:
-                throw new Error("BUG!! unknown error in Fiber._getAngle()"); // ???
+                break;
         }
-        return 0;
+        return this.headAngle;
     }
     // rotate object in minimum rotation (call from CML.State.r())
-    /** @private _cml_fiber_internal */
+    /** @private _cml_fiber_internal
     _isShortestRotation(): boolean {
-        return (this.headAngleOption == State.HO_AIM || this.headAngleOption == State.HO_VEL);
+        return (this.head Angle Option == State.HO_AIM || this.head Angle Option == State.HO_VEL);
     }
+    */
+
     // invertion
     //--------------------------------------------------
     _invertAngle(ang: number): number {

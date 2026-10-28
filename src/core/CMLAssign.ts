@@ -24,35 +24,30 @@ export class Assign extends State {
             this._index = parseInt(indexStr) - 1;
         }
         if (str.length == 1) {
-            this.func = (this._index == -1) ? this._asgr : this._asg;
+            this.func = this._asg;
         }
         else {
             const ope = (str.charAt(1));
             switch (ope) {
                 case '+':
-                    this.func = (this._index == -1) ? this._addr : this._add;
+                    this.func = this._add;
                     break;
                 case '-':
-                    this.func = (this._index == -1) ? this._subr : this._sub;
+                    this.func = this._sub;
                     break;
                 case '*':
-                    this.func = (this._index == -1) ? this._mulr : this._mul;
+                    this.func = this._mul;
                     break;
                 case '/':
-                    this.func = (this._index == -1) ? this._divr : this._div;
+                    this.func = this._div;
                     break;
                 default: throw Error("BUG!! unknown error in assign");
             }
         }
     }
-    _asgr(_: State, $: number[], fiber: Fiber) { fiber.object.rank = $[0]; return true; }
-    _addr(_: State, $: number[], fiber: Fiber) { fiber.object.rank += $[0]; return true; }
-    _subr(_: State, $: number[], fiber: Fiber) { fiber.object.rank -= $[0]; return true; }
-    _mulr(_: State, $: number[], fiber: Fiber) { fiber.object.rank *= $[0]; return true; }
-    _divr(_: State, $: number[], fiber: Fiber) { fiber.object.rank /= $[0]; return true; }
-    _asg(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] = $[0]; return true; }
-    _add(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] += $[0]; return true; }
-    _sub(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] -= $[0]; return true; }
-    _mul(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] *= $[0]; return true; }
-    _div(_: State, $: number[], fiber: Fiber) { fiber.vars[0][this._index] /= $[0]; return true; }
+    _asg(_: State, $: number[], fiber: Fiber) { fiber.setVariable(this._index, $[0]); return true; }
+    _add(_: State, $: number[], fiber: Fiber) { fiber.setVariable(this._index, fiber.getVariable(this._index) + $[0]); return true; }
+    _sub(_: State, $: number[], fiber: Fiber) { fiber.setVariable(this._index, fiber.getVariable(this._index) - $[0]); return true; }
+    _mul(_: State, $: number[], fiber: Fiber) { fiber.setVariable(this._index, fiber.getVariable(this._index) * $[0]); return true; }
+    _div(_: State, $: number[], fiber: Fiber) { fiber.setVariable(this._index, fiber.getVariable(this._index) / $[0]); return true; }
 }

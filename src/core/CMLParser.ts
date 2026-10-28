@@ -243,7 +243,7 @@ export class Parser {
             rexstr += "|(("; // ---all--- (res[3,4])
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula operator (res[5])
             rexstr += "|" + State.command_rex; // normal commands (res[6])
-            rexstr += "|l\\$([1-9r][+\\-*/]?)="; // assign (res[7])
+            rexstr += "|l\\$([1-9][+\\-*/]?)="; // assign (res[7])
             rexstr += "|&(?!\\{)("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
             rexstr += "|#([A-Za-z0-9_]+)\\s*\\{"; // labeled sequence definition (res[9])
             rexstr += "|&?(\\{)"; // non-labeled sequence call (res[10])

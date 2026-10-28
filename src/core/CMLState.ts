@@ -76,8 +76,7 @@ export class State extends ListElem {
         const angleInRad = (option == State.HO_SEQ) ?
                             fiber._invertRotation(angleInDeg*0.017453292519943295) :
                             fiber._invertAngle(angleInDeg*0.017453292519943295);
-        fiber.headAngleOption = option;
-        fiber.headAngle = angleInRad;
+        fiber.setHeadAngle(option, angleInRad);
     }
     // command executer
     //------------------------------------------------------------
@@ -181,7 +180,7 @@ export class State extends ListElem {
             cy = fiber.object.projected.y + Math.sin(ang) * fiber.fx + Math.cos(ang) * fiber.fy;
         }
         // calculate angle
-        fiber.firedAngle = fiber._getAngle(fiber.firedAngle);
+        fiber.firedAngle = fiber.headAngle;
         // create bullets
         if (fiber.barrage.qrtList.isEmpty()) {
             // create single bullet
@@ -219,8 +218,7 @@ export class State extends ListElem {
             // copy other parameters
             newfiber.fx = fiber.fx;
             newfiber.fy = fiber.fy;
-            newfiber.headAngleOption = fiber.headAngleOption;
-            newfiber.headAngle = (fiber.headAngleOption == State.HO_SEQ) ? 0 : fiber.headAngle;
+            newfiber.headAngle = fiber.headAngle;
             newfiber.firedAngle = fiber.firedAngle;
             newfiber.seqFired = fiber.seqFired;
             newfiber.wtm1 = access_id;
@@ -288,7 +286,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pd|px|py|pz|p|vd|vx|vy|vz|v|ad|ax|ay|az|a|rc|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|td|tp|to)";
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|h|td|tp|to)";
     // global variables
     static _globalVariables: Global = null!;
     // operators
@@ -350,19 +348,14 @@ export class State extends ListElem {
             argc: 1,
             type: State.ST_ELSE,
             func(state, _$, fiber) {
-                if (fiber.lcnt[0] == -1) {
+                if (fiber.lcnt[0] == -1) { // true branch executed
                     fiber._pointer = state.jump!;
                     while (fiber._pointer.type != State.ST_BLOCKEND)
                         fiber._pointer = fiber._pointer.jump!;
                     fiber._pointer = fiber._pointer.prev;
                 } else 
-                if (fiber.lcnt[0] == -2) {
-                    if (state.formula.answerCount > 0) {
-                        // loopconter < 0 means branch. true=-1, false=-2
-                        fiber.lcnt[0] = (state.prev.$[0]) ? -1: -2;
-                        if (fiber.lcnt[0] == -2) 
-                            fiber._pointer = state.jump!.prev;
-                    }
+                if (fiber.lcnt[0] == -2) { // false 
+                    // do nothing for false branch
                 }
                 return true;
             }
@@ -406,30 +399,10 @@ export class State extends ListElem {
         },
     //---- position
         "p":{
-            argc: 3,
-            type: State.STF_BE_INTERPOLATED,
-            func(state, $, fiber, object) {
-                if (state.formula.answerCount == 1) {
-                    const angle = fiber._getAngle(object.anglePositionOnScreen, false);
-                    object.setPositionByDirection(angle, $[0], $[1], fiber.chgt);
-                } else
-                    object.setPosition(fiber._invertX($[0]), fiber._invertY($[1]), $[2], fiber.chgt);
-                return true;
-            }
-        },
-        "px":{
-            argc: 1,
+            argc: 2,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setPositionX(fiber._invertX($[0]), fiber.chgt);
-                return true;
-            }
-        },
-        "py":{
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setPositionY(fiber._invertY($[0]), fiber.chgt);
+                object.setPositionByDirection(fiber.headAngle, $[0], $[1], fiber.chgt);
                 return true;
             }
         },
@@ -441,41 +414,12 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "pd":{
+    //---- velocity
+        "v":{
             argc: 2,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                const angle = fiber._getAngle(object.anglePositionOnScreen, false);
-                object.setPositionByDirection(angle, $[0], $[1], fiber.chgt);
-                return true;
-            }
-        },
-    //---- velocity
-        "v":{
-            argc: 3,
-            type: State.STF_BE_INTERPOLATED,
-            func(state, $, fiber, object) {
-                if (state.formula.answerCount == 1) {
-                    const angle = fiber._getAngle(object.angleVelocityOnScreen, false);
-                    object.setVelocityByDirection(angle, $[0], $[1], fiber.chgt);
-                } else
-                    object.setVelocity(fiber._invertX($[0]), fiber._invertY($[1]), $[2], fiber.chgt);
-                return true;
-            }
-        },
-        "vx":{
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setVelocityX(fiber._invertX($[0]), fiber.chgt);
-                return true;
-            }
-        },
-        "vy":{
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setVelocityY(fiber._invertY($[0]), fiber.chgt);
+                object.setVelocityByDirection(fiber.headAngle, $[0], $[1], fiber.chgt);
                 return true;
             }
         },
@@ -487,44 +431,16 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "vd":{
+    //---- accelaration
+        "a":{
             argc: 2,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                const angle = fiber._getAngle(object.angleVelocityOnScreen, false);
-                object.setVelocityByDirection(angle, $[0], $[1], fiber.chgt);
+                object.setAccelByDirection(fiber.headAngle, $[0], $[1]);
                 return true;
             }
         },
-    //---- accelaration
-        "a":{
-            argc: 3,
-            type: State.STF_BE_INTERPOLATED,
-            func(state, $, fiber, object) {
-                if (state.formula.answerCount == 1) {
-                    const angle = fiber._getAngle(object.angleAccelOnScreen, false);
-                    object.setAccelByDirection(angle, $[0], $[1]);
-                } else
-                    object.setAccel(fiber._invertX($[0]), fiber._invertY($[1]), $[2]);
-                return true;
-            }
-        },
-        "ax":{
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setAccelX(fiber._invertX($[0]));
-                return true;
-            }
-        },
-        "ay":{
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setAccelY(fiber._invertY($[0]));
-                return true;
-            }
-        },
+
         "az":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
@@ -533,22 +449,13 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "ad":{
-            argc: 2,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                const angle = fiber._getAngle(object.angleAccelOnScreen, false);
-                object.setAccelByDirection(angle, $[0], $[1]);
-                return true;
-            }
-        },
     //---- rotation
         "r":{
             argc: 2,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                const angle = fiber._getAngle(object.angleOnScreen, false);
-                object.setRotation(angle, fiber.chgt, $[0], $[1], fiber._isShortestRotation());
+                //**/ when ha360, shortest rotation option=true then do nothing
+                object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], fiber.allowAngleRotation);
                 return true;
             }
         },
@@ -556,8 +463,8 @@ export class State extends ListElem {
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                const angle = fiber._getAngle(object.angleOnScreen, false);
-                object.setConstantRotation(angle, fiber.chgt, $[0]*0.017453292519943295, fiber._isShortestRotation());
+                //**/ when ha360, shortest rotation option=true then do nothing
+                object.setConstantRotation(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
                 return true;
             }
         },
@@ -566,8 +473,8 @@ export class State extends ListElem {
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                const angle = fiber._getAngle(object.angleOnScreen, false);
-                object.setChangeDirection(angle, fiber.chgt, $[0]*0.017453292519943295, fiber._isShortestRotation());
+                //**/ when ha360, shortest rotation option=true then do nothing
+                object.setChangeDirection(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
                 return true;
             }
         },
@@ -685,6 +592,14 @@ export class State extends ListElem {
                 return true;
             }
         },
+        "h":{
+            argc: 1,
+            type: State.STF_BE_INTERPOLATED,
+            func(state, $, fiber) {
+                state._setHeadAngle(fiber, State.HO_AIM, $[0]);
+                return true;
+            }
+        },
         "ho":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
@@ -705,10 +620,11 @@ export class State extends ListElem {
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {
-                state._setHeadAngle(fiber, State.HO_SEQ,$[0]);
+                state._setHeadAngle(fiber, State.HO_SEQ, $[0]);
                 return true;
             }
         },
+
     //---- barrage setting
         "bm":{
             argc: 4,
@@ -743,7 +659,7 @@ export class State extends ListElem {
             }
         },
     //---- target change
-        "td":{ // set target to degault
+        "td":{ // set target to default
             argc: 0,
             type: State.ST_NORMAL,
             func(_state, _$, fiber) {

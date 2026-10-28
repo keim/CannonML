@@ -43,7 +43,7 @@ export class FormulaLiteral implements FormulaNode {
         "?": ()=>Formula._globalVariables.rand(),
         "??": ()=>(Formula._globalVariables.rand() * 2 - 1),
         "i": (fbr)=>fbr.getInterval(),
-        "r": (fbr, idx)=>((idx) ? Formula._globalVariables.getRank(idx) : fbr.object.rank),
+        "r": (fbr)=>(fbr.object.rank),
         "l": (fbr, idx)=>fbr.getLoopCounter(idx),
         "x": (fbr)=>fbr.object.pos.x,
         "y": (fbr)=>fbr.object.pos.y,

@@ -32,6 +32,8 @@ export class CMLObject extends ListElem {
     euler: Vector
     quat: Vector
     counter: number
+    counter_z: number
+    isBMLMode: boolean
     bmlVelocity: number
     bmlAccel: number
     _id: number
@@ -42,7 +44,6 @@ export class CMLObject extends ListElem {
     _destructionStatus: number
     _accessibleChildren: CMLObject[]
     _relativeChildren: CMLObject[]
-    _motionType: number
     _isRelative: boolean
     _age: number
     _roti: Interpolation
@@ -64,6 +65,8 @@ export class CMLObject extends ListElem {
         this.euler.changed = false;
         this.quat.w = 1;
         this.counter = 0;
+        this.counter_z = 0;
+        this.isBMLMode = false;
         this.bmlVelocity = 0;
         this.bmlAccel = 0;
         // common parameters
@@ -74,7 +77,6 @@ export class CMLObject extends ListElem {
         this._destructionStatus = -1; // destruction status
         this._accessibleChildren = []; // children list that has access id
         this._relativeChildren = []; // children list that is part of this
-        this._motionType = CMLObject.MT_CONST;  // motion type
         this._isRelative = false;                // is position relative 
         this._age = 0; // age in frame
         // rotation
@@ -109,18 +111,8 @@ target_object = null;                   // target object was destroyed.
         }
         return this._parent;
     }
-    /** Motion type.
-     * @see CML.Object#MT_CONST
-     * @see CML.Object#MT_ACCEL
-     * @see CML.Object#MT_INTERPOL
-     * @see CML.Object#MT_BULLETML
-     * @see CML.Object#MT_PHYSICAL
-     */
-    get motionType() { return this._motionType; }
     /** Is this object on stage ? */
     get isActive() { return (this._parent != null); }
-    /** Is this object bulletML mode. */
-    get isBMLMode() { return this._motionType == CMLObject.MT_BULLETML; }
     /** Does this object have another object as a part ? */
     get hasRelativeChild() { return (this._relativeChildren.length != 0); }
     /** You can define the "$r" value for each object by overriding this property, Ussualy returns CML.Global.getRank(0). @see CML.Global#getRank */
@@ -286,16 +278,18 @@ target_object = null;                   // target object was destroyed.
     }
     /** Reset position, velocity, accelaration, interpolation, motion type and rotation.
      */
-    reset(x: number, y: number, z = 0): this {
-        this._motionType = CMLObject.MT_CONST;
+    reset(x: number, y: number, z: number = 0): this {
         this._isRelative = false;
-        this.setPosition(x, y, z); // pos, relative, projected
+        this.setPosition(x, y); // pos, relative, projected
+        this.setPositionZ(z);
         this.vel.setScalar(0);
         this.acc.setScalar(0);
         this.bez.setScalar(0);
         this.euler.setScalar(0);
         this.quat.setScalar(0);
         this.counter = 0;
+        this.counter_z = 0;
+        this.isBMLMode = false;
         this.bmlVelocity = 0;
         this.bmlAccel = 0;
         this._rotd = 0;
@@ -340,101 +334,146 @@ target_object = null;                   // target object was destroyed.
     /** Set position.
      *  @param x X value of position.
      *  @param y Y value of position.
-     *  @param z Z value of position.
      *  @param frames Frames for tweening with bezier interpolation.
      *  @return this object
      */
-    setPosition(x: number, y: number, z=0, frames=0): this {
+    setPosition(x: number, y: number, frames=0): this {
         if (frames == 0) {
             if (this._isRelative) {
-                this.relative.set(x, y, z);
+                this.relative.x = x;
+                this.relative.y = y;
                 this.calcAbsPosition();
             }
             else {
-                this.pos.set(x, y, z);
+                this.pos.x = x;
+                this.pos.y = y;
             }
-            this._motionType = CMLObject.MT_CONST;
         }
         else {
             // interlopation
             //this._ax = (v.x * t * 3 - this.vx * 2) * t * 2;
             //this._bx = (v.x * t * -2 + this.vx) * t * t * 6;
             const t = 1 / frames;
-            const v = new Vector(x,y,z).sub((this._isRelative) ? this.relative : this.pos);
-            this.acc.copy(v).multiplyScalar(t*t*6).addScaledVector(this.vel,-t*4);
-            this.bez.copy(v).multiplyScalar(t*t*t*-12).addScaledVector(this.vel,t*t*6);
+            const v = new Vector(x,y,0).sub((this._isRelative) ? this.relative : this.pos);
+            this.acc.x = (v.x * t * t - this.vel.x * 2) * t * 2;
+            this.acc.y = (v.y * t * t - this.vel.y * 2) * t * 2;
+            this.bez.x = (v.x * t * -2 + this.vel.x) * t * t * 6;
+            this.bez.y = (v.y * t * -2 + this.vel.y) * t * t * 6;
             this.counter = frames;
-            this._motionType = CMLObject.MT_INTERPOL;
+        }
+        this.isBMLMode = false;
+        return this;
+    }
+    setPositionZ(z: number, frames=0) { 
+        if (frames == 0) {
+            if (this._isRelative) {
+                this.relative.z = z;
+                this.calcAbsPosition();
+            }
+            else {
+                this.pos.z = z;
+            }
+        }
+        else {
+            // interlopation
+            //this._ax = (v.x * t * 3 - this.vx * 2) * t * 2;
+            //this._bx = (v.x * t * -2 + this.vx) * t * t * 6;
+            const t = 1 / frames;
+            const dz = z - ((this._isRelative) ? this.relative.z : this.pos.z);
+            this.acc.z = (dz * t * t - this.vel.z * 2) * t * 2;
+            this.bez.z = (dz * t * -2 + this.vel.z) * t * t * 6;
+            this.counter_z = frames;
         }
         return this;
     }
-    setPositionX(x: number, frames=0) { return this.setPosition(x, this._getY(), this._getZ(), frames); }
-    setPositionY(y: number, frames=0) { return this.setPosition(this._getX(), y, this._getZ(), frames); }
-    setPositionZ(z: number, frames=0) { return this.setPosition(this._getX(), this._getY(), z, frames); }
     setPositionByDirection(angle: number, v: number, h: number, frames=0) { 
         const sin = Math.sin(angle), cos = Math.cos(angle);
-        return this.setPosition(cos*v-sin*h, sin*v+cos*h, this._getZ(), frames);
+        return this.setPosition(cos*v-sin*h, sin*v+cos*h, frames);
     }
     /** Set velocity.
      *  @param vx X value of velocity.
      *  @param vy Y value of velocity.
-     *  @param vz Z value of velocity.
      *  @param frames Frames for tweening with bezier interpolation.
      *  @return this object
      */
-    setVelocity(vx=0, vy=0, vz=0, frames=0): this {
+    setVelocity(vx=0, vy=0, frames=0): this {
         if (frames == 0) {
-            this.vel.set(vx, vy, vz);
-            this._motionType = CMLObject.MT_CONST;
+            this.vel.x = vx;
+            this.vel.y = vy;
+            this.counter = 0;
         }
         else {
             const t = 1 / frames;
-            const v = new Vector(vx, vy, vz);
-            if (this._motionType == CMLObject.MT_INTERPOL) {
+            if (this.counter == frames) {
                 // interlopation
                 //this._ax -= vx * t * 2;
                 //this._bx += vx * t * t * 6;
-                this.acc.addScaledVector(v,-t*2);
-                this.bez.addScaledVector(v, t*t*6);
-                this.counter = frames;
-                this._motionType = CMLObject.MT_INTERPOL;
+                this.acc.x -= vx * t * 2;
+                this.acc.y -= vy * t * 2;
+                this.bez.x += vx * t * t * 6;
+                this.bez.y += vy * t * t * 6;
             }
             else {
                 // accelaration
                 //this._ax = (vx - this.vx) * t;
-                this.acc.copy(v).sub(this.vel).multiplyScalar(t);
-                this.counter = frames;
-                this._motionType = CMLObject.MT_ACCEL;
+                this.acc.x = (vx - this.vel.x) * t;
+                this.acc.y = (vy - this.vel.y) * t;
             }
+            this.counter = frames;
         }
+        this.isBMLMode = false;
         return this;
     }
-    setVelocityX(x: number, frames=0) { return this.setVelocity(x, this.vel.y, this.vel.z, frames); }
-    setVelocityY(y: number, frames=0) { return this.setVelocity(this.vel.x, y, this.vel.z, frames); }
-    setVelocityZ(z: number, frames=0) { return this.setVelocity(this.vel.x, this.vel.y, z, frames); }
+    setVelocityZ(z: number, frames=0): this {
+        if (frames == 0) {
+            this.vel.z = z;
+            this.counter_z = 0;
+        }
+        else {
+            const t = 1 / frames;
+            if (this.counter_z == frames) {
+                // interlopation
+                //this._ax -= vx * t * 2;
+                //this._bx += vx * t * t * 6;
+                this.acc.z -= z * t * 2;
+                this.bez.z += z * t * t * 6;
+            }
+            else {
+                // accelaration
+                //this._ax = (vx - this.vx) * t;
+                this.acc.z = (z - this.vel.z) * t;
+            }
+            this.counter_z = frames;
+        }
+        this.isBMLMode = false;
+        return this;
+     }
     setVelocityByDirection(angle: number, v: number, h: number, frames=0) { 
         const sin = Math.sin(angle), cos = Math.cos(angle);
-        return this.setVelocity(cos*v-sin*h, sin*v+cos*h, this._getZ(), frames);
+        return this.setVelocity(cos*v-sin*h, sin*v+cos*h, frames);
     }
     /** Set accelaration.
      *  @param ax X value of accelaration.
      *  @param ay Y value of accelaration.
-     *  @param az Z value of accelaration.
      *  @param frames Frames to stop accelarate. 0 means not to stop.
      *  @return this object
      */
-    setAccel(ax=0, ay=0, az=0, frames=0): this {
-        this.acc.set(ax, ay, az);
+    setAccel(ax=0, ay=0, frames=0): this {
+        this.acc.x = ax;
+        this.acc.y = ay;
         this.counter = frames;
-        this._motionType = (ax==0 && ay==0 && az==0) ? CMLObject.MT_CONST : CMLObject.MT_ACCEL;
+        this.isBMLMode = false;
         return this;
     }
-    setAccelX(x: number, frames=0) { return this.setAccel(x, this._getAy(), this._getAz(), frames); }
-    setAccelY(y: number, frames=0) { return this.setAccel(this._getAx(), y, this._getAz(), frames); }
-    setAccelZ(z: number, frames=0) { return this.setAccel(this._getAx(), this._getAy(), z, frames); }
+    setAccelZ(z: number, frames=0): this { 
+        this.acc.z = z;
+        this.counter_z = frames;
+        this.isBMLMode = false;
+        return this;
+    }
     setAccelByDirection(angle: number, v: number, h: number, frames=0) { 
         const sin = Math.sin(angle), cos = Math.cos(angle);
-        return this.setAccel(cos*v-sin*h, sin*v+cos*h, this._getAz(), frames);
+        return this.setAccel(cos*v-sin*h, sin*v+cos*h, frames);
     }
     /** &lt;changeDirection type='absolute'&gt; of bulletML.
      *  @param dir Direction to change.
@@ -448,7 +487,7 @@ target_object = null;                   // target object was destroyed.
         this.bmlVelocity = this.velocity;
         this.bmlAccel = 0;
         this.counter = 0;
-        this._motionType = CMLObject.MT_BULLETML;
+        this.isBMLMode = true;
         return this;
     }
     /** &lt;changeSpeed type='absolute'&gt; of bulletML.
@@ -469,7 +508,7 @@ target_object = null;                   // target object was destroyed.
             this.bmlAccel = (speed - this.velocity) / frames;
             this.counter = frames;
         }
-        this._motionType = CMLObject.MT_BULLETML;
+        this.isBMLMode = true;
         return this;
     }
 
@@ -649,15 +688,9 @@ target_object = null;                   // target object was destroyed.
     /** @private _cml_internal */ _getX() { return (this._isRelative) ? this.relative.x : this.pos.x; }
     /** @private _cml_internal */ _getY() { return (this._isRelative) ? this.relative.y : this.pos.y; }
     /** @private _cml_internal */ _getZ() { return (this._isRelative) ? this.relative.z : this.pos.z; }
-    /** @private _cml_internal */ _getAx() {
-        return (this._motionType == CMLObject.MT_CONST || this._motionType == CMLObject.MT_BULLETML) ? 0 : this.acc.x;
-    }
-    /** @private _cml_internal */ _getAy() {
-        return (this._motionType == CMLObject.MT_CONST || this._motionType == CMLObject.MT_BULLETML) ? 0 : this.acc.y;
-    }
-    /** @private _cml_internal */ _getAz() {
-        return (this._motionType == CMLObject.MT_CONST || this._motionType == CMLObject.MT_BULLETML) ? 0 : this.acc.z;
-    }
+    /** @private _cml_internal */ _getAx() { return this.acc.x; }
+    /** @private _cml_internal */ _getAy() { return this.acc.y; }
+    /** @private _cml_internal */ _getAz() { return this.acc.z; }
     /** @private */ 
     _calcFiberPosition(fx: number, fy: number): { x: number, y: number } {
         if (!this._isRelative)
@@ -725,35 +758,30 @@ target_object = null;                   // target object was destroyed.
     /** update position and angle */
     update() {
         const pos = (this._isRelative) ? this.relative : this.pos;
-        switch (this._motionType) {
-            case CMLObject.MT_CONST:
-                pos.add(this.vel);
-                break;
-            case CMLObject.MT_ACCEL: 
-                pos.add(this.vel).addScaledVector(this.acc, 0.5);
-                this.vel.add(this.acc);
-                if (--this.counter == 0)
-                    this._motionType = CMLObject.MT_CONST;
-                break;
-            case CMLObject.MT_INTERPOL:
-                pos.add(this.vel).addScaledVector(this.acc, 0.5).addScaledVector(this.bez, 0.16666666666666667);
-                this.vel.add(this.acc).addScaledVector(this.bez, 0.5);
-                this.acc.add(this.bez);
-                if (--this.counter == 0)
-                    this._motionType = CMLObject.MT_CONST;
-                break;
-            case CMLObject.MT_BULLETML: 
-                const ang = this.angleOnScreen;
-                this.vel.set(Math.cos(ang) * this.bmlVelocity, Math.sin(ang) * this.bmlVelocity, this.vel.z);
-                this.bmlVelocity += this.bmlAccel;
-                pos.add(this.vel);
-                if (--this.counter == 0)
-                    this.bmlAccel = 0;
-                if (this._rotd == 0 && this.bmlAccel == 0)
-                    this._motionType = CMLObject.MT_CONST;
-                break;
-            default:
-                break;
+        if (this.isBMLMode) {
+            pos.add(this.vel).addScaledVector(this.acc, 0.5).addScaledVector(this.bez, 0.166666667);
+            this.vel.add(this.acc).addScaledVector(this.bez, 0.5);
+            this.acc.add(this.bez);
+            if (--this.counter == 0) {
+                this.acc.x = 0;
+                this.acc.y = 0;
+                this.bez.x = 0;
+                this.bez.y = 0;
+            }
+            if (--this.counter_z == 0) {
+                this.acc.z = 0;
+                this.bez.z = 0;
+            }
+        } else {
+            const ang = this.angleOnScreen;
+            this.vel.set(Math.cos(ang) * this.bmlVelocity, Math.sin(ang) * this.bmlVelocity, this.vel.z);
+            this.bmlVelocity += this.bmlAccel;
+            pos.add(this.vel);
+            if (--this.counter == 0)
+                this.bmlAccel = 0;
+            if (this._rotd == 0 && this.bmlAccel == 0) {
+                this.isBMLMode = false;
+            }
         }
         if (this._isRelative)
             this.calcAbsPosition();
