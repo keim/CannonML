@@ -286,7 +286,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fc|f|qx|qy|q|bm|bs|br|bv|ha|ho|hp|ht|hv|hs|h|td|tp|to)";
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fc|f|qx|qy|q|bm|bs|br|bv|da|do|dp|dt|dv|ds|d|td|tp|to)";
     // global variables
     static _globalVariables: Global = null!;
     // operators
@@ -440,7 +440,6 @@ export class State extends ListElem {
                 return true;
             }
         },
-
         "az":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
@@ -454,7 +453,6 @@ export class State extends ListElem {
             argc: 2,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                //**/ when ha360, shortest rotation option=true then do nothing
                 object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], fiber.allowAngleRotation);
                 return true;
             }
@@ -463,7 +461,22 @@ export class State extends ListElem {
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                //**/ when ha360, shortest rotation option=true then do nothing
+                object.setConstantRotation(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
+                return true;
+            }
+        },
+        "rx":{
+            argc: 1,
+            type: State.STF_BE_INTERPOLATED,
+            func(_state, $, fiber, object) {
+                object.setConstantRotation(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
+                return true;
+            }
+        },
+        "ry":{
+            argc: 1,
+            type: State.STF_BE_INTERPOLATED,
+            func(_state, $, fiber, object) {
                 object.setConstantRotation(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
                 return true;
             }
@@ -473,7 +486,6 @@ export class State extends ListElem {
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                //**/ when ha360, shortest rotation option=true then do nothing
                 object.setChangeDirection(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
                 return true;
             }
@@ -568,7 +580,7 @@ export class State extends ListElem {
             }
         },
     //---- head angle options
-        "ha":{
+        "da":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {
@@ -576,7 +588,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "hp":{
+        "dp":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {
@@ -584,7 +596,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "ht":{
+        "dt":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {
@@ -592,7 +604,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "h":{
+        "d":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {
@@ -600,7 +612,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "ho":{
+        "do":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {
@@ -608,7 +620,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "hv":{
+        "dv":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {
@@ -616,7 +628,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "hs":{
+        "ds":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
             func(state, $, fiber) {

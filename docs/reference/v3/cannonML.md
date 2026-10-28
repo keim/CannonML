@@ -290,14 +290,11 @@ q [x座標], [y座標]
 ```
 qx [x座標]
 ```
-
-(creating point X) x座標を指定します。y座標値は前回指定値から変化しません。
-
 ```
 qy [y座標]
 ```
 
-(creating point Y) y座標を指定します。x座標値は前回指定値から変化しません。
+(creating point X or Y) x または y座標のみを指定します。
 
 【初期値】
 
@@ -312,38 +309,38 @@ qy [y座標]
 様々なコマンドの角度をDegree単位で指定します。`f fc r rc cd p v a` 各コマンドで参照されます。反時計回りが正です。コマンド実行時の角度を算出します。例えば `ht0 w10 f` は、10フーレム前に角度を算出するため、正確に自機に向けて射出されません。`w10 ht0 f` と、同フレームで確度算出してください。
 
 ```
-ha [角度]
+da [角度]
 ```
 
-(set Head on Absolute angle) スクリーン上の絶対角度(スクロール方向を0)で指定します。
+(set Direction by Absolute angle) スクリーン上の絶対角度(スクロール方向を0)で指定します。
 
 ```
-ho [角度]
+do [角度]
 ```
 
-(set Head relative to Object angle) オブジェクト角度との相対角度で指定します。
+(set Direction relative to Object angle) オブジェクト角度との相対角度で指定します。
 
 ```
-hv [角度]
+dv [角度]
 ```
 
-(set Head on Velocity direction) オブジェクト進行方向との相対角度で指定します。
+(set Direction based on velocity vector) オブジェクト進行方向との相対角度で指定します。
 
 ```
-hp [角度]
+dp [角度]
 ```
 
-(set Head relative to Parent object angle) 親オブジェクト角度との相対角度で指定します。
+(set Direction relative to Parent object angle) 親オブジェクト角度との相対角度で指定します。
 
 ```
-ht [角度]　h [角度] 
+dt [角度]　d [角度] 
 ```
 
 (set Head to Target) ターゲット方向との相対角度で指定します。
 
 【初期値】
 
-- h0
+- d0
 
 ### 複数オブジェクト生成コマンドの設定 (b*)
 
