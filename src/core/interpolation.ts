@@ -6,10 +6,32 @@ export class Interpolation {
     Q = 0
     R = 0
     S = 0
+    _t = 0
+    _dt = 0
     // calculation
     //--------------------------------------------------
     calc(t: number): number {
         return ((this.P * t + this.Q) * t + this.R) * t + this.S;
+    }
+    start(frames: number): number {
+        this._t = 0;
+        this._dt = 1 / frames;
+        return this.S;
+    }
+    step(): number {
+        this._t += this._dt;
+        if (this._t > 1) {
+            this._t = 1;
+            this._dt = 0;
+        }
+        return this.calc(this._t);
+    }
+    stop(): number {
+        this._dt = 0;
+        return this.calc(this._t);
+    }
+    isStoped(): boolean {
+        return this._dt === 0;
     }
     // interpolation setting
     //--------------------------------------------------

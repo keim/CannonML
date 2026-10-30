@@ -286,7 +286,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fc|f|qx|qy|q|bm|bs|br|bv|da|do|dp|dt|dv|ds|d|td|tp|to)";
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
     // global variables
     static _globalVariables: Global = null!;
     // operators
@@ -466,18 +466,18 @@ export class State extends ListElem {
             }
         },
         "rx":{
-            argc: 1,
+            argc: 3,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setConstantRotation(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
+                object.setPitch($[0]*0.017453292519943295, fiber.chgt, $[1], $[2]);
                 return true;
             }
         },
         "ry":{
-            argc: 1,
+            argc: 3,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setConstantRotation(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
+                object.setBank($[0]*0.017453292519943295, fiber.chgt, $[1], $[2]);
                 return true;
             }
         },
@@ -535,19 +535,17 @@ export class State extends ListElem {
             argc: 2,
             type: State.STF_CALLREF,
             func(state, $, fiber) {
-                if (state.formula.answerCount > 0) 
-                    fiber.bul.speed = $[0];
+                fiber.bul.speed = $[0];
                 state._fire(fiber, Math.floor($[1]), false);
                 fiber.bul.update();
                 return true;
             }
         },
-        "fc":{
+        "fs":{
             argc: 2,
             type: State.STF_CALLREF,
             func(state, $, fiber) {
-                if (state.formula.answerCount > 0) 
-                    fiber.bul.speed = $[0];
+                fiber.bul.speed = $[0];
                 state._fire(fiber, Math.floor($[1]), true);
                 fiber.bul.update();
                 return true;
@@ -604,14 +602,6 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "d":{
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(state, $, fiber) {
-                state._setHeadAngle(fiber, State.HO_AIM, $[0]);
-                return true;
-            }
-        },
         "do":{
             argc: 1,
             type: State.STF_BE_INTERPOLATED,
@@ -659,14 +649,6 @@ export class State extends ListElem {
             type: State.ST_BARRAGE,
             func(_state, $, fiber) {
                 fiber.barrage.appendRandom($[0], fiber._invertRotation($[1]), $[2], $[3]); 
-                return true;
-            }
-        },
-        "bv":{
-            argc: 1,
-            type: State.ST_NORMAL,
-            func(_state, $, fiber) {
-                fiber.bul.setSpeedStep($[0]);
                 return true;
             }
         },

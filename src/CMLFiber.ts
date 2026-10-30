@@ -312,6 +312,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         // execution
         if (--this.wcnt <= 0) { // execute only if waiting counte<=0
             let loopCounter = 0, executeNext = true;
+            const _InvertFlag = this.invertFlag;
             while (executeNext && this._pointer) {
                 executeNext = this._pointer.execute(this); // execute State function
                 this._pointer = this._pointer.next; // increment pointer
@@ -319,6 +320,8 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
                 if (++loopCounter == Fiber._loopmax) 
                     throw new Error("CML Exection error. No wait command in the loop ?");
             }
+            // reset inversion flag for each frame
+            this.invertFlag = _InvertFlag;
         }
         // run all children
         let elem = this._listChild.begin;

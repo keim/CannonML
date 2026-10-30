@@ -114,10 +114,6 @@ export class BarrageElem extends ListElem {
         }
         return this;
     }
-    // set speed step
-    setSpeedStep(ss: number) {
-        this.speed_step = ss;
-    }
     // check end
     isEnd(): boolean {
         return (this.counter == 0);

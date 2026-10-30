@@ -46,9 +46,7 @@ export class CMLObject extends ListElem {
     _relativeChildren: CMLObject[]
     _isRelative: boolean
     _age: number
-    _roti: Interpolation
-    _rott: number
-    _rotd: number
+    _roti: Interpolation[]
     _variables: number[]
     constructor() {
         super();
@@ -80,9 +78,7 @@ export class CMLObject extends ListElem {
         this._isRelative = false;                // is position relative 
         this._age = 0; // age in frame
         // rotation
-        this._roti = new Interpolation(); // rotation Interpolation
-        this._rott = 0; // rotation parameter
-        this._rotd = 0; // rotation parameter increament
+        this._roti = [new Interpolation(), new Interpolation(), new Interpolation()]; // rotation Interpolation
         this._variables = new Array(9).fill(0); // user defined variables
     }
     // public properties
@@ -292,7 +288,7 @@ target_object = null;                   // target object was destroyed.
         this.isBMLMode = false;
         this.bmlVelocity = 0;
         this.bmlAccel = 0;
-        this._rotd = 0;
+        this._roti[0].stop();
         return this;
     }
     // reference
@@ -533,14 +529,36 @@ target_object = null;                   // target object was destroyed.
         }
         if (frames == 0) {
             this.head += diff;
-            this._rott = 0;
-            this._rotd = 0;
+            this._roti[0].stop();
         }
         else {
             // rotating interpolation
-            this._roti.setFergusonCoons(this.head, this.head + diff, diff * start_t, diff * end_t);
-            this._rott = 0;
-            this._rotd = 1 / frames;
+            this._roti[0].setFergusonCoons(this.head, this.head + diff, diff * start_t, diff * end_t);
+            this._roti[0].start(frames);
+        }
+        return this;
+    }
+    setPitch(end_angle: number, frames = 0, start_t = 1, end_t = 1): this {
+        const diff = end_angle - this.pitch;
+        if (frames == 0) {
+            this.pitch += diff;
+            this._roti[1].stop();
+        }
+        else {
+            this._roti[1].setFergusonCoons(this.pitch, this.pitch + diff, diff * start_t, diff * end_t);
+            this._roti[1].start(frames);
+        }
+        return this;
+    }
+    setBank(end_angle: number, frames = 0, start_t = 1, end_t = 1): this {
+        const diff = end_angle - this.bank;
+        if (frames == 0) {
+            this.bank += diff;
+            this._roti[2].stop();
+        }
+        else {
+            this._roti[2].setFergusonCoons(this.bank, this.bank + diff, diff * start_t, diff * end_t);
+            this._roti[2].start(frames);
         }
         return this;
     }
@@ -569,13 +587,11 @@ target_object = null;                   // target object was destroyed.
             diff = (diff < -rmax) ? -rmax : (diff > rmax) ? rmax : diff;
         if (frames == 0) {
             this.head += diff;
-            this._rott = 0;
-            this._rotd = 0;
+            this._roti[0].stop();
         }
         else {
-            this._roti.setLinear(this.head, this.head + diff);
-            this._rott = 0;
-            this._rotd = 1 / frames;
+            this._roti[0].setLinear(this.head, this.head + diff);
+            this._roti[0].start(frames);
         }
         return this;
     }
@@ -659,12 +675,7 @@ target_object = null;                   // target object was destroyed.
     }
     /** Rotate haed in 1 frame, if rotd &gt; 0. The _motion() is a typical usage exapmle. @see CML.Object#_motion()*/
     rotateHead() {
-        this._rott += this._rotd;
-        if (this._rott >= 1) {
-            this._rott = 1;
-            this._rotd = 0;
-        }
-        this.head = this._roti.calc(this._rott);
+        this.head = this._roti[0].step();
     }
     // operation for children/parts
     //------------------------------------------------------------
@@ -706,7 +717,7 @@ target_object = null;                   // target object was destroyed.
         // clear some parameters
         this._age = 0;
         this.head = head;
-        this._rotd = 0;
+        this._roti[0].stop();
         this._destructionStatus = -1;
         // set the relations
         this._parent = parent;
@@ -779,13 +790,13 @@ target_object = null;                   // target object was destroyed.
             pos.add(this.vel);
             if (--this.counter == 0)
                 this.bmlAccel = 0;
-            if (this._rotd == 0 && this.bmlAccel == 0) {
+            if (this._roti[0].isStoped() && this.bmlAccel == 0) {
                 this.isBMLMode = false;
             }
         }
         if (this._isRelative)
             this.calcAbsPosition();
-        if (this._rotd != 0)
+        if (this._roti[0].isStoped())
             this.rotateHead();
         if (this.euler.changed) {
             this.quat.euler2Quat(this.euler);
