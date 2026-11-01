@@ -478,45 +478,26 @@ target_object = null;                   // target object was destroyed.
      *  @param shortest_rot Flag to rotate on shortest rotation.
      *  @return this object
      */
-    setChangeDirection(dir: number, frames: number, rmax: number, shortest_rot = true): this {
-        this.setConstantRotation(dir, frames, rmax, shortest_rot);
-        this.bmlVelocity = this.velocity;
-        this.bmlAccel = 0;
-        this.counter = 0;
-        this.isBMLMode = true;
-        return this;
-    }
-    /** &lt;changeSpeed type='absolute'&gt; of bulletML.
-     *  @param speed Speed to change.
-     *  @param frames Frames to change speed.
-     *  @return this object
-     */
-    setChangeSpeed(speed: number, frames = 0): this {
-        if (frames == 0) {
-            // turn velocity vector to head direction
-            this.bmlVelocity = speed;
+    setChangeDirection(dir: number, frames: number, rmax: number, isShortestRotation = true): this {
+        this.setRotation(dir, frames, 1, 1, rmax, isShortestRotation);
+        if (!this.isBMLMode) {
+            this.bmlVelocity = this.velocity;
             this.bmlAccel = 0;
             this.counter = 0;
+            this.isBMLMode = true;
         }
-        else {
-            // set verocity
-            this.bmlVelocity = this.velocity;
-            this.bmlAccel = (speed - this.velocity) / frames;
-            this.counter = frames;
-        }
-        this.isBMLMode = true;
         return this;
     }
-
     /** Set rotation. You can specify the first and last speed.
      *  @param end_angle Final angle when the rotation finished, based on scrolling direction.
      *  @param frames Frames to rotate.
      *  @param start_t Ratio of first rotating speed. The value of 1 means the speed of a constant rotation.
      *  @param end_t Ratio of last rotating speed. The value of 1 means the speed of a constant rotation.
+     *  @param rmax Maximum speed of rotation [radians/frame].
      *  @param isShortestRotation Rotate with shortest rotation or not.
      *  @return this object
      */
-    setRotation(end_angle: number, frames = 0, start_t = 1, end_t = 1, isShortestRotation = true): this {
+    setRotation(end_angle: number, frames = 0, start_t = 1, end_t = 1, rmax = 0, isShortestRotation = true): this {
         // calculate shotest rotation
         let diff;
         if (isShortestRotation) {
@@ -527,6 +508,10 @@ target_object = null;                   // target object was destroyed.
         else {
             diff = end_angle - this.angleOnScreen;
         }
+        // restriction
+        if (rmax != 0) 
+            diff = (diff < -rmax) ? -rmax : (diff > rmax) ? rmax : diff;
+        // set rotation
         if (frames == 0) {
             this.head += diff;
             this._roti[0].stop();
@@ -543,7 +528,7 @@ target_object = null;                   // target object was destroyed.
         if (frames == 0) {
             this.pitch += diff;
             this._roti[1].stop();
-        }
+        }        
         else {
             this._roti[1].setFergusonCoons(this.pitch, this.pitch + diff, diff * start_t, diff * end_t);
             this._roti[1].start(frames);
@@ -559,39 +544,6 @@ target_object = null;                   // target object was destroyed.
         else {
             this._roti[2].setFergusonCoons(this.bank, this.bank + diff, diff * start_t, diff * end_t);
             this._roti[2].start(frames);
-        }
-        return this;
-    }
-    /** Set constant rotation. You can specify the maximum speed.
-     *  @param end_angle Final angle when the rotation finished, based on scrolling direction.
-     *  @param frames Frames to rotate.
-     *  @param rmax Maximum speed of rotation [radians/frame].
-     *  @param isShortestRotation Rotate with shortest rotation or not.
-     *  @return this object
-     */
-    setConstantRotation(end_angle: number, frames = 0, rmax = 1, isShortestRotation = true): this {
-        // rotation max
-        rmax *= (frames == 0) ? 1 : frames;
-        // calculate shotest rotation
-        var diff;
-        if (isShortestRotation) {
-            this._normalizeHead();
-            diff = (end_angle - this.angleOnScreen) / (Math.PI * 2) + 0.5;
-            diff = (diff - Math.floor(diff) - 0.5) * Math.PI * 2;
-        }
-        else {
-            diff = end_angle - this.angleOnScreen;
-        }
-        // restriction
-        if (rmax != 0) 
-            diff = (diff < -rmax) ? -rmax : (diff > rmax) ? rmax : diff;
-        if (frames == 0) {
-            this.head += diff;
-            this._roti[0].stop();
-        }
-        else {
-            this._roti[0].setLinear(this.head, this.head + diff);
-            this._roti[0].start(frames);
         }
         return this;
     }
@@ -769,7 +721,7 @@ target_object = null;                   // target object was destroyed.
     /** update position and angle */
     update() {
         const pos = (this._isRelative) ? this.relative : this.pos;
-        if (this.isBMLMode) {
+        if (!this.isBMLMode) {
             pos.add(this.vel).addScaledVector(this.acc, 0.5).addScaledVector(this.bez, 0.166666667);
             this.vel.add(this.acc).addScaledVector(this.bez, 0.5);
             this.acc.add(this.bez);

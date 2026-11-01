@@ -286,7 +286,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|cd|cs|@ko|@o|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|cd|@ko|@o|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
     // global variables
     static _globalVariables: Global = null!;
     // operators
@@ -450,18 +450,10 @@ export class State extends ListElem {
         },
     //---- rotation
         "r":{
-            argc: 2,
+            argc: 3,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], fiber.allowAngleRotation);
-                return true;
-            }
-        },
-        "rc":{
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setConstantRotation(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
+                object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], $[2], fiber.allowAngleRotation);
                 return true;
             }
         },
@@ -487,14 +479,6 @@ export class State extends ListElem {
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
                 object.setChangeDirection(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
-                return true;
-            }
-        },
-        "cs":{ // changeSpeed
-            argc: 2,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setChangeSpeed($[0], fiber.chgt);
                 return true;
             }
         },
