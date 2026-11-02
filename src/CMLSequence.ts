@@ -182,11 +182,11 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
         else {
             // first "." means root
             if (idx == 0) 
-                return this.root.findSequence(label_.substr(1));
+                return this.root.findSequence(label_.slice(1));
             // label_ includes access operator "."
-            const parent_label = label_.substr(0, idx);
+            const parent_label = label_.slice(0, idx);
             if (parent_label in this._childSequences) {
-                const child_label = label_.substr(idx + 1);
+                const child_label = label_.slice(idx + 1);
                 return this._childSequences[parent_label].findSequence(child_label);
             }
         }

@@ -453,12 +453,12 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             return null;
         var fbr = Fiber._freeFibers.pop() || new Fiber();
         fbr.insert_before(Fiber._rootFiber._firstDest); // child of root
-        fbr._initialize(Fiber._rootFiber, obj, seq, 0, invertFlag); // the generation is counted from root
+        fbr._initialize(Fiber._rootFiber, obj, seq, Fiber.ID_NOT_SPECIFYED, invertFlag); // the generation is counted from root
         return fbr;
     }
     /** @private _cml_fiber_internal call only from the '&#64;' command (CML.State._fiber()) */
     _newChildFiber(seq: Sequence, id: number, invertFlag: number, copyParam: boolean): Fiber | null {
-        if (id != Fiber.ID_NOT_SPECIFYED)
+        if (id !== Fiber.ID_NOT_SPECIFYED)
             this.destroyChild(id); // destroy old fiber, when id is obtained
         if (seq.isEmpty)
             return null;
@@ -493,7 +493,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             return null;
         var fbr = Fiber._freeFibers.pop() || new Fiber();
         fbr.insert_before(Fiber._rootFiber._firstDest); // child of root
-        if (!fbr._initialize(this, obj, seq, 0, invertFlag)) { // the generation is counted from this
+        if (!fbr._initialize(this, obj, seq, Fiber.ID_NOT_SPECIFYED, invertFlag)) { // the generation is counted from this
             throw new Error("CML Exection error. The 'n', 'f' or '@o' command calls deeper than stac limit.");
         }
         return fbr;
@@ -519,7 +519,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     static _stacmax: number = 64;
     // id not specifyed 
     /** @private _cml_fiber_internal */
-    static ID_NOT_SPECIFYED: number = 0;
+    static ID_NOT_SPECIFYED: number = -1;
     // global variables
     static _globalVariables: Global = null!;
     static _freeFibers: List = new List(); // free list

@@ -33,9 +33,6 @@ export class CMLObject extends ListElem {
     quat: Vector
     counter: number
     counter_z: number
-    isBMLMode: boolean
-    bmlVelocity: number
-    bmlAccel: number
     _id: number
     // 破棄後は null になる（isActive で判定）。型は非 null として扱う
     _parent: CMLObject
@@ -46,7 +43,9 @@ export class CMLObject extends ListElem {
     _relativeChildren: CMLObject[]
     _isRelative: boolean
     _age: number
-    _roti: Interpolation[]
+    _rotHead: Interpolation
+    _rotPitch: Interpolation
+    _rotBank: Interpolation
     _variables: number[]
     constructor() {
         super();
@@ -64,9 +63,6 @@ export class CMLObject extends ListElem {
         this.quat.w = 1;
         this.counter = 0;
         this.counter_z = 0;
-        this.isBMLMode = false;
-        this.bmlVelocity = 0;
-        this.bmlAccel = 0;
         // common parameters
         this._id = 0; // construction id
         this._parent = null!; // parent object
@@ -78,7 +74,9 @@ export class CMLObject extends ListElem {
         this._isRelative = false;                // is position relative 
         this._age = 0; // age in frame
         // rotation
-        this._roti = [new Interpolation(), new Interpolation(), new Interpolation()]; // rotation Interpolation
+        this._rotHead = new Interpolation();
+        this._rotPitch = new Interpolation();
+        this._rotBank = new Interpolation();
         this._variables = new Array(9).fill(0); // user defined variables
     }
     // public properties
@@ -129,12 +127,11 @@ target_object = null;                   // target object was destroyed.
     get relatedZ() { return (this._isRelative) ? this.relative.z : this.pos.z; }
     // velocity
     /** Absolute value of velocity. */
-    get velocity() { return (this.isBMLMode) ? this.bmlVelocity : this.vel.length(); }
+    get velocity() {
+        return this.vel.length();
+    }
     set velocity(vel: number) {
-        if (this.isBMLMode) 
-            this.bmlVelocity = vel;
-        else 
-            this.vel.setLength(vel);
+        this.vel.setLength(vel);
     }
     // angles
     /** Angle of this object, scrolling direction is 0 degree. */
@@ -166,11 +163,11 @@ target_object = null;                   // target object was destroyed.
     }
     /** Calculate direction of velocity. */
     get angleVelocityOnScreen() {
-        return (this.isBMLMode) ? this.angleOnScreen : Math.atan2(this.vel.y, this.vel.x);
+        return Math.atan2(this.vel.y, this.vel.x);
     }
     /** Calculate direction of accelaration. */
     get angleAccelOnScreen() { 
-        return (this.isBMLMode) ? this.angleOnScreen : Math.atan2(this.acc.y, this.acc.x);
+        return Math.atan2(this.acc.y, this.acc.x);
     }
     /** rotation */
     get head()  {
@@ -285,10 +282,9 @@ target_object = null;                   // target object was destroyed.
         this.quat.setScalar(0);
         this.counter = 0;
         this.counter_z = 0;
-        this.isBMLMode = false;
-        this.bmlVelocity = 0;
-        this.bmlAccel = 0;
-        this._roti[0].stop();
+        this._rotHead.stop();
+        this._rotPitch.stop();
+        this._rotBank.stop();
         return this;
     }
     // reference
@@ -357,7 +353,6 @@ target_object = null;                   // target object was destroyed.
             this.bez.y = (v.y * t * -2 + this.vel.y) * t * t * 6;
             this.counter = frames;
         }
-        this.isBMLMode = false;
         return this;
     }
     setPositionZ(z: number, frames=0) { 
@@ -417,7 +412,6 @@ target_object = null;                   // target object was destroyed.
             }
             this.counter = frames;
         }
-        this.isBMLMode = false;
         return this;
     }
     setVelocityZ(z: number, frames=0): this {
@@ -441,7 +435,6 @@ target_object = null;                   // target object was destroyed.
             }
             this.counter_z = frames;
         }
-        this.isBMLMode = false;
         return this;
      }
     setVelocityByDirection(angle: number, v: number, h: number, frames=0) { 
@@ -458,35 +451,16 @@ target_object = null;                   // target object was destroyed.
         this.acc.x = ax;
         this.acc.y = ay;
         this.counter = frames;
-        this.isBMLMode = false;
         return this;
     }
     setAccelZ(z: number, frames=0): this { 
         this.acc.z = z;
         this.counter_z = frames;
-        this.isBMLMode = false;
         return this;
     }
     setAccelByDirection(angle: number, v: number, h: number, frames=0) { 
         const sin = Math.sin(angle), cos = Math.cos(angle);
         return this.setAccel(cos*v-sin*h, sin*v+cos*h, frames);
-    }
-    /** &lt;changeDirection type='absolute'&gt; of bulletML.
-     *  @param dir Direction to change.
-     *  @param frames Frames to change direction.
-     *  @param rmax Maxmum speed of rotation [radians/frame].
-     *  @param shortest_rot Flag to rotate on shortest rotation.
-     *  @return this object
-     */
-    setChangeDirection(dir: number, frames: number, rmax: number, isShortestRotation = true): this {
-        this.setRotation(dir, frames, 1, 1, rmax, isShortestRotation);
-        if (!this.isBMLMode) {
-            this.bmlVelocity = this.velocity;
-            this.bmlAccel = 0;
-            this.counter = 0;
-            this.isBMLMode = true;
-        }
-        return this;
     }
     /** Set rotation. You can specify the first and last speed.
      *  @param end_angle Final angle when the rotation finished, based on scrolling direction.
@@ -514,12 +488,12 @@ target_object = null;                   // target object was destroyed.
         // set rotation
         if (frames == 0) {
             this.head += diff;
-            this._roti[0].stop();
+            this._rotHead.stop();
         }
         else {
             // rotating interpolation
-            this._roti[0].setFergusonCoons(this.head, this.head + diff, diff * start_t, diff * end_t);
-            this._roti[0].start(frames);
+            this._rotHead.setFergusonCoons(this.head, this.head + diff, diff * start_t, diff * end_t);
+            this._rotHead.start(frames);
         }
         return this;
     }
@@ -527,11 +501,11 @@ target_object = null;                   // target object was destroyed.
         const diff = end_angle - this.pitch;
         if (frames == 0) {
             this.pitch += diff;
-            this._roti[1].stop();
+            this._rotPitch.stop();
         }        
         else {
-            this._roti[1].setFergusonCoons(this.pitch, this.pitch + diff, diff * start_t, diff * end_t);
-            this._roti[1].start(frames);
+            this._rotPitch.setFergusonCoons(this.pitch, this.pitch + diff, diff * start_t, diff * end_t);
+            this._rotPitch.start(frames);
         }
         return this;
     }
@@ -539,11 +513,11 @@ target_object = null;                   // target object was destroyed.
         const diff = end_angle - this.bank;
         if (frames == 0) {
             this.bank += diff;
-            this._roti[2].stop();
+            this._rotBank.stop();
         }
         else {
-            this._roti[2].setFergusonCoons(this.bank, this.bank + diff, diff * start_t, diff * end_t);
-            this._roti[2].start(frames);
+            this._rotBank.setFergusonCoons(this.bank, this.bank + diff, diff * start_t, diff * end_t);
+            this._rotBank.start(frames);
         }
         return this;
     }
@@ -625,10 +599,6 @@ target_object = null;                   // target object was destroyed.
             this.pos.addVectors(this.parent.pos, new Vector().copy(this.relative).applyQuat(q));
         }
     }
-    /** Rotate haed in 1 frame, if rotd &gt; 0. The _motion() is a typical usage exapmle. @see CML.Object#_motion()*/
-    rotateHead() {
-        this.head = this._roti[0].step();
-    }
     // operation for children/parts
     //------------------------------------------------------------
     /** Find first child object with specifyed id.
@@ -669,7 +639,9 @@ target_object = null;                   // target object was destroyed.
         // clear some parameters
         this._age = 0;
         this.head = head;
-        this._roti[0].stop();
+        this._rotHead.stop();
+        this._rotPitch.stop();
+        this._rotBank.stop();
         this._destructionStatus = -1;
         // set the relations
         this._parent = parent;
@@ -720,36 +692,35 @@ target_object = null;                   // target object was destroyed.
     //------------------------------------------------------------
     /** update position and angle */
     update() {
+        // motion
         const pos = (this._isRelative) ? this.relative : this.pos;
-        if (!this.isBMLMode) {
-            pos.add(this.vel).addScaledVector(this.acc, 0.5).addScaledVector(this.bez, 0.166666667);
-            this.vel.add(this.acc).addScaledVector(this.bez, 0.5);
-            this.acc.add(this.bez);
-            if (--this.counter == 0) {
-                this.acc.x = 0;
-                this.acc.y = 0;
-                this.bez.x = 0;
-                this.bez.y = 0;
-            }
-            if (--this.counter_z == 0) {
-                this.acc.z = 0;
-                this.bez.z = 0;
-            }
-        } else {
-            const ang = this.angleOnScreen;
-            this.vel.set(Math.cos(ang) * this.bmlVelocity, Math.sin(ang) * this.bmlVelocity, this.vel.z);
-            this.bmlVelocity += this.bmlAccel;
-            pos.add(this.vel);
-            if (--this.counter == 0)
-                this.bmlAccel = 0;
-            if (this._roti[0].isStoped() && this.bmlAccel == 0) {
-                this.isBMLMode = false;
-            }
+        pos.add(this.vel).addScaledVector(this.acc, 0.5).addScaledVector(this.bez, 0.166666667);
+        this.vel.add(this.acc).addScaledVector(this.bez, 0.5);
+        this.acc.add(this.bez);
+        if (--this.counter == 0) {
+            this.acc.x = 0;
+            this.acc.y = 0;
+            this.bez.x = 0;
+            this.bez.y = 0;
         }
-        if (this._isRelative)
+        if (--this.counter_z == 0) {
+            this.acc.z = 0;
+            this.bez.z = 0;
+        }
+        if (this._isRelative) {
             this.calcAbsPosition();
-        if (this._roti[0].isStoped())
-            this.rotateHead();
+        }
+        // rotation
+        if (!this._rotHead.isStoped()) {
+            this.head = this._rotHead.step();
+        }
+        if (!this._rotPitch.isStoped()) {
+            this.pitch = this._rotPitch.step();
+        }
+        if (!this._rotBank.isStoped()) {
+            this.bank = this._rotBank.step();
+        }
+        // update quaternion if euler angles changed
         if (this.euler.changed) {
             this.quat.euler2Quat(this.euler);
             this.euler.changed = false;

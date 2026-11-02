@@ -113,10 +113,13 @@ export class Parser {
         this.childstac.length = 0;
         this.childstac.unshift(seq_);
         this.cmdTemp = null;
-        const seqLabels = (cml_string.match(/#[A-Za-z0-9_]+/g) || []).map(l=>l.substr(1)),
+
+        // extract sequence labels, global labels, and user-defined commands
+        const seqLabels = (cml_string.match(/#\w+/g) || []).map(l=>l.slice(1)),
               gloLabels = Sequence.globalSequences.reduce<string[]>((acm,seq)=>acm.concat(seq.childLabels), []),
               commands  = Object.keys(this._globalVariables._mapUsrDefCmd);
         this.currentLabelRegExpString = commands.concat(gloLabels, seqLabels).sort((a,b)=>((a>b)?-1:1)).join('|');
+
         return this._createCMLRegExp();
     }
     _terminate() {
@@ -244,9 +247,9 @@ export class Parser {
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula operator (res[5])
             rexstr += "|" + State.command_rex; // normal commands (res[6])
             rexstr += "|l\\$([1-9][+\\-*/]?)="; // assign (res[7])
-            rexstr += "|&(?!\\{)("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
-            rexstr += "|#([A-Za-z0-9_]+)\\s*\\{"; // labeled sequence definition (res[9])
-            rexstr += "|&?(\\{)"; // non-labeled sequence call (res[10])
+            rexstr += "|&("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
+            rexstr += "|#(\w+)\\s*\\{"; // labeled sequence definition (res[9])
+            rexstr += "|(\\{)"; // non-labeled sequence call (res[10])
             rexstr += ")\\s*" + operandRegExpString + ")"; // argument(res[11,12];prefix, res[13,14];literal, res[15,16];postfix)
             rexstr += "|([A-Za-z]+)"; // error (res[17])
             this._regexp = new RegExp(rexstr, "gm"); // "s" optoin not available on javascript

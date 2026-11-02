@@ -101,6 +101,7 @@ export class State extends ListElem {
         if (fiber.bul.isEnd())
             return false;
         // create new bullet object and initialize
+        // [adhok !!] wtm1 & wtm2 are used for access_id & isParts in this.__reflexive_call()
         this._create_multi_bullet(fiber, fiber.wtm1, Boolean(fiber.wtm2), null);
         // calc bullet and set wait counter
         fiber.bul.update();
@@ -209,7 +210,7 @@ export class State extends ListElem {
         }
         else {
             // create new fiber and initialize
-            const newfiber = fiber._newChildFiber(Sequence.rapid(), 0, fiber.invertFlag, false)!;
+            const newfiber = fiber._newChildFiber(Sequence.rapid(), Fiber.ID_NOT_SPECIFYED, fiber.invertFlag, false)!;
             // copy bullet setting and bullet multiplyer
             newfiber.bul.copy(bul.next);
             newfiber.bul.init(bul);
@@ -245,7 +246,7 @@ export class State extends ListElem {
     /** @private */
     static ST_NO_LABEL = 3; // non-labeled sequence define "{...}"
     /** @private */
-    static ST_RESTRICT = 4; // restrict to put reference after this command ("&","@*","n*")
+    static ST_RESTRICT = 4; // restrict to put reference after this command ("&","@*")
     /** @private */
     static ST_BLOCKSTART = 5; // loop "["
     /** @private */
@@ -286,7 +287,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|cd|@ko|@o|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|@ko|@o|@x|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
     // global variables
     static _globalVariables: Global = null!;
     // operators
@@ -386,14 +387,19 @@ export class State extends ListElem {
             }
         },
         "~":{ // wait with interpolation
-            argc: 0,
+            argc: 1,
             type: State.ST_INTERPOLATE,
-            func(_state, _$, fiber) {
+            func(_state, $, fiber) {
+                const _chgt = fiber.chgt;
+                if ($[0] !== 0) {
+                    fiber.chgt = Math.floor($[0]);
+                }
                 while (fiber._pointer.next.type & State.STF_BE_INTERPOLATED) {
                     fiber._pointer = fiber._pointer.next;
                     fiber._pointer.execute(fiber);
                 }
-                fiber.wcnt = fiber.wtm2;
+                fiber.wcnt = fiber.chgt;
+                fiber.chgt = _chgt;
                 return (fiber.wcnt == 0);
             }
         },
@@ -434,7 +440,7 @@ export class State extends ListElem {
     //---- accelaration
         "a":{
             argc: 2,
-            type: State.STF_BE_INTERPOLATED,
+            type: State.ST_NORMAL,
             func(_state, $, fiber, object) {
                 object.setAccelByDirection(fiber.headAngle, $[0], $[1]);
                 return true;
@@ -442,7 +448,7 @@ export class State extends ListElem {
         },
         "az":{
             argc: 1,
-            type: State.STF_BE_INTERPOLATED,
+            type: State.ST_NORMAL,
             func(_state, $, _fiber, object) {
                 object.setAccelZ($[0]);
                 return true;
@@ -473,15 +479,6 @@ export class State extends ListElem {
                 return true;
             }
         },
-    //---- bulletml based
-        "cd":{ // changeDirection
-            argc: 1,
-            type: State.STF_BE_INTERPOLATED,
-            func(_state, $, fiber, object) {
-                object.setChangeDirection(fiber.headAngle, fiber.chgt, $[0]*0.017453292519943295, fiber.allowAngleRotation);
-                return true;
-            }
-        },
     //---- kill object or fibers
         "ko":{
             argc: 1,
@@ -500,6 +497,13 @@ export class State extends ListElem {
             }
         },
     //---- call reference fiber
+        "@x":{
+            argc: 1,
+            type: State.ST_RESTRICT | State.STF_CALLREF,
+            func(state, $, fiber) {
+                return state._fiber(fiber, $[0]);
+            }
+        },
         "@o":{
             argc: 1,
             type: State.ST_RESTRICT | State.STF_CALLREF,
@@ -679,18 +683,18 @@ export class State extends ListElem {
             }
         },
     //---- internal command
-        "$calllabel":{
+        "$calllabel":{ // &(label_name)
             argc: 0,
             type: State.STF_CALLREF,
             func(state, _$, fiber) {
                 return state._gosub(fiber);
             }
         },
-        "$nonlabel":{
-            argc: 1,
+        "$nonlabel":{ // {...}
+            argc: 0,
             type: State.STF_CALLREF,
             func(state, $, fiber) {
-                return state._fiber(fiber, $[0]); 
+                return state._fiber(fiber, Fiber.ID_NOT_SPECIFYED); 
             }
         },
         "$rapid":{
