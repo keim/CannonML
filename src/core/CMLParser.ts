@@ -36,6 +36,7 @@ export class Parser {
     REX_ASSIGN!: number
     REX_CALLSEQ!: number
     REX_LABELDEF!: number
+    REX_REPEATCALL!: number
     REX_NONLABELDEF!: number
     REX_ARG_PREFIX!: number
     REX_ARG_LITERAL!: number
@@ -71,6 +72,7 @@ export class Parser {
                     // check the result of matching
                     if (!this._parseStatement(res)) // new normal statement
                         if (!this._parseLabelDefine(res)) // labeled sequence definition
+                            if (!this._parseRepeatCall(res)) // repeat previous call "{.}"
                             if (!this._parseNonLabeledSequenceCall(res)) // non-labeled sequence
                                 if (!this._parseSequenceCall(res)) // call sequence
                                     if (!this._parseAssign(res)) // assign 
@@ -186,6 +188,12 @@ export class Parser {
         this.cmdTemp = this._new_sequence(res[this.REX_LABELDEF]);
         return true;
     }
+    _parseRepeatCall(res: RegExpExecArray): boolean {
+        if (!res[this.REX_REPEATCALL])
+            return false;
+        this.cmdTemp = this._new_reference(null, null);
+        return true;
+    }
     _parseNonLabeledSequenceCall(res: RegExpExecArray): boolean {
         if (!res[this.REX_NONLABELDEF])
             return false;
@@ -236,23 +244,25 @@ export class Parser {
             this.REX_ASSIGN = 7; // assign
             this.REX_CALLSEQ = 8; // call sequence
             this.REX_LABELDEF = 9; // labeled sequence definition
-            this.REX_NONLABELDEF = 10; // non-labeled sequence definition
-            this.REX_ARG_PREFIX = 11; // argument prefix
-            this.REX_ARG_LITERAL = 13; // argument literal
-            this.REX_ARG_POSTFIX = 15; // argument postfix
-            this.REX_ERROR = 17; // error
-            let rexstr = "(//[^\\n]*$|/\\*.*?\\*/)"; // comment (res[1])
+            this.REX_REPEATCALL = 10; // repeat previous call
+            this.REX_NONLABELDEF = 11; // non-labeled sequence definition
+            this.REX_ARG_PREFIX = 12; // argument prefix
+            this.REX_ARG_LITERAL = 14; // argument literal
+            this.REX_ARG_POSTFIX = 16; // argument postfix
+            this.REX_ERROR = 18; // error
+            let rexstr = "(//[^\\n]*$|/\\*[\\s\\S]*?\\*/)"; // comment (res[1]); may span lines
             rexstr += "|'(.*?)'"; // string (res[2])
             rexstr += "|(("; // ---all--- (res[3,4])
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula operator (res[5])
             rexstr += "|" + State.command_rex; // normal commands (res[6])
             rexstr += "|l\\$([1-9][+\\-*/]?)="; // assign (res[7])
             rexstr += "|&("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
-            rexstr += "|#(\w+)\\s*\\{"; // labeled sequence definition (res[9])
-            rexstr += "|(\\{)"; // non-labeled sequence call (res[10])
-            rexstr += ")\\s*" + operandRegExpString + ")"; // argument(res[11,12];prefix, res[13,14];literal, res[15,16];postfix)
-            rexstr += "|([A-Za-z]+)"; // error (res[17])
-            this._regexp = new RegExp(rexstr, "gm"); // "s" optoin not available on javascript
+            rexstr += "|#(\\w+)\\s*\\{"; // labeled sequence definition (res[9])
+            rexstr += "|(\\{\\.\\})"; // repeat previous call (res[10])
+            rexstr += "|(\\{)"; // non-labeled sequence call (res[11])
+            rexstr += ")\\s*" + operandRegExpString + ")"; // argument(res[12,13];prefix, res[14,15];literal, res[16,17];postfix)
+            rexstr += "|([A-Za-z]+|&)"; // error (res[18]); a bare "&" is not followed by a label
+            this._regexp = new RegExp(rexstr, "gm"); // "s" option not available on javascript
             this._globalVariables._requestUpdateRegExp = false;
             this._compiledLabelRegExpString = this.currentLabelRegExpString;
         }
@@ -268,9 +278,10 @@ export class Parser {
     }
     // cut sequence from the list
     _cut_sequence(start: State, end: State) {
+        const prev = start.prev; // cut() clears start.prev
         this.listState.cut(start, end);
         end.jump = start;
-        return (start.type == State.ST_NO_LABEL) ? start.prev : null;
+        return (start.type == State.ST_NO_LABEL) ? prev : null;
     }
     // create new sequence
     _new_sequence(label: string | null): Sequence {
@@ -281,6 +292,7 @@ export class Parser {
     // create new reference
     // (seq, null) means non-labeled call "{...}"
     // (null, label) means labeled call "&abc"
+    // (null, null) means repeat previous call "{.}"
     _new_reference(seq: Sequence | null, label: string | null): Refer {
         if ((this.listState.tail.type & State.STF_CALLREF) == 0) {
             this._append_statement(new State((label) ? "$calllabel" : "$nonlabel"));

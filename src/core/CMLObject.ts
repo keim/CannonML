@@ -178,17 +178,17 @@ target_object = null;                   // target object was destroyed.
         this.euler.changed = true;
     }
     get pitch() {
-        return this.euler.y;
+        return this.euler.x;
     }
     set pitch(r: number) {
-        this.euler.y = r;
+        this.euler.x = r;
         this.euler.changed = true;
     }
     get bank()  {
-        return this.euler.x;
+        return this.euler.y;
     }
     set bank(r: number) {
-        this.euler.x = r;
+        this.euler.y = r;
         this.euler.changed = true;
     }
     // callback functions
@@ -347,8 +347,8 @@ target_object = null;                   // target object was destroyed.
             //this._bx = (v.x * t * -2 + this.vx) * t * t * 6;
             const t = 1 / frames;
             const v = new Vector(x,y,0).sub((this._isRelative) ? this.relative : this.pos);
-            this.acc.x = (v.x * t * t - this.vel.x * 2) * t * 2;
-            this.acc.y = (v.y * t * t - this.vel.y * 2) * t * 2;
+            this.acc.x = (v.x * t * 3 - this.vel.x * 2) * t * 2;
+            this.acc.y = (v.y * t * 3 - this.vel.y * 2) * t * 2;
             this.bez.x = (v.x * t * -2 + this.vel.x) * t * t * 6;
             this.bez.y = (v.y * t * -2 + this.vel.y) * t * t * 6;
             this.counter = frames;
@@ -371,7 +371,7 @@ target_object = null;                   // target object was destroyed.
             //this._bx = (v.x * t * -2 + this.vx) * t * t * 6;
             const t = 1 / frames;
             const dz = z - ((this._isRelative) ? this.relative.z : this.pos.z);
-            this.acc.z = (dz * t * t - this.vel.z * 2) * t * 2;
+            this.acc.z = (dz * t * 3 - this.vel.z * 2) * t * 2;
             this.bez.z = (dz * t * -2 + this.vel.z) * t * t * 6;
             this.counter_z = frames;
         }
@@ -657,11 +657,11 @@ target_object = null;                   // target object was destroyed.
         if (isRelative) 
             this._parent._relativeChildren.push(this);
     
-        if (args)
-            this._variables.concat(args);
-        else 
-            this._variables.fill(0);
-        this.setPosition(x, y, z); // set motion type inside
+        this._variables.fill(0);
+        args?.forEach((v, i) => { if (i < this._variables.length) this._variables[i] = v; });
+        this.setPosition(x, y); // set motion type inside
+        this.setPositionZ(z);
+        this.projected.copy(this.pos);
         this.vel.set(vx, vy, 0);
         CMLObject._activeObjects.push(this);
         // callback

@@ -57,7 +57,11 @@ export class State extends ListElem {
     /** finalize after all arguments are set */
     construct() {
         if (!this.formula.construct()) return false;
-        Object.assign(this.$, this.formula.calcStatic());
+        const args = this.formula.calcStatic();
+        // more arguments than the command takes is a syntax error (Refer / UserDefine have no key)
+        if (this.key && args && args.length > this.$.length)
+            throw Error(this.key + " has too many arguments ?");
+        Object.assign(this.$, args);
         return true;
     }
     /** execute */
@@ -126,14 +130,20 @@ export class State extends ListElem {
         const ref = this.next; // next statement is referential sequence
         fiber.jstc.push(ref);
         fiber._pushInvertion(fiber.invertFlag);
+        this._setArguments(fiber, ref.$);
         fiber._pointer = ref.jump!;
         return true;
+    }
+    // set call arguments to the variables $1...$9 of the object
+    _setArguments(fiber: Fiber, args: number[]) {
+        args.slice(0, 9).forEach((v, i) => fiber.setVariable(i, v));
     }
     // run new fiber
     _fiber(fiber: Fiber, fiber_id: number) {
         const ref = this.next; // next statement is referential sequence
-        const seq = ref.jump || fiber.seqFiber; // executing sequence
-        fiber._newChildFiber(seq, fiber_id, fiber.invertFlag, (seq.type == State.ST_NO_LABEL)); // create and initialize fiber
+        this._setArguments(fiber, ref.$);
+        const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
+        fiber._newChildFiber(seq, fiber_id, fiber.invertFlag, true); // create and initialize fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
         return true;
@@ -141,7 +151,7 @@ export class State extends ListElem {
     // run new destruction fiber
     _fiber_destruction(fiber: Fiber, destStatus: number) {
         const ref = this.next; // next statement is referential sequence
-        const seq = ref.jump || fiber.seqFiber; // executing sequence
+        const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
         fiber._newDestFiber(seq, destStatus, fiber.invertFlag); // create and initialize destruction fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
@@ -150,7 +160,7 @@ export class State extends ListElem {
     // run new fiber on child object
     _fiber_child(fiber: Fiber, obj: CMLObject, object_id: number) {
         const ref = this.next; // next statement is referential sequence
-        const seq = ref.jump || fiber.seqFiber; // executing sequence
+        const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
         obj.findAllChildren(object_id).forEach((child: CMLObject)=>fiber._newObjectFiber(child, seq, fiber.invertFlag));
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
@@ -161,7 +171,14 @@ export class State extends ListElem {
         // next statement is sequence referene 
         const ref = this.next;
         // update fire pointer, ref.jump shows executing sequence
-        if (ref.jump) fiber.seqFired = ref.jump;
+        if (ref.type == State.ST_REFER) {
+            // ref.jump is reference sequence
+            if (ref.jump) fiber.seqFired = ref.jump;
+            // ref.jump is null when repeat previous call "{.}", do nothing
+        } else {
+            // no references sequences
+            fiber.seqFired =  Sequence.nop();
+        }
         // create multi bullet
         this._create_multi_bullet(fiber, access_id, isParts, ref.$);
         // skip next statement
@@ -287,7 +304,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rc|rx|ry|r|kf|ko|i|my|mx|@ko|@o|@x|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rx|ry|r|kf|ko|i|my|mx|@ko|@o|@x|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
     // global variables
     static _globalVariables: Global = null!;
     // operators
@@ -298,9 +315,9 @@ export class State extends ListElem {
             type: State.ST_NORMAL,
             func(state, $, fiber) {
                 if (state.formula.answerCount > 0)
-                    fiber.wtm1 = $[0];
+                    fiber.wtm1 = Math.floor($[0]);
                 fiber.wcnt = fiber.wtm1;
-                return false;
+                return fiber.wcnt == 0; // w0 does not wait: continue with the next command
             }
         },
         "w?":{ // waitif
@@ -459,7 +476,7 @@ export class State extends ListElem {
             argc: 3,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], $[2], fiber.allowAngleRotation);
+                object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], $[2]*0.017453292519943295, fiber.allowAngleRotation);
                 return true;
             }
         },
@@ -690,10 +707,10 @@ export class State extends ListElem {
                 return state._gosub(fiber);
             }
         },
-        "$nonlabel":{ // {...}
+        "$nonlabel":{ // {...} or {.}
             argc: 0,
             type: State.STF_CALLREF,
-            func(state, $, fiber) {
+            func(state, _$, fiber) {
                 return state._fiber(fiber, Fiber.ID_NOT_SPECIFYED); 
             }
         },

@@ -357,7 +357,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     _popInvertion() {
         this.invertFlag = this.istc.shift()!;
     }
-    // return fiber's head angle (angle in this game's screen, the scroll direction is 0[deg]).
+    // return fiber's head angle (angle in this game's screen, the scroll direction is 0[rad]).
     /** @private _cml_fiber_internal */
     setHeadAngle(headAngleOption:number, angle:number): number {
         switch (headAngleOption) {
@@ -367,7 +367,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
                 break;
             case State.HO_ABS:
                 this.allowAngleRotation = false;
-                this.headAngle = angle;
+                this.headAngle = angle + Fiber._globalVariables._scrollRadian;
                 break;
             case State.HO_REL:
                 this.allowAngleRotation = false;

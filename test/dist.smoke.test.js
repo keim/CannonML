@@ -18,7 +18,7 @@ describe("tsc output (dist)", () => {
         const { CML, CannonML } = await import(${JSON.stringify(pathToFileURL(join(out, "index.js")).href)});
         const cml = new CannonML();
         cml.setScreenSize(1000, 1000);
-        const r = cml.runner(0, 0, 0, cml.sequence("vx2"));
+        const r = cml.runner(0, 0, 0, cml.sequence("v2,0"));
         cml.update(); cml.update();
         console.log(JSON.stringify([Object.keys(CML).length, r.pos.x]));
       `;
