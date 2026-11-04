@@ -143,6 +143,12 @@ describe("ローカル変数 $1〜$9 と変数代入", () => {
     expect(last("l$9=3 p$9,0")).toEqual([3, 0]);
   });
 
+  // 変数はオブジェクト単位。同じオブジェクトの別ファイバからも見え、後から代入した値で上書きされる
+  it("同じオブジェクトの別ファイバと変数を共有する", () => {
+    expect(run("{w2 p$1,0} w1 l$1=7", 3).trace.at(-1)).toEqual([7, 0]);
+    expect(last("#A{p$1,0} {&A 5} w1 {&A 8} w1 f0{p$1,0}", 3)).toEqual([8, 0]);
+  });
+
   it("代入値には数式や他の変数を使える", () => {
     expect(last("l$1=2+3 p$1,0")).toEqual([5, 0]);
     expect(last("l$1=3 l$2=$1*2 p$2,0")).toEqual([6, 0]);
@@ -167,6 +173,63 @@ describe("ローカル変数 $1〜$9 と変数代入", () => {
 
   it("変数はオブジェクト毎に持つので、子オブジェクトには引き継がれない", () => {
     expect(pos(run("l$1=9 f0{p$1,0}", 3).spawned[0])).toEqual([0, 0]);
+  });
+});
+
+describe("ユーザー定義変数 $name", () => {
+  const withVariable = (name, func) => {
+    const { cml } = createCML();
+    cml.setScreenSize(10000, 10000);
+    cml.globalVariables.registerUserVariable(name, func);
+    return cml;
+  };
+  const exec = (cml, script, frames = 1) => {
+    const r = cml.runner(0, 0, 0);
+    r.execute(cml.sequence(script));
+    for (let i = 0; i < frames; i++) cml.update();
+    return r;
+  };
+
+  it("登録した関数の戻り値が、数式の中で参照できる", () => {
+    const cml = withVariable("life", () => 40);
+    expect(pos(exec(cml, "p$life+1,$life*2"))).toEqual([41, 80]);
+  });
+
+  it("変数名の直後の数字が、関数の第 2 引数（index）になる。省略すると 0", () => {
+    const calls = [];
+    const cml = withVariable("life", (fbr, idx) => (calls.push(idx), 10 + idx));
+    expect(pos(exec(cml, "p$life,$life3"))).toEqual([10, 13]);
+    expect(calls).toEqual([0, 3]);
+  });
+
+  it("関数は実行中のファイバを受け取り、参照するたびに呼ばれる（実行時の値）", () => {
+    let n = 0;
+    const cml = withVariable("count", fbr => (typeof fbr.getVariable === "function" ? ++n : -1));
+    exec(cml, "[3 l$1=$count w1]", 4);
+    expect(n).toBe(3);
+  });
+
+  it("名前に _ を含められる", () => {
+    expect(pos(exec(withVariable("a_b", () => 7), "p$a_b,0"))).toEqual([7, 0]);
+  });
+
+  it("定義済みの変数と同じ名前は、定義済みの変数が優先される", () => {
+    expect(pos(exec(withVariable("x", () => 99), "p$x,0"))).toEqual([0, 0]);
+  });
+
+  it("末尾が数字の名前は、数字が index として扱われるので参照できない", () => {
+    const cml = withVariable("a1", () => 5);
+    expect(() => cml.sequence("p$a1,0")).toThrow();
+  });
+
+  it("$p. $t. ではユーザー定義変数を参照できない", () => {
+    const cml = withVariable("life", () => 5);
+    expect(() => cml.sequence("p$t.life,0")).toThrow();
+    expect(() => cml.sequence("p$p.life,0")).toThrow();
+  });
+
+  it("登録していない名前は構文エラー", () => {
+    expect(() => parse("p$nosuch,0")).toThrow();
   });
 });
 
@@ -203,6 +266,30 @@ describe("ユーザー定義コマンド &name", () => {
     const { cml, calls } = withCommand("test", 2);
     exec(cml, "&test 1+2,$sqr16");
     expect(calls[0].args).toEqual([3, 4]);
+  });
+
+  it("関数形式の引数でも呼び出せる", () => {
+    const { cml, calls } = withCommand("test", 2);
+    exec(cml, "&test(1+2,4)");
+    expect(calls[0].args).toEqual([3, 4]);
+  });
+
+  it("引数を省略すると 0 になる", () => {
+    const { cml, calls } = withCommand("test", 2);
+    exec(cml, "&test 5");
+    expect(calls[0].args).toEqual([5, 0]);
+  });
+
+  it("requireSequence を指定すると、直後のシーケンスが必須で、自動では実行されない", () => {
+    const { cml } = createCML();
+    const calls = [];
+    cml.globalVariables.registerUserCommand("seq", (fbr, args) => calls.push(args.slice()), 1, true);
+    expect(() => cml.sequence("&seq 1")).toThrow();
+    const r = cml.runner(0, 0, 0);
+    r.execute(cml.sequence("&seq 1 {p5,0}"));
+    cml.update();
+    expect(calls).toEqual([[1]]);
+    expect(r.pos.x).toBe(0);
   });
 
   it("引数のないコマンド", () => {

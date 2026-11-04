@@ -43,11 +43,11 @@ export class Fiber extends ListElem {
     fx: number
     fy: number
     chgt: number
-    allowAngleRotation: boolean
+    shortestRotation: boolean // true: 360° 周期とみなし最短方向で旋回 (dt/dv)。false: 角度差をそのまま使う (da/do/dp/ds)
     headAngle: number
     firedAngle: number
     bul: BarrageElem
-    invertFlag: number
+    mirror: boolean
     wtm1: number
     wtm2: number
     seqFiber: Sequence
@@ -55,7 +55,7 @@ export class Fiber extends ListElem {
     wcnt: number
     lcnt: number[]
     jstc: State[]
-    istc: number[]
+    mstc: boolean[]
     // constructor
     //------------------------------------------------------------
     /** <b>You cannot create new CML.Fiber().</b> You can get CML.Fiber instance only from CML.Object.execute().
@@ -82,11 +82,11 @@ export class Fiber extends ListElem {
         /** @private _cml_fiber_internal */ this.fx = 0; // fiber position
         /** @private _cml_fiber_internal */ this.fy = 0;
         /** @private _cml_fiber_internal */ this.chgt = 0; // pos/vel/rot changing timeq
-        /** @private _cml_fiber_internal */ this.allowAngleRotation = true; // allow angle rotation. 360->0
+        /** @private _cml_fiber_internal */ this.shortestRotation = true;
         /** @private _cml_fiber_internal */ this.headAngle = 0;  // head angle [radian]
         /** @private _cml_fiber_internal */ this.firedAngle = 0; // previous fired angle (due to the compatiblity with bulletML)
         /** @private _cml_fiber_internal */ this.bul = new BarrageElem(); // primary setting of bullet
-        /** @private _cml_fiber_internal */ this.invertFlag = 0; // invertion flag (0=no, 1=x_reverse, 2=y_reverse, 3=xy_reverse)
+        /** @private _cml_fiber_internal */ this.mirror = false; // mirror about the scroll axis (set by '@m')
         /** @private _cml_fiber_internal */ this.wtm1 = 1; // waiting time for "w"
         /** @private _cml_fiber_internal */ this.wtm2 = 1; // waiting time for "~"
         /** @private _cml_fiber_internal */ this.seqFiber = null!; // previous calling sequence from "@"
@@ -95,7 +95,7 @@ export class Fiber extends ListElem {
         /** @private _cml_fiber_internal */ this.wcnt = 0; // waiting counter
         /** @private _cml_fiber_internal */ this.lcnt = []; // loop counter
         /** @private _cml_fiber_internal */ this.jstc = []; // sub routine call stac
-        /** @private _cml_fiber_internal */ this.istc = []; // invertion flag s
+        /** @private _cml_fiber_internal */ this.mstc = []; // mirror flag stack
     }
     // properties
     //------------------------------------------------------------
@@ -236,17 +236,17 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     // internal functions
     //------------------------------------------------------------
     // initializer (call from CML.State._fiber())
-    _initialize(parent: Fiber, obj: CMLObject, seq: Sequence, access_id: number, invertFlag = 0): boolean {
+    _initialize(parent: Fiber, obj: CMLObject, seq: Sequence, access_id: number, mirror = false): boolean {
         this._setObject(obj); // set running object
         this._access_id = access_id; // access id
         this._gene = parent._gene + 1; // set generation
         this._clear_param(); // clear parameters
-        this.invertFlag = invertFlag; // set invertion flag
+        this.mirror = mirror; // set mirror flag
         this._pointer = seq.next; // set cml pointer
         this.wcnt = 0; // reset waiting counter
         this.lcnt.length = 0; // clear loop counter stac
         this.jstc.length = 0; // clear sub-routine call stac
-        this.istc.length = 0; // clear invertion stac
+        this.mstc.length = 0; // clear mirror stack
         this._firstDest = this._listChild.end; // reset last child
         return (this._gene < Fiber._stacmax);
     }
@@ -269,12 +269,12 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.fx = 0; // fiber position
         this.fy = 0;
         this.chgt = 0; // changing time
-        this.allowAngleRotation = true; // allow angle rotation. 360->0
+        this.shortestRotation = true;
         this.headAngle = 0; // head angle [radian]
         this.firedAngle = 0; // previous fired angle (due to the compatiblity with bulletML)
         this.bul.setSequence(1, 0, 0, 0);
         this._barrage.clear();
-        this.invertFlag = 0; // invertion flag
+        this.mirror = false; // mirror flag
         this.wtm1 = 1; // waiting time for "w"
         this.wtm2 = 1; // waiting time for "~"
         this.seqFiber = Sequence.nop();
@@ -286,7 +286,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this.fx = src.fx; // fiber position
         this.fy = src.fy;
         this.chgt = src.chgt; // changing time
-        this.allowAngleRotation = src.allowAngleRotation; // allow angle rotation. 360->0
+        this.shortestRotation = src.shortestRotation;
         this.headAngle = src.headAngle; // head angle [radian]
         this.firedAngle = src.firedAngle; // previous fired angle (due to the compatiblity with bulletML)
         this.bul.copy(src.bul);
@@ -312,7 +312,6 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         // execution
         if (--this.wcnt <= 0) { // execute only if waiting counte<=0
             let loopCounter = 0, executeNext = true;
-            const _InvertFlag = this.invertFlag;
             while (executeNext && this._pointer) {
                 executeNext = this._pointer.execute(this); // execute State function
                 this._pointer = this._pointer.next; // increment pointer
@@ -320,8 +319,6 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
                 if (++loopCounter == Fiber._loopmax) 
                     throw new Error("CML Exection error. No wait command in the loop ?");
             }
-            // reset inversion flag for each frame
-            this.invertFlag = _InvertFlag;
         }
         // run all children
         let elem = this._listChild.begin;
@@ -346,43 +343,43 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             this.destroy();
         return elem;
     }
-    // push invertion
+    // push mirror
     /** @private _cml_fiber_internal */
-    _pushInvertion(newFlag: number) {
-        this.istc.unshift(this.invertFlag);
-        this.invertFlag = newFlag;
+    _pushMirrorFlag(newFlag: boolean) {
+        this.mstc.unshift(this.mirror);
+        this.mirror = newFlag;
     }
-    // pop invertion
+    // pop mirror
     /** @private _cml_fiber_internal */
-    _popInvertion() {
-        this.invertFlag = this.istc.shift()!;
+    _popMirrorFlag() {
+        this.mirror = this.mstc.shift()!;
     }
     // return fiber's head angle (angle in this game's screen, the scroll direction is 0[rad]).
     /** @private _cml_fiber_internal */
     setHeadAngle(headAngleOption:number, angle:number): number {
         switch (headAngleOption) {
             case State.HO_AIM:
-                this.allowAngleRotation = true;
+                this.shortestRotation = true;
                 this.headAngle = this._object.getAimingAngleOnScreen(this._target, this.fx, this.fy) + angle;
                 break;
             case State.HO_ABS:
-                this.allowAngleRotation = false;
+                this.shortestRotation = false;
                 this.headAngle = angle + Fiber._globalVariables._scrollRadian;
                 break;
             case State.HO_REL:
-                this.allowAngleRotation = false;
+                this.shortestRotation = false;
                 this.headAngle = this._object.angleOnScreen + angle;
                 break;
             case State.HO_PAR:
-                this.allowAngleRotation = false;
+                this.shortestRotation = false;
                 this.headAngle = this._object.angleParentOnScreen + angle;
                 break;
             case State.HO_VEL:
-                this.allowAngleRotation = true;
+                this.shortestRotation = true;
                 this.headAngle = this._object.angleVelocityOnScreen + angle;
                 break;
             case State.HO_SEQ:
-                this.allowAngleRotation = false;
+                this.shortestRotation = false;
                 this.headAngle += angle;
                 break;
             default:
@@ -390,30 +387,21 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         }
         return this.headAngle;
     }
-    // rotate object in minimum rotation (call from CML.State.r())
-    /** @private _cml_fiber_internal
-    _isShortestRotation(): boolean {
-        return (this.head Angle Option == State.HO_AIM || this.head Angle Option == State.HO_VEL);
-    }
-    */
 
-    // invertion
+    // mirroring
     //--------------------------------------------------
-    _invertAngle(ang: number): number {
-        if (this.invertFlag & 1)
-            ang = -ang;
-        if (this.invertFlag & 2)
-            ang = 3.141592653589793 - ang;
-        return ang;
+    _mirrorAngle(ang: number): number {
+        return (this.mirror) ? -ang : ang;
     }
-    _invertRotation(rot: number): number {
-        return (this.invertFlag == 1 || this.invertFlag == 2) ? -rot : rot;
+    _mirrorRotation(rot: number): number {
+        return (this.mirror) ? -rot : rot;
     }
-    _invertX(x: number): number {
-        return (this.invertFlag & 2) ? -x : x;
+    // screen-axis mirror: flips the screen axis perpendicular to the scroll direction
+    _mirrorX(x: number): number {
+        return (this.mirror && Fiber._globalVariables.vertical) ? -x : x;
     }
-    _invertY(y: number): number {
-        return (this.invertFlag & 1) ? -y : y;
+    _mirrorY(y: number): number {
+        return (this.mirror && !Fiber._globalVariables.vertical) ? -y : y;
     }
     // static function
     //------------------------------------------------------------
@@ -448,23 +436,23 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     }
     // new fiber
     /** @private _cml_fiber_internal call only from CML.Object.execute() */
-    static _newRootFiber(obj: CMLObject, seq: Sequence, invertFlag: number): Fiber | null {
+    static _newRootFiber(obj: CMLObject, seq: Sequence, mirror: boolean): Fiber | null {
         if (seq.isEmpty)
             return null;
         var fbr = Fiber._freeFibers.pop() || new Fiber();
         fbr.insert_before(Fiber._rootFiber._firstDest); // child of root
-        fbr._initialize(Fiber._rootFiber, obj, seq, Fiber.ID_NOT_SPECIFYED, invertFlag); // the generation is counted from root
+        fbr._initialize(Fiber._rootFiber, obj, seq, Fiber.ID_NOT_SPECIFYED, mirror); // the generation is counted from root
         return fbr;
     }
     /** @private _cml_fiber_internal call only from the '&#64;' command (CML.State._fiber()) */
-    _newChildFiber(seq: Sequence, id: number, invertFlag: number, copyParam: boolean): Fiber | null {
+    _newChildFiber(seq: Sequence, id: number, mirror: boolean, copyParam: boolean): Fiber | null {
         if (id !== Fiber.ID_NOT_SPECIFYED)
             this.destroyChild(id); // destroy old fiber, when id is obtained
         if (seq.isEmpty)
             return null;
         var fbr = Fiber._freeFibers.pop() || new Fiber();
         fbr.insert_before(this._firstDest); // child of this
-        if (!fbr._initialize(this, this._object, seq, id, invertFlag)) { // the generation is counted from root
+        if (!fbr._initialize(this, this._object, seq, id, mirror)) { // the generation is counted from root
             throw new Error("CML Exection error. The '@' command calls depper than stac limit.");
         }
         if (copyParam)
@@ -472,7 +460,7 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         return fbr;
     }
     /** @private _cml_fiber_internal call only from the '&#64;ko' command (CML.State._fiber_destruction()) */
-    _newDestFiber(seq: Sequence, id: number, invertFlag: number): Fiber | null {
+    _newDestFiber(seq: Sequence, id: number, mirror: boolean): Fiber | null {
         this._killDestFiber(id); // destroy old fiber
         if (seq.isEmpty)
             return null;
@@ -482,18 +470,18 @@ var seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         fbr._seqWaitDest.next.jump = seq;
         fbr.insert_before(this._firstDest); // child of this
         this._firstDest = fbr; // overwrite first destruction fiber
-        if (!fbr._initialize(this, this._object, fbr._seqWaitDest, id, invertFlag)) {
+        if (!fbr._initialize(this, this._object, fbr._seqWaitDest, id, mirror)) {
             throw new Error("CML Exection error. The '@ko' command calls deeper than stac limit.");
         }
         return fbr;
     }
     /** @private _cml_fiber_internal call from the 'n', 'f' or '&#64;o' command (search in CML.State) */
-    _newObjectFiber(obj: CMLObject, seq: Sequence, invertFlag: number): Fiber | null {
+    _newObjectFiber(obj: CMLObject, seq: Sequence, mirror: boolean): Fiber | null {
         if (seq.isEmpty)
             return null;
         var fbr = Fiber._freeFibers.pop() || new Fiber();
         fbr.insert_before(Fiber._rootFiber._firstDest); // child of root
-        if (!fbr._initialize(this, obj, seq, Fiber.ID_NOT_SPECIFYED, invertFlag)) { // the generation is counted from this
+        if (!fbr._initialize(this, obj, seq, Fiber.ID_NOT_SPECIFYED, mirror)) { // the generation is counted from this
             throw new Error("CML Exection error. The 'n', 'f' or '@o' command calls deeper than stac limit.");
         }
         return fbr;

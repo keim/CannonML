@@ -148,6 +148,53 @@ describe("シーケンス呼出 &", () => {
     expect(last("#A{p$1,$2} &A 10,20")).toEqual([10, 20]);
   });
 
+  it("引数を取れるのは &label だけ。{...} {.} の後ろの引数は構文エラー", () => {
+    expect(() => parse("{p$1,0}9")).toThrow();
+    expect(() => parse("f0{p$1,0}9")).toThrow();
+    expect(() => parse("@x1{p$1,0}9")).toThrow();
+    expect(() => parse("f0{p1,0} f0{.}9")).toThrow();
+    expect(() => parse("{p1,0} p1,0")).not.toThrow();
+  });
+
+  it("引数は ( , ) で囲む関数形式でも書ける（ニーモニック形式と同じ意味）", () => {
+    expect(last("da90 p(1,2)")).toEqual(last("da90 p1,2"));
+    expect(run("da90 v(1,2)", 1).runner.vel).toEqual(run("da90 v1,2", 1).runner.vel);
+    expect(last("#A{p$1,$2} &A(10,20)")).toEqual([10, 20]);
+    expect(last("p(1+2,3*4)")).toEqual(last("p1+2,3*4"));
+    expect(last("l$1=3 p((1+$1)*2,0)")).toEqual([8, 0]);
+    expect(run("#A{p$1,0} f(0)&A(4)", 3).spawned.length).toBe(1);
+    expect(run("w(2) p1,0", 3).trace).toEqual([[0, 0], [0, 0], [1, 0]]);
+  });
+
+  it("括弧の内側や前後の空白は無視される", () => {
+    const want = last("da90 p1,2");
+    for (const s of ["p( 1,2)", "p(1 ,2 )", "p( 1 , 2 )", "p(\t1,2)", "p (\n1,2)"])
+      expect(last("da90 " + s), s).toEqual(want);
+    expect(last("da90 p( -1,2)")).toEqual(last("da90 p-1,2"));
+    expect(last("da90 p(- 1,2)")).toEqual(last("da90 p-1,2"));
+    expect(last("da90 p(1,( 2))")).toEqual(want);
+  });
+
+  it("括弧の対応が取れていなければ構文エラー", () => {
+    for (const s of ["p(1,2", "p1,2)", "p(1,2))", "p((1,2)", "p(", "p)", "p(1)(2)"])
+      expect(() => parse(s), s).toThrow();
+  });
+
+  it("どのコマンドにも解釈されない文字・数値は黙って捨てずに構文エラー", () => {
+    for (const s of ["p1 2", "p1,2 ;", "p1,2 5 p3,0", "p1,2 `", "p1,2 #", "; p1,2", "p1,2 .", "$x"])
+      expect(() => parse(s), s).toThrow();
+  });
+
+  it("空白・改行・コメントだけの読み飛ばしは構文エラーにならない", () => {
+    expect(() => parse("  p1,2 \n // c\n /* c */ w1 \n p3,4  ")).not.toThrow();
+    expect(() => parse("")).not.toThrow();
+    expect(() => parse("   ")).not.toThrow();
+  });
+
+  it("関数形式の ( ) は数式の括弧: p(1,2)*3 は p1,2*3", () => {
+    expect(last("da90 p(1,2)*3")).toEqual(last("da90 p1,2*3"));
+  });
+
   it("引数には数式を使える", () => {
     expect(last("#A{p$1,$2} &A 1+2,3*4")).toEqual([3, 12]);
   });

@@ -65,7 +65,10 @@ export class Parser {
         try {
             // execute first matching
             let res = regexp.exec(cml_string);
+            let end = 0; // end of the previous match
             while (res != null) {
+                this._checkSkipped(cml_string, end, res.index);
+                end = regexp.lastIndex;
                 //trace(res);
                 if (!this._parseFormula(res)) { // parse fomula first
                     this._append_statement(this.cmdTemp); // append previous formula and statement
@@ -91,6 +94,7 @@ export class Parser {
                 // execute next matching
                 res = regexp.exec(cml_string);
             }
+            this._checkSkipped(cml_string, end, cml_string.length);
             // throw error when stacs are still remain.
             if (this.loopstac.length != 0)
                 throw Error("[[...] ?");
@@ -105,6 +109,12 @@ export class Parser {
             seq.clear();
             throw err;
         }
+    }
+    // the regular expression skips text that matches nothing; only white spaces may be skipped
+    _checkSkipped(cml_string: string, from: number, to: number) {
+        const skipped = cml_string.slice(from, to).trim();
+        if (skipped)
+            throw Error("unexpected '" + skipped + "' ?");
     }
     // parsing subroutines
     //------------------------------------------------------------
@@ -302,10 +312,14 @@ export class Parser {
     }
     // set arguments 
     _check_argument(state: State | null, res: RegExpExecArray) {
-        if (state && res[this.REX_ARG_LITERAL]) {
-            state.formula.pushPrefix(res[this.REX_ARG_PREFIX]);
+        if (state && (res[this.REX_ARG_PREFIX] || res[this.REX_ARG_LITERAL] || res[this.REX_ARG_POSTFIX])) {
+            if (state instanceof Refer && state._label == null)
+                throw Error("{...} takes no arguments ?"); // only &label takes arguments
+            if (!state.formula.pushPrefix(res[this.REX_ARG_PREFIX]))
+                throw Error("in formula " + res[this.REX_ARG_PREFIX]);
             state.formula.pushLiteral(res[this.REX_ARG_LITERAL]);
-            state.formula.pushPostfix(res[this.REX_ARG_POSTFIX]);
+            if (!state.formula.pushPostfix(res[this.REX_ARG_POSTFIX]))
+                throw Error("unmatched ) ?");
         }
     }
     // regular expression string of user command. call from CML.Formula

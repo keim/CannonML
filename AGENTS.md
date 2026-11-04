@@ -2,7 +2,7 @@
 
 Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). npm + `tsc` (build) + Vitest (tests); no lint or CI yet. The language is **v3** (spec: `docs/reference/v3/cannonML.md`, Japanese). Design notes for the TS migration: `docs/superpowers/specs/2026-10-19-typescript-migration-design.md`.
 
-**Read "Current state" at the bottom first**: it lists the spec deviations that the tests pin with `it.fails`.
+**Read "Current state" at the bottom first**: it lists the known spec deviations.
 
 ## Run / verify
 
@@ -22,12 +22,12 @@ Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). np
 - Flow / wait: `w` `w?` `~` `i` `[ ]` `? :` `{...}` (implicit new fiber) `&label` `l$N=` (`l$N+=` …)
 - Labels must always be called as `&Label` (with `&`). A bare label name is a syntax error (`A ?`). `&{...}` is a syntax error too.
 - Motion, relative to the `d*` direction: `p` `v` `a` `r` (2D), `pz` `vz` `az` (Z, independent of xy), `rx` `ry`. `i` sets interpolation frames; `a`/`az` ignore it.
-- Direction: `da` `dt` `do` `dv` `dp`. `ds` is implemented but not in the spec.
+- Direction: `da` `dt` `do` `dv` `dp` `ds`.
 - Spawn: `q` `qx` `qy` (origin), `bm` `bs` `br` (barrage), `f` `fs` (`fs` = relative-position child).
-- Fibers: `@x` (exclusive id) `@o` (child object) `@ko` (on destroy), `kf`, `ko`. Targets: `td` `tp` `to`. Mirror: `mx` `my`.
-- v2 commands that no longer parse (not in `command_rex`): `px` `py` `pd` `vd` `ad` `ha` `ho` `hv` `hp` `ht` `hs` `n` `nc` `fc` `@` `cd` `cs` `gp` `bv` `m` and all `^…` fake-call forms. `rc` is in `command_rex` but has no operator (`rc command not defined !`).
-- No `args` array any more: `cml.runner(x, y, z, seq, invFlag)` and `runner.execute(seq, invFlag)`. Locals `$1..$9` live on the object (`CMLObject._variables`) and are shared by its fibers.
-- User commands/variables are registered on `cml.globalVariables.registerUserCommand(name, func, argc, requireSequence?)` / `registerUserVariable`. The spec text says `CMLSequence.registerUserCommand()`; that does not exist.
+- Fibers: `@x` (exclusive id) `@m` (mirror fiber) `@o` (child object) `@ko` (on destroy), `kf`, `ko`. Targets: `td` `tp` `to`.
+- v2 commands that no longer parse (not in `command_rex`): `px` `py` `pd` `vd` `ad` `ha` `ho` `hv` `hp` `ht` `hs` `n` `nc` `fc` `@` `cd` `cs` `gp` `bv` `m` `mx` `my` and all `^…` fake-call forms.
+- No `args` array any more: `cml.runner(x, y, z, seq, mirror)` and `runner.execute(seq, mirror)` (`mirror` is a boolean). Locals `$1..$9` live on the object (`CMLObject._variables`) and are shared by its fibers.
+- User commands/variables are registered on `cml.globalVariables.registerUserCommand(name, func, argc, requireSequence?)` / `registerUserVariable`.
 
 ## Architecture
 
@@ -38,9 +38,9 @@ Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). np
 - Per-frame driver: host app must call `cml.update()` every frame (`Fiber._updateAll` + `Object._updateAll`). Pattern execution: `cml.sequence(script)` → `cml.runner(x,y,z,seq)` → `runner.execute(...)` returns a `Fiber`. See `demo/main.js` for the wiring including `setDefaultTarget` / `setScreenSize` and the `onCreateNewRunner` / `onDestroy` / `onUpdate` callback contract (`demo/actor.js`).
 - `src/core/` holds the parser/state-machine internals (`CMLParser`, `CMLState`, `CMLFormula*`, `CMLBarrage*`, `CMLObject`, `CMLVector`, `interpolation`, ...). `src/CML{Fiber,Runner,Sequence}.ts` are the public runtime.
 - Adding a command = an entry in **both** `State.command_rex` (longer alternatives first: `pz` before `p`, `@ko` before `@o`) and `State.operators`. An operator is `{ argc, type, func(state, $, fiber, object) }`; unused leading params are named `_`. Commands typed `STF_BE_INTERPOLATED` are run together by `~` / `$init4int`. `$`-prefixed operators are internal and not in `command_rex`.
-- The parser regex is assembled from plain JS string literals in `Parser._createCMLRegExp`. Write `\\s` / `\\w`: a single `\s` / `\w` silently becomes `s` / `w`, and tsc cannot see it. This has already broken the parser twice.
+- The parser regex is assembled from plain JS string literals in `Parser._createCMLRegExp`. Write `\\s` / `\\w`: a single `\s` / `\w` silently becomes `s` / `w`, and tsc cannot see it. This has already broken the parser twice. Text the regexp does not match is a syntax error (`Parser._checkSkipped`), and unbalanced `(` `)` is rejected in `Formula`.
 - Units: script angles are degrees (counter-clockwise positive). They become radians in `State._setHeadAngle`, in `rx`/`ry`, and in the `BarrageElem.set*` setters (which take degrees). `fiber.headAngle` and `CMLObject` angles are radians.
-- Mirror: `mx` toggles bit 1 of `fiber.invertFlag`, `my` bit 2. `Fiber._invertY` reads bit 1 and `_invertX` bit 2, so `mx` flips y and `my` flips x.
+- Mirror: `@m` starts a fiber with `fiber.mirror = true` (nested `@m` toggles). It negates `d*` angles, the perpendicular component of `p`/`v`/`a`, and `b*` rotations. `q` is in screen coordinates: `_mirrorX` flips x on vertical scroll, `_mirrorY` flips y on horizontal scroll. `dt` still aims at the target; only its offset is mirrored.
 
 ## Conventions / gotchas
 
@@ -48,14 +48,12 @@ Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). np
 - Off-screen culling: `CML.Runner.onUpdate` auto-destroys runners outside `setScreenSize` bounds unless `runner.scopeEnabled = false` (player objects in `demo/main.js`). Without `setScreenSize` the bounds are 0, so a runner is destroyed on its first `update`.
 - `docs/remaining-tasks.md` and `README.md` describe the v2 / pre-TypeScript state and link to deleted v2 docs. Do not treat them as current.
 
-## Current state (2026-11-03) — delete an entry when it is fixed
+## Current state (2026-11-04) — delete an entry when it is fixed
 
-`npm run typecheck` and `npm test` pass: 183 tests, plus 3 `it.fails` that pin deviations of the implementation from the v3 spec. `demo/` still has a v2 default script (`demo/index.html`) that does not parse.
+`npm run typecheck` and `npm test` pass: 189 tests, no `it.fails`. `demo/` still has a v2 default script (`demo/index.html`) that does not parse.
 
 Spec vs. implementation, pinned in `test/spec/` (each has a `既知の不具合` / `要確認` comment):
 
-- `mx` / `my` mirror `d*` angles about the scroll direction (`mx` flips the component perpendicular to it, `my` the parallel one), but not the components of `p` / `v` / `a`. `q` is mirrored on screen axes instead (`mx` flips y), which does not match the angle mirror: the spec does not say which axis is meant, so this needs a decision.
-- User commands: the spec text names `CMLSequence.registerUserCommand()`; the real API is `cml.globalVariables.registerUserCommand`. (Names containing `_` are allowed; the spec was corrected.)
 - Not in the spec, unpinned: `bm1,30` fires its single bullet at -15° (the fan edge), not the centre.
 - `dp` is relative to the parent's angle only for `fs` children; for `f` children the reference is the screen's 0° (scroll direction). The spec was corrected to match.
-- Undecided: `f` with `{...}` does not pass constants to the bullet (`f0{7 p$1,0}` leaves `$1` at 0); the spec defines arguments for `&label` only. Locals are per object (`CMLObject._variables`), not per call, so two calls on one object overwrite each other's `$1..$9`.
+- Arguments are accepted after `&label` only (also `f0 &A 4`, which sets the bullet's `$1..`); an argument after `{...}` / `{.}` is a syntax error (`Parser._check_argument`). Locals are per object (`CMLObject._variables`), shared by all its fibers (spec documents this), so two calls on one object overwrite each other's `$1..$9`.

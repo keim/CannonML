@@ -26,8 +26,8 @@ export class Formula {
     }
     // Initialize all statics (call from CML.Parser._createCMLRegExp())
     static _createOperandRegExpString(literalRegExpString: string): string {
-        let rex = "(" + FormulaOperator.prefix_rex + "+)?";
-        rex += literalRegExpString + "?";
+        let rex = "((?:" + FormulaOperator.prefix_rex + "\\s*)+)?";
+        rex += literalRegExpString + "?\\s*";
         rex += "(" + FormulaOperator.postfix_rex + "+)?";
         return rex;
     }
@@ -48,6 +48,7 @@ export class Formula {
         if (!oprator)
             return false;
         const ope = new FormulaOperator(oprator, oprcnt);
+        const isClose = ope.priorL == 99;
         while (this._stacOperator.length > 0 && this._stacOperator[0].priorL > ope.priorR) {
             const oprcnt = this._stacOperator[0].oprcnt;
             if (this._stacOperand.length < oprcnt)
@@ -57,9 +58,11 @@ export class Formula {
             this._stacOperand.unshift(this._stacOperator.shift()!);
         }
         // closed by ()
-        if (this._stacOperator.length > 0 && this._stacOperator[0].priorR == 99 && ope.priorL == 99)
+        if (isClose) {
+            if (this._stacOperator.length == 0 || this._stacOperator[0].priorR != 99)
+                return false; // ")" without "("
             this._stacOperator.shift();
-        else
+        } else
             this._stacOperator.unshift(ope);
         return true;
     }
@@ -88,9 +91,12 @@ export class Formula {
     }
     // construct formula structure
     construct() {
+        // "(" is not closed
+        if (this._stacOperator.some(o => o.priorR == 99))
+            return false;
         // no arguments
         if (this._stacOperand.length == 0)
-            return true;
+            return this._stacOperator.length == 0;
         // construct tree structure
         while (this._stacOperator.length > 0) {
             const oprcnt = this._stacOperator[0].oprcnt;

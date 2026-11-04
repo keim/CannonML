@@ -78,8 +78,8 @@ export class State extends ListElem {
     // position of fiber
     _setHeadAngle(fiber: Fiber, option: number, angleInDeg: number) {
         const angleInRad = (option == State.HO_SEQ) ?
-                            fiber._invertRotation(angleInDeg*0.017453292519943295) :
-                            fiber._invertAngle(angleInDeg*0.017453292519943295);
+                            fiber._mirrorRotation(angleInDeg*0.017453292519943295) :
+                            fiber._mirrorAngle(angleInDeg*0.017453292519943295);
         fiber.setHeadAngle(option, angleInRad);
     }
     // command executer
@@ -129,7 +129,7 @@ export class State extends ListElem {
             throw new Error("CML Execution error. '&' call stac overflow.");
         const ref = this.next; // next statement is referential sequence
         fiber.jstc.push(ref);
-        fiber._pushInvertion(fiber.invertFlag);
+        fiber._pushMirrorFlag(fiber.mirror);
         this._setArguments(fiber, ref.$);
         fiber._pointer = ref.jump!;
         return true;
@@ -139,11 +139,12 @@ export class State extends ListElem {
         args.slice(0, 9).forEach((v, i) => fiber.setVariable(i, v));
     }
     // run new fiber
-    _fiber(fiber: Fiber, fiber_id: number) {
+    _fiber(fiber: Fiber, fiber_id: number, mirror: boolean) {
         const ref = this.next; // next statement is referential sequence
         this._setArguments(fiber, ref.$);
         const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
-        fiber._newChildFiber(seq, fiber_id, fiber.invertFlag, true); // create and initialize fiber
+        const mirrorFlag = mirror ? !fiber.mirror : fiber.mirror
+        fiber._newChildFiber(seq, fiber_id, mirrorFlag, true); // create and initialize fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
         return true;
@@ -152,7 +153,7 @@ export class State extends ListElem {
     _fiber_destruction(fiber: Fiber, destStatus: number) {
         const ref = this.next; // next statement is referential sequence
         const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
-        fiber._newDestFiber(seq, destStatus, fiber.invertFlag); // create and initialize destruction fiber
+        fiber._newDestFiber(seq, destStatus, fiber.mirror); // create and initialize destruction fiber
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
         return true;
@@ -161,7 +162,7 @@ export class State extends ListElem {
     _fiber_child(fiber: Fiber, obj: CMLObject, object_id: number) {
         const ref = this.next; // next statement is referential sequence
         const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
-        obj.findAllChildren(object_id).forEach((child: CMLObject)=>fiber._newObjectFiber(child, seq, fiber.invertFlag));
+        obj.findAllChildren(object_id).forEach((child: CMLObject)=>fiber._newObjectFiber(child, seq, fiber.mirror));
         fiber.seqFiber = seq; // update executing sequence
         fiber._pointer = ref; // skip next statement
         return true;
@@ -227,7 +228,7 @@ export class State extends ListElem {
         }
         else {
             // create new fiber and initialize
-            const newfiber = fiber._newChildFiber(Sequence.rapid(), Fiber.ID_NOT_SPECIFYED, fiber.invertFlag, false)!;
+            const newfiber = fiber._newChildFiber(Sequence.rapid(), Fiber.ID_NOT_SPECIFYED, fiber.mirror, false)!;
             // copy bullet setting and bullet multiplyer
             newfiber.bul.copy(bul.next);
             newfiber.bul.init(bul);
@@ -250,7 +251,7 @@ export class State extends ListElem {
               obj = fiber.object.onFireObject(fiber.seqFired);
         if (!obj) return;
         obj._initialize(fiber.object, isParts, access_id, cx, cy, 0, vx, vy, angle, args);  // create object
-        fiber._newObjectFiber(obj, fiber.seqFired, fiber.invertFlag);   // create fiber
+        fiber._newObjectFiber(obj, fiber.seqFired, fiber.mirror);   // create fiber
     }
 
     // Status Types
@@ -304,7 +305,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rx|ry|r|kf|ko|i|my|mx|@ko|@o|@x|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rx|ry|r|kf|ko|i|@ko|@o|@m|@x|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
     // global variables
     static _globalVariables: Global = null!;
     // operators
@@ -337,7 +338,7 @@ export class State extends ListElem {
             type: State.ST_END,
             func(_state, _$, fiber) {
                 if (fiber.jstc.length > 0) { // pop jump stac
-                    fiber._popInvertion();
+                    fiber._popMirrorFlag();
                     fiber._pointer = fiber.jstc.pop()!;
                 }
                 return true;
@@ -425,7 +426,7 @@ export class State extends ListElem {
             argc: 2,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setPositionByDirection(fiber.headAngle, $[0], $[1], fiber.chgt);
+                object.setPositionByDirection(fiber.headAngle, $[0], fiber._mirrorRotation($[1]), fiber.chgt);
                 return true;
             }
         },
@@ -442,7 +443,7 @@ export class State extends ListElem {
             argc: 2,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setVelocityByDirection(fiber.headAngle, $[0], $[1], fiber.chgt);
+                object.setVelocityByDirection(fiber.headAngle, $[0], fiber._mirrorRotation($[1]), fiber.chgt);
                 return true;
             }
         },
@@ -459,7 +460,7 @@ export class State extends ListElem {
             argc: 2,
             type: State.ST_NORMAL,
             func(_state, $, fiber, object) {
-                object.setAccelByDirection(fiber.headAngle, $[0], $[1]);
+                object.setAccelByDirection(fiber.headAngle, $[0], fiber._mirrorRotation($[1]));
                 return true;
             }
         },
@@ -476,7 +477,7 @@ export class State extends ListElem {
             argc: 3,
             type: State.STF_BE_INTERPOLATED,
             func(_state, $, fiber, object) {
-                object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], $[2]*0.017453292519943295, fiber.allowAngleRotation);
+                object.setRotation(fiber.headAngle, fiber.chgt, $[0], $[1], $[2]*0.017453292519943295, fiber.shortestRotation);
                 return true;
             }
         },
@@ -518,7 +519,14 @@ export class State extends ListElem {
             argc: 1,
             type: State.ST_RESTRICT | State.STF_CALLREF,
             func(state, $, fiber) {
-                return state._fiber(fiber, $[0]);
+                return state._fiber(fiber, $[0], false);
+            }
+        },
+        "@m":{
+            argc: 0,
+            type: State.ST_RESTRICT | State.STF_CALLREF,
+            func(state, _$, fiber) {
+                return state._fiber(fiber, Fiber.ID_NOT_SPECIFYED, true);
             }
         },
         "@o":{
@@ -561,8 +569,8 @@ export class State extends ListElem {
             argc: 2,
             type: State.ST_NORMAL,
             func(_state, $, fiber) {
-                fiber.fx = fiber._invertX($[0]);
-                fiber.fy = fiber._invertY($[1]);
+                fiber.fx = fiber._mirrorX($[0]);
+                fiber.fy = fiber._mirrorY($[1]);
                 return true;
             }
         },
@@ -570,7 +578,7 @@ export class State extends ListElem {
             argc: 1,
             type: State.ST_NORMAL,
             func(_state, $, fiber) {
-                fiber.fx = fiber._invertX($[0]);
+                fiber.fx = fiber._mirrorX($[0]);
                 return true;
             }
         },
@@ -578,7 +586,7 @@ export class State extends ListElem {
             argc: 1,
             type: State.ST_NORMAL,
             func(_state, $, fiber) {
-                fiber.fy = fiber._invertY($[0]);
+                fiber.fy = fiber._mirrorY($[0]);
                 return true;
             }
         },
@@ -637,7 +645,7 @@ export class State extends ListElem {
             argc: 4,
             type: State.ST_BARRAGE,
             func(_state, $, fiber) {
-                fiber.barrage.appendMultiple($[0], fiber._invertRotation($[1]), $[2], $[3]); 
+                fiber.barrage.appendMultiple($[0], fiber._mirrorRotation($[1]), $[2], $[3]); 
                 return true;
             }
         },
@@ -645,7 +653,7 @@ export class State extends ListElem {
             argc: 4,
             type: State.ST_BARRAGE,
             func(_state, $, fiber) {
-                fiber.barrage.appendSequence($[0], fiber._invertRotation($[1]), $[2], $[3]);
+                fiber.barrage.appendSequence($[0], fiber._mirrorRotation($[1]), $[2], $[3]);
                 return true;
             }
         },
@@ -653,7 +661,7 @@ export class State extends ListElem {
             argc: 4,
             type: State.ST_BARRAGE,
             func(_state, $, fiber) {
-                fiber.barrage.appendRandom($[0], fiber._invertRotation($[1]), $[2], $[3]); 
+                fiber.barrage.appendRandom($[0], fiber._mirrorRotation($[1]), $[2], $[3]); 
                 return true;
             }
         },
@@ -682,23 +690,6 @@ export class State extends ListElem {
                 return true;
             }
         },
-    //---- mirror
-        "mx":{
-            argc: 0,
-            type: State.ST_NORMAL,
-            func(_state, _$, fiber) {
-                fiber.invertFlag = fiber.invertFlag ^ 1;
-                return true;
-            }
-        },
-        "my":{
-            argc: 0,
-            type: State.ST_NORMAL,
-            func(_state, _$, fiber) {
-                fiber.invertFlag = fiber.invertFlag ^ 2;
-                return true;
-            }
-        },
     //---- internal command
         "$calllabel":{ // &(label_name)
             argc: 0,
@@ -711,7 +702,7 @@ export class State extends ListElem {
             argc: 0,
             type: State.STF_CALLREF,
             func(state, _$, fiber) {
-                return state._fiber(fiber, Fiber.ID_NOT_SPECIFYED); 
+                return state._fiber(fiber, Fiber.ID_NOT_SPECIFYED, false); 
             }
         },
         "$rapid":{

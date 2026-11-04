@@ -106,7 +106,7 @@ return Enemy(fbr.object).life;
         this._mapUsrDefRef[name] = func;
         this._requestUpdateRegExp = true;
     }
-    /** Register user defined command "&amp;[a-z_]+".
+    /** Register user defined command "&amp;[A-Za-z0-9_]+".
      *  <p>
      *  This function registers the command that can use in CML string. <br/>
      *  </p>
@@ -116,7 +116,7 @@ return Enemy(fbr.object).life;
      *  The 1st argument gives a reference of the fiber that execute the sequence.
      *  And the 2nd argument gives the arguments of the command.
      *  @param argc The count of argument that this command requires.<br/>
-     *  @param requireSequence Specify true if this command require the sequence as the '&amp;', '&#64;' and 'n' commands.
+     *  @param requireSequence Specify true if this command require the sequence as the 'f', 'fs' and '&#64;' commands.
      *  @see CML.Fiber
 @example
 <listing version="3.0">

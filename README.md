@@ -97,7 +97,7 @@ enemy.execute(cml.sequence("[w30[$x>0?bm1,1f10:bm7,120f5]]"));
 |---|---|
 | `new CannonML(vertical = true, callbacks = {})` | インスタンス生成。シングルトンのため2回呼ぶと例外。`vertical` はスクロール方向、`callbacks` は `onCreateNewRunner` / `onDestroy` / `onUpdate` |
 | `update()` | 全ファイバー・全オブジェクトを1フレーム進める。毎フレーム必須 |
-| `runner(x, y, z, seq, args, invFlag)` | `CML.Runner` を生成。`seq` を渡すと同時に実行開始 |
+| `runner(x, y, z, seq, mirror)` | `CML.Runner` を生成。`seq` を渡すと同時に実行開始 |
 | `sequence(cmlScript, globalFlag = false)` | CML 文字列から `CML.Sequence` を生成 |
 | `setDefaultTarget(target)` | 弾の狙撃対象のデフォルト(初期値は `CML.Object.root`) |
 | `setScreenSize(width, height, bias = 0)` | 画面外判定サイズ。範囲外のランナーは自動破棄される |
@@ -122,7 +122,7 @@ enemy.execute(cml.sequence("[w30[$x>0?bm1,1f10:bm7,120f5]]"));
 
 | メソッド | 説明 |
 |---|---|
-| `execute(seq, args = null, invertFlag = 0)` | シーケンスを実行し、`CML.Fiber` を返す |
+| `execute(seq, mirror = false)` | シーケンスを実行し、`CML.Fiber` を返す |
 | `halt()` | 自身の全ファイバーの実行を停止 |
 | `destroy(status)` | オブジェクトを破棄(子ファイバーも停止) |
 | `setCallbackFunctions({onCreateNewRunner, onDestroy, onUpdate})` | 描画連携用コールバックを登録 |

@@ -8,14 +8,14 @@ const round = n => Math.round(n * 1e6) / 1e6 + 0;
  * trace は各フレーム後の runner の [x, y]、counts は各フレーム後の生成数、
  * spawned は生成された Runner（孫以降も含む）、extra は before の戻り値。
  */
-export function run(script, frames = 1, { vertical = true, screen = 10000, rand, before, invFlag = 0 } = {}) {
+export function run(script, frames = 1, { vertical = true, screen = 10000, rand, before, mirror = false } = {}) {
   const { cml, CML, ctx } = createCML({ vertical, rand });
   cml.setScreenSize(screen, screen);
   const extra = before && before(cml);
   const spawned = [];
   const runner = cml.runner(0, 0, 0);
   runner.setCallbackFunctions({ onCreateNewRunner: r => spawned.push(r) });
-  const fiber = runner.execute(cml.sequence(script), invFlag);
+  const fiber = runner.execute(cml.sequence(script), mirror);
   const trace = [], counts = [];
   for (let i = 0; i < frames; i++) {
     cml.update();

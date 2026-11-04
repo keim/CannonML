@@ -1,6 +1,6 @@
-// docs/reference/v3/cannonML.md: 「特殊ファイバ起動」「その他」（@x @o @ko / ko kf / t* / m*）
+// docs/reference/v3/cannonML.md: 「特殊ファイバ起動」「その他」（@x @o @ko / ko kf / t* / @m）
 import { describe, it, expect } from "vitest";
-import { run, deg, withTarget, at, parse } from "../helpers/run.js";
+import { run, deg, withTarget, at, parse, xy } from "../helpers/run.js";
 import { createCML } from "../helpers/load.js";
 
 const round = n => Math.round(n * 1e6) / 1e6;
@@ -150,67 +150,71 @@ describe("t* ターゲットオブジェクトの指定", () => {
   });
 });
 
-describe("mx / my 反転動作", () => {
-  // 基準は da30 p10,0（画面の -60 度に 10 進んだ位置）。角度はスクロール方向を軸に反転する:
-  //   mx … スクロール方向の垂直成分を反転（da30 は画面の 30 度 → -30 度）
-  //   my … スクロール方向の平行成分を反転（da30 は画面の 30 度 → 150 度）
+describe("@m ミラーファイバ起動", () => {
+  // 基準は da30 p10,0。@m はスクロール方向を軸に鏡映する（da30 は da-30 になる）
   const BASE = "da30 p10,0";
-  const mirror = prefix => run(`${prefix} ${BASE}`, 1).trace[0];
+  const mirrored = at(-30, 10);
 
-  it("mx と my は、それぞれ別の 1 軸だけを反転する", () => {
-    expect(mirror("mx")).toEqual(at(-30, 10));
-    expect(mirror("my")).toEqual(at(150, 10));
+  it("@m の外側は反転しない", () => {
+    expect(run(`@m{} ${BASE}`, 1).trace[0]).toEqual(at(30, 10));
   });
 
-  it("mx my で両軸が反転し、同じコマンドを 2 回で元に戻る", () => {
-    expect(mirror("mx my")).toEqual(at(210, 10));
-    expect(mirror("mx mx")).toEqual(at(30, 10));
+  it("d* の角度が反転する", () => {
+    expect(run(`@m{${BASE}}`, 1).trace[0]).toEqual(mirrored);
   });
 
-  // 既知の不具合: p の成分は反転されない（d* の角度と q・b* だけがミラーされる）。
-  // 反転は、スクロール方向を軸にした鏡映: 基準の b（直交成分）の符号が反転する
-  it.fails("p の位置が反転する", () => {
-    expect(run("mx da30 p10,5", 1).trace[0]).toEqual(at(-30, 10, -5));
-    expect(run("my da30 p10,5", 1).trace[0]).toEqual(at(150, 10, -5));
+  it("p の位置が反転する（直交成分の符号も反転）", () => {
+    expect(run("@m{da30 p10,5}", 1).trace[0]).toEqual(at(-30, 10, -5));
   });
 
-  // 既知の不具合: 上と同じ（v の成分は反転されない）
-  it.fails("v の速度が反転する", () => {
-    expect(run("mx da0 v10,5", 1).runner.vel).toEqual(at(0, 10, -5));
+  it("i と ~ の補間でも p の終点が反転する", () => {
+    expect(run("@m{da30 i3 p10,5 ~}", 3).trace.at(-1)).toEqual(at(-30, 10, -5));
   });
 
-  // 既知の不具合: 上と同じ（a の成分は反転されない）
-  it.fails("a の加速度が反転する", () => {
-    expect(run("mx da0 a10,5", 1).runner.acc).toEqual(at(0, 10, -5));
+  it("v の速度が反転する", () => {
+    expect(xy(run("@m{da0 v10,5}", 1).runner.vel)).toEqual(at(0, 10, -5));
   });
 
-  // 要確認: q の反転は画面の軸（mx は y、my は x）で、d* の角度の反転（スクロール方向基準）と軸が揃っていない
-  it("q の位置が反転する（現在の軸）", () => {
-    expect(pos(run("mx q10,5 f0", 1).spawned[0])).toEqual([10, -5]);
-    expect(pos(run("my q10,5 f0", 1).spawned[0])).toEqual([-10, 5]);
+  it("a の加速度が反転する", () => {
+    expect(xy(run("@m{da0 a10,5}", 1).runner.acc)).toEqual(at(0, 10, -5));
   });
 
-  // da0 は画面の -90 度（基準）。bs で 1 射出ごとに +10 度、mx では -10 度ずつ、my では 180 度を起点に -10 度ずつ
+  // q は画面座標。スクロール軸に垂直な画面軸を反転する（縦: x、横: y）
+  it("q の位置が反転する（縦スクロール: 画面の x が反転）", () => {
+    expect(pos(run("@m{q10,5 f0}", 1).spawned[0])).toEqual([-10, 5]);
+  });
+
+  it("q の位置が反転する（横スクロール: 画面の y が反転）", () => {
+    expect(pos(run("@m{q10,5 f0}", 1, { vertical: false }).spawned[0])).toEqual([10, -5]);
+    expect(pos(run("@m{qx10 qy5 f0}", 1, { vertical: false }).spawned[0])).toEqual([10, -5]);
+    expect(pos(run("@m{qx10 qy5 f0}", 1).spawned[0])).toEqual([-10, 5]);
+  });
+
+  // da0 は画面の -90 度（基準）。bs で 1 射出ごとに +10 度、@m では -10 度ずつ
   it("b* の角度が反転する", () => {
-    const angles = prefix => run(`${prefix} da0 bs3,10,0 f5`, 1).spawned.map(o => Math.round(deg(o.vel)));
-    expect(angles("")).toEqual([-90, -80, -70]);
-    expect(angles("mx")).toEqual([-90, -100, -110]);
-    expect(angles("my")).toEqual([90, 80, 70]);
+    const angles = script => run(script, 1).spawned.map(o => Math.round(deg(o.vel)));
+    expect(angles("da0 bs3,10,0 f5")).toEqual([-90, -80, -70]);
+    expect(angles("@m{da0 bs3,10,0 f5}")).toEqual([-90, -100, -110]);
   });
 
-  it("w を挟むと反転はリセットされる", () => {
-    expect(run(`mx w1 ${BASE}`, 2).trace.at(-1)).toEqual(at(30, 10));
+  it("w を挟んでも反転は続く（起動したファイバは終了まで反転）", () => {
+    expect(run(`@m{w1 ${BASE}}`, 2).trace.at(-1)).toEqual(mirrored);
   });
 
   it("& で呼び出したシーケンスの全コマンドが反転する", () => {
-    expect(run(`#A{${BASE}} mx &A`, 1).trace[0]).toEqual(mirror("mx"));
-  });
-
-  it("{...} で起動したファイバは、w の後も含めて全コマンドが反転する", () => {
-    expect(run(`mx {${BASE} w1 ${BASE}}`, 3).trace.at(-1)).toEqual(mirror("mx"));
+    expect(run(`#A{${BASE}} @m{&A}`, 1).trace[0]).toEqual(mirrored);
+    expect(run(`#A{${BASE}} @m&A`, 1).trace[0]).toEqual(mirrored);
   });
 
   it("f で生成した子オブジェクトのファイバも全コマンドが反転する", () => {
-    expect(pos(run(`mx f0{${BASE} w1 ${BASE}}`, 4).spawned[0])).toEqual(mirror("mx"));
+    expect(pos(run(`@m{f0{${BASE} w1 ${BASE}}}`, 4).spawned[0])).toEqual(mirrored);
+  });
+
+  it("@m の入れ子は反転が打ち消される", () => {
+    expect(run(`@m{@m{${BASE}}}`, 1).trace[0]).toEqual(at(30, 10));
+  });
+
+  it("mx / my は構文として存在しない", () => {
+    expect(() => run("mx", 1)).toThrow();
   });
 });
