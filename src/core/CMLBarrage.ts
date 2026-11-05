@@ -48,7 +48,7 @@ export class Barrage {
      *  @param copy source.
      */
     appendCopyOf(src: Barrage) {
-        var qrt = src.qrtList.begin;
+        let qrt = src.qrtList.begin;
         while (qrt != src.qrtList.end) {
             this._appendElementCopyOf(qrt);
             qrt = qrt.next;

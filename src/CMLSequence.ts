@@ -1,4 +1,5 @@
-import type { Global } from "./core/CMLGlobal.js"
+import { Formula } from "./core/CMLFormula.js"
+import { required, type Global } from "./core/CMLGlobal.js"
 import { Parser } from "./core/CMLParser.js"
 import { Refer } from "./core/CMLRefer.js"
 import { State } from "./core/CMLState.js"
@@ -29,7 +30,7 @@ import { State } from "./core/CMLState.js"
 @example Typical usage.
 <listing version="3.0">
 // Create enemys sequence from "String of cannonML" or "XML of bulletML".
-var motion:CML.Sequence = new CML.Sequence(String or XML);
+const motion:CML.Sequence = new CML.Sequence(String or XML);
 
 ...
 
@@ -77,13 +78,13 @@ export class Sequence extends State {
      *  </p>
 @example
 <listing version="3.0">
-var seqG:CML.Sequence = new CML.Sequence("#LABEL_G{...}");
+const seqG:CML.Sequence = new CML.Sequence("#LABEL_G{...}");
 
 seqG.global = true;
-var seqA:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Success; you can refer the LABEL_G.
+const seqA:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Success; you can refer the LABEL_G.
 
 seqG.global = false;
-var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you cannot refer the LABEL_G.
+const seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you cannot refer the LABEL_G.
 </listing>
      */
     get global() { return this._global; }
@@ -97,7 +98,7 @@ var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you canno
     }
     /** Is this sequence empty ? */
     get isEmpty() {
-        var cmd = this.next;
+        const cmd = this.next;
         return (this.next == null || cmd.type == State.ST_END);
     }
     // static functions
@@ -105,6 +106,8 @@ var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you canno
     /** @private */
     static _initialize(globalVariables_: Global) {
         Sequence._parser = new Parser(globalVariables_);
+        Formula._initialize(globalVariables_);
+
     }
     // references
     //------------------------------------------------------------
@@ -117,8 +120,8 @@ var seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you canno
      *  @return Value of argument.
 @example
 <listing version='3.0'>
-var seq:CML.Sequence = new CML.Sequence("#A{10,20 v0,2[w30f3]}");
-var seqA:CML.Sequence = seq.findSequence("A");
+const seq:CML.Sequence = new CML.Sequence("#A{10,20 v0,2[w30f3]}");
+const seqA:CML.Sequence = seq.findSequence("A");
 trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 10, 20, 0
 </listing>
      */
@@ -163,13 +166,13 @@ trace(seqA.getParameter(0), seqA.getParameter(1), seqA.getParameter(2));    // 1
 @example
 <listing version="3.0">
 // You can access the child sequence.
-var seq:CML.Sequence = new CML.Sequence("#A{v0,2[w30f3]}");
-var seqA:CML.Sequence = seq.findSequence("A");       // seqA is "v0,2[w30f]".
+const seq:CML.Sequence = new CML.Sequence("#A{v0,2[w30f3]}");
+const seqA:CML.Sequence = seq.findSequence("A");       // seqA is "v0,2[w30f]".
 
 // You can use the access operator.
-var seq:CML.Sequence = new CML.Sequence("#A{ #B{v0,2[w30f4]} #C{v0,4[w10f2]} }");
-var seqAB:CML.Sequence = seq.findSequence("A.B");    // seqAB is "v0,2[w30f4]". Same as seq.findSequence("A").findSequence("B")
-var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". Same as seq.findSequence("A").findSequence("C")
+const seq:CML.Sequence = new CML.Sequence("#A{ #B{v0,2[w30f4]} #C{v0,4[w10f2]} }");
+const seqAB:CML.Sequence = seq.findSequence("A.B");    // seqAB is "v0,2[w30f4]". Same as seq.findSequence("A").findSequence("B")
+const seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". Same as seq.findSequence("A").findSequence("C")
 </listing>
      */
     findSequence(label_: string): Sequence | null {
@@ -293,7 +296,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     /** @private */
     static nop() {
         if (!Sequence._nop) {
-            var cmdNop = new State("$end");
+            const cmdNop = new State("$end");
             Sequence._nop = new Sequence();
             Sequence._nop.next = cmdNop;
             cmdNop.prev = Sequence._nop;
@@ -305,7 +308,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     /** @private */
     static rapid() {
         if (!Sequence._rapid) {
-            var rap = new State("$rapid");
+            const rap = new State("$rapid");
             Sequence._rapid = new Sequence();
             Sequence._rapid.next = rap;
             rap.prev = Sequence._rapid;
@@ -316,7 +319,7 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     // sequence to wait for object destruction. call from CML.Fiber
     /** @private */
     static newWaitDestruction() {
-        var seq = new Sequence(), cmd = new State("$w4d");
+        const seq = new Sequence(), cmd = new State("$w4d");
         seq.next = cmd;
         cmd.prev = seq;
         cmd.jump = seq;
@@ -327,8 +330,12 @@ var seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]". 
     // lazily created shared sequences (see nop() / rapid())
     static _nop?: Sequence
     static _rapid?: Sequence
+
     // Cannon ML Parser
-    static _parser: Parser = null!;
+    static _parserValue: Parser | null = null;
+    static get _parser(): Parser { return required(Sequence._parserValue, "Sequence._parser"); }
+    static set _parser(v: Parser) { Sequence._parserValue = v; }
+    
     // global sequence
     static globalSequences: Sequence[] = [];
 

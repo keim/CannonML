@@ -2,10 +2,8 @@ import { Fiber } from "./CMLFiber.js"
 import { Runner, type RunnerCallbacks } from "./CMLRunner.js"
 import { Sequence } from "./CMLSequence.js"
 import { Barrage } from "./core/CMLBarrage.js"
-import { Formula } from "./core/CMLFormula.js"
 import { Global } from "./core/CMLGlobal.js"
 import { CMLObject } from "./core/CMLObject.js"
-import { State } from "./core/CMLState.js"
 
 //----------------------------------------------------------------------------------------------------
 // CannonML.ts
@@ -33,8 +31,6 @@ export class CannonML {
         Fiber._initialize(this.globalVariables);
         CMLObject._initialize(this.globalVariables, this.rootRunner);
         Sequence._initialize(this.globalVariables);
-        State._initialize(this.globalVariables);
-        Formula._initialize(this.globalVariables);
         Barrage._initialize(this.globalVariables);
         this.setDefaultTarget(CMLObject.root);
     }
@@ -74,7 +70,7 @@ export class CannonML {
     setDefaultTarget(target_: CMLObject) {
         Fiber._defaultTarget = target_;
     }
-    /** set screen size (escaped when Runners are out of screen size) and bias */
+    /** set screen size (escaped when Runners are out of screen size) and bias. The default is 200 x 200. */
     setScreenSize(width: number, height: number, bias=0) {
         this.globalVariables._halfScreenWidth = width / 2 + bias;
         this.globalVariables._halfScreenHeight = height / 2 + bias;

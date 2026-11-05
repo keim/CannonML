@@ -1,4 +1,4 @@
-import type { Global } from "./CMLGlobal.js"
+import { required, type Global } from "./CMLGlobal.js"
 import type { Sequence } from "../CMLSequence.js"
 import { List } from "./CMLList.js"
 import { ListElem } from "./CMLListElem.js"
@@ -558,11 +558,10 @@ target_object = null;                   // target object was destroyed.
         }
         // refrective funciton
         function _repush(obj: CMLObject) {
-            var key;
             obj.remove_from_list();
             CMLObject._activeObjects.push(obj);
-            for (key in obj._relativeChildren) {
-                var part = obj._relativeChildren[key];
+            for (const key in obj._relativeChildren) {
+                const part = obj._relativeChildren[key];
                 _repush(part);
             }
         }
@@ -748,8 +747,14 @@ target_object = null;                   // target object was destroyed.
     //------------------------------------------------------------
     // statics
     static _activeObjects: List = new List(); // active object list
-    static _root: CMLObject = null!; // root object instance
-    static _globalVariables: Global = null!; // gloabal variables
+
+    static _rootValue: CMLObject | null = null; // root object instance
+    static get _root(): CMLObject { return required(CMLObject._rootValue, "CMLObject._root"); }
+    static set _root(v: CMLObject) { CMLObject._rootValue = v; }
+    static _globalVariablesValue: Global | null = null; // gloabal variables
+    static get _globalVariables(): Global { return required(CMLObject._globalVariablesValue, "CMLObject._globalVariables"); }
+    static set _globalVariables(v: Global) { CMLObject._globalVariablesValue = v; }
+    
     // enum for relation
     static NO_RELATION = 0;
     static REL_ATTRACT = 1;

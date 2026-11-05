@@ -118,7 +118,7 @@ describe("kf 全ファイバ停止", () => {
 describe("t* ターゲットオブジェクトの指定", () => {
   // 子オブジェクト (50,0) が w1 の後でターゲットを変えて射出する。弾は 2 番目の生成物
   const childShot = (childScript, before) => {
-    const r = run(`q50,0 f0{w1 ${childScript} f5}`, 4, { before });
+    const r = run(`o50,0 f0{w1 ${childScript} f5}`, 4, { before });
     return deg(r.spawned[1].vel);
   };
 
@@ -179,15 +179,15 @@ describe("@m ミラーファイバ起動", () => {
     expect(xy(run("@m{da0 a10,5}", 1).runner.acc)).toEqual(at(0, 10, -5));
   });
 
-  // q は画面座標。スクロール軸に垂直な画面軸を反転する（縦: x、横: y）
-  it("q の位置が反転する（縦スクロール: 画面の x が反転）", () => {
-    expect(pos(run("@m{q10,5 f0}", 1).spawned[0])).toEqual([-10, 5]);
+  // o は画面座標。スクロール軸に垂直な画面軸を反転する（縦: x、横: y）
+  it("o の位置が反転する（縦スクロール: 画面の x が反転）", () => {
+    expect(pos(run("@m{o10,5 f0}", 1).spawned[0])).toEqual([-10, 5]);
   });
 
-  it("q の位置が反転する（横スクロール: 画面の y が反転）", () => {
-    expect(pos(run("@m{q10,5 f0}", 1, { vertical: false }).spawned[0])).toEqual([10, -5]);
-    expect(pos(run("@m{qx10 qy5 f0}", 1, { vertical: false }).spawned[0])).toEqual([10, -5]);
-    expect(pos(run("@m{qx10 qy5 f0}", 1).spawned[0])).toEqual([-10, 5]);
+  it("o の位置が反転する（横スクロール: 画面の y が反転）", () => {
+    expect(pos(run("@m{o10,5 f0}", 1, { vertical: false }).spawned[0])).toEqual([10, -5]);
+    expect(pos(run("@m{ox10 oy5 f0}", 1, { vertical: false }).spawned[0])).toEqual([10, -5]);
+    expect(pos(run("@m{ox10 oy5 f0}", 1).spawned[0])).toEqual([-10, 5]);
   });
 
   // da0 は画面の -90 度（基準）。bs で 1 射出ごとに +10 度、@m では -10 度ずつ
@@ -216,5 +216,21 @@ describe("@m ミラーファイバ起動", () => {
 
   it("mx / my は構文として存在しない", () => {
     expect(() => run("mx", 1)).toThrow();
+  });
+});
+
+describe("画面サイズの既定値（setScreenSize を呼ばない場合は 200 x 200）", () => {
+  const alive = x => {
+    const { cml } = createCML();
+    const r = cml.runner(x, 0, 0);
+    cml.update();
+    return r.destructionStatus < 0;
+  };
+
+  it("画面内（|x| <= 100）の Runner は破棄されず、外に出ると破棄される", () => {
+    expect(alive(0)).toBe(true);
+    expect(alive(100)).toBe(true);
+    expect(alive(101)).toBe(false);
+    expect(alive(-101)).toBe(false);
   });
 });

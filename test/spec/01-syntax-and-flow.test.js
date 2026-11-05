@@ -204,6 +204,19 @@ describe("シーケンス呼出 &", () => {
     expect(last("#A{p1,0} #AB{p2,0} &A")).toEqual([1, 0]);
   });
 
+  // 仕様: 接頭辞だけが定義済みなら、残りは引数にもラベルにもならず構文エラー（最長一致の制限）
+  it("定義済みラベルの接頭辞だけでは &AB と解釈されない（B が構文エラー）", () => {
+    expect(() => parse("#A{p5,0} &AB")).toThrow(/B \?/);
+  });
+
+  it("ラベルが無いとき未定義の &name は、BUG ではなく &name の構文エラーになる", () => {
+    for (const s of ["&noargs", "&noargs()", "&", "& p1,0"]) {
+      expect(() => parse(s), s).toThrow();
+      expect(() => parse(s), s).not.toThrow(/BUG/);
+    }
+    expect(() => parse("&noargs")).toThrow("&noargs ?");
+  });
+
   it("& を付けないラベル名は構文エラー", () => {
     expect(() => parse("#A{p5,0} A")).toThrow();
     expect(() => parse("#A{p5,0} f0 A")).toThrow();

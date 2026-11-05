@@ -23,7 +23,7 @@ export class Parser {
     loopstac: State[]
     childstac: Sequence[]
     cmdTemp: State | null
-    currentLabelRegExpString: string
+    currentLabelRegExpString: string = ""
     _compiledLabelRegExpString: string | null
     _regexp: RegExp | null
     _regexpUserCommand: RegExp | null
@@ -49,12 +49,11 @@ export class Parser {
         this.loopstac = []; // loop stac
         this.childstac = []; // child cast "{}" stac
         this.cmdTemp = null; // current parsing statement
-        this.currentLabelRegExpString = null!; // labels in current parsing script
+        // labels in current parsing script: set in _initialize()
         this._compiledLabelRegExpString = null; // labels in current parsing script
         this._regexp = null; // regular expression
         this._regexpUserCommand = null; // regular expression for user commands
         this._globalVariables = globalVariables_;
-        Formula._initialize(globalVariables_);
     }
     // parsing
     //------------------------------------------------------------
@@ -266,12 +265,12 @@ export class Parser {
             rexstr += "(,|\\+|-|\\*|/|%|==|!=|>=|<=|>|<)"; // formula operator (res[5])
             rexstr += "|" + State.command_rex; // normal commands (res[6])
             rexstr += "|l\\$([1-9][+\\-*/]?)="; // assign (res[7])
-            rexstr += "|&("+this.currentLabelRegExpString+")"; // call sequence or command (res[8])
+            rexstr += "|&(" + (this.currentLabelRegExpString || "(?!)") + ")"; // call sequence or command (res[8]); "(?!)" never matches
             rexstr += "|#(\\w+)\\s*\\{"; // labeled sequence definition (res[9])
             rexstr += "|(\\{\\.\\})"; // repeat previous call (res[10])
             rexstr += "|(\\{)"; // non-labeled sequence call (res[11])
             rexstr += ")\\s*" + operandRegExpString + ")"; // argument(res[12,13];prefix, res[14,15];literal, res[16,17];postfix)
-            rexstr += "|([A-Za-z]+|&)"; // error (res[18]); a bare "&" is not followed by a label
+            rexstr += "|(&?\\w+|&)"; // error (res[18]); "&name" as a whole, and a bare "&"
             this._regexp = new RegExp(rexstr, "gm"); // "s" option not available on javascript
             this._globalVariables._requestUpdateRegExp = false;
             this._compiledLabelRegExpString = this.currentLabelRegExpString;

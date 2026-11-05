@@ -1,5 +1,5 @@
 import type { Fiber } from "../CMLFiber.js"
-import type { Global } from "./CMLGlobal.js"
+import { required, type Global } from "./CMLGlobal.js"
 import { FormulaLiteral } from "./CMLFormulaLiteral.js"
 import { FormulaOperator, type FormulaNode } from "./CMLFormulaOperator.js"
 
@@ -130,8 +130,14 @@ export class Formula {
         return answers;
     }
 
-    static _globalVariables: Global = null!;
-    static _prefixRegExp: RegExp = null!;
-    static _postfixRegExp: RegExp = null!;
+    static _globalVariablesValue: Global | null = null;
+    static get _globalVariables(): Global { return required(Formula._globalVariablesValue, "Formula._globalVariables"); }
+    static set _globalVariables(v: Global) { Formula._globalVariablesValue = v; }
+    static _prefixRegExpValue: RegExp | null = null;
+    static get _prefixRegExp(): RegExp { return required(Formula._prefixRegExpValue, "Formula._prefixRegExp"); }
+    static set _prefixRegExp(v: RegExp) { Formula._prefixRegExpValue = v; }
+    static _postfixRegExpValue: RegExp | null = null;
+    static get _postfixRegExp(): RegExp { return required(Formula._postfixRegExpValue, "Formula._postfixRegExp"); }
+    static set _postfixRegExp(v: RegExp) { Formula._postfixRegExpValue = v; }
 
 }

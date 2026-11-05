@@ -1,6 +1,6 @@
-// docs/reference/v3/cannonML.md: 「オブジェクト生成」（q* b* f*）
+// docs/reference/v3/cannonML.md: 「オブジェクト生成」（o* b* f*）
 import { describe, it, expect } from "vitest";
-import { run, deg, withTarget } from "../helpers/run.js";
+import { run, deg, withTarget, parse } from "../helpers/run.js";
 import { createCML } from "../helpers/load.js";
 
 const speed = o => Math.hypot(o.vel.x, o.vel.y);
@@ -89,37 +89,41 @@ describe("オブジェクト生成 f / fs", () => {
   });
 });
 
-describe("原点の指定 q / qx / qy", () => {
-  it("q は子オブジェクトの初期位置を指定する", () => {
-    expect(pos(run("w1 q5,3 f0", 2).spawned[0])).toEqual([5, 3]);
+describe("原点の指定 o / ox / oy", () => {
+  it("o は子オブジェクトの初期位置を指定する", () => {
+    expect(pos(run("w1 o5,3 f0", 2).spawned[0])).toEqual([5, 3]);
   });
 
-  it("qx / qy は一方の座標だけを変える", () => {
-    expect(pos(run("w1 q1,2 qx7 f0", 2).spawned[0])).toEqual([7, 2]);
-    expect(pos(run("w1 q1,2 qy9 f0", 2).spawned[0])).toEqual([1, 9]);
+  it("ox / oy は一方の座標だけを変える", () => {
+    expect(pos(run("w1 o1,2 ox7 f0", 2).spawned[0])).toEqual([7, 2]);
+    expect(pos(run("w1 o1,2 oy9 f0", 2).spawned[0])).toEqual([1, 9]);
+  });
+
+  it("旧名の q / qx / qy は構文エラー（o / ox / oy に改名）", () => {
+    for (const s of ["q1,2", "qx7", "qy9", "w1 q5,3 f0"]) expect(() => parse(s), s).toThrow();
   });
 
   it("引数を省略すると 0 になる", () => {
-    expect(pos(run("w1 q5,3 q f0", 2).spawned[0])).toEqual([0, 0]);
+    expect(pos(run("w1 o5,3 o f0", 2).spawned[0])).toEqual([0, 0]);
   });
 
   it("原点はオブジェクトの相対位置で、オブジェクトが回転するとその角度に合わせて移動する", () => {
     // da0 r1,1 で画面の -90 度へ向く。原点 (5,0) は -90 度回って (0,-5) になる
-    expect(pos(run("da0 r1,1 w1 q5,0 f0", 2).spawned[0])).toEqual([0, -5]);
+    expect(pos(run("da0 r1,1 w1 o5,0 f0", 2).spawned[0])).toEqual([0, -5]);
   });
 
-  it("仕様の例 1: q0,0 dt0 q-5,0 f10 q5,0 f10 は、中心から算出した同じ向きで ±5 の位置から射出する", () => {
+  it("仕様の例 1: o0,0 dt0 o-5,0 f10 o5,0 f10 は、中心から算出した同じ向きで ±5 の位置から射出する", () => {
     const before = withTarget(0, 100);
-    const [a, b] = run("w1 q0,0 dt0 q-5,0 f10 q5,0 f10", 2, { before }).spawned;
+    const [a, b] = run("w1 o0,0 dt0 o-5,0 f10 o5,0 f10", 2, { before }).spawned;
     expect(origin(a)).toEqual([-5, 0]);
     expect(origin(b)).toEqual([5, 0]);
     expect(deg(a.vel)).toBeCloseTo(90);
     expect(deg(b.vel)).toBeCloseTo(90);
   });
 
-  it("仕様の例 2: q-5,0 dt0 f10 q5,0 dt0 f10 は、それぞれの位置からターゲットへ向けて射出する", () => {
+  it("仕様の例 2: o-5,0 dt0 f10 o5,0 dt0 f10 は、それぞれの位置からターゲットへ向けて射出する", () => {
     const before = withTarget(0, 100);
-    const [a, b] = run("w1 q-5,0 dt0 f10 q5,0 dt0 f10", 2, { before }).spawned;
+    const [a, b] = run("w1 o-5,0 dt0 f10 o5,0 dt0 f10", 2, { before }).spawned;
     expect(origin(a)).toEqual([-5, 0]);
     expect(origin(b)).toEqual([5, 0]);
     expect(deg(a.vel)).toBeCloseTo(Math.atan2(100, 5) * 180 / Math.PI);
@@ -132,6 +136,21 @@ describe("同時生成 bm / bs / br", () => {
     // da0 の画面角は -90 度。扇の中心角 30 度は、両側 15 度ずつ
     const r = run("da0 bm3,30 f10", 1);
     expect(sorted(angles(r.spawned)).map(a => Math.round(a))).toEqual([-105, -90, -75]);
+  });
+
+  // 最初の弾は -[扇中心角]/2、最後の弾は +[扇中心角]/2。弾数 1 だと最初の弾だけなので、扇の端（-中心角/2）に飛ぶ
+  it("bm は弾数 1 のとき、扇の中心ではなく端（-中心角/2）に 1 発だけ撃つ", () => {
+    const one = s => angles(run(`da0 ${s} f10`, 1).spawned).map(a => Math.round(a + 90));
+    expect(one("bm1,30")).toEqual([-15]);
+    expect(one("bm1,-30")).toEqual([15]);
+    expect(one("bm1,0")).toEqual([0]);
+    expect(one("bm2,30")).toEqual([-15, 15]);
+  });
+
+  it("bm の速度幅も同様に、弾数 1 なら -速度幅/2 の速度で 1 発撃つ", () => {
+    const speeds = s => run(`da0 ${s} f10`, 1).spawned.map(speed).map(v => Math.round(v * 100) / 100).sort((a, b) => a - b);
+    expect(speeds("bm1,0,2")).toEqual([9]);
+    expect(speeds("bm3,0,2")).toEqual([9, 10, 11]);
   });
 
   it("bm の第 3 引数は多重弾の速度幅", () => {

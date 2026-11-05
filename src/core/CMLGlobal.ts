@@ -1,5 +1,11 @@
 import { SinTable } from "./CMLSinTable.js"
 import type { Fiber } from "../CMLFiber.js"
+
+/** @private Return a static that is set by `new CannonML()`; throw when it is still unset. */
+export function required<T>(value: T | null, name: string): T {
+    if (value == null) throw new Error("CannonML is not initialized: " + name + " (create new CannonML() first)");
+    return value;
+}
 import { RangeLimitNumber } from "./RangeLimitNumber.js"
 
 //----------------------------------------------------------------------------------------------------
@@ -40,8 +46,8 @@ export class Global {
         this._sin = new SinTable();
         this._funcRand = Math.random;
         this._requestUpdateRegExp = true;
-        this._halfScreenWidth = 0;
-        this._halfScreenHeight = 0;
+        this._halfScreenWidth = 100; // default screen size 200 x 200, see CannonML.setScreenSize()
+        this._halfScreenHeight = 100;
         this.vertical = vertical_ ? 1 : 0;
     }
     // public variables

@@ -2,7 +2,6 @@ import { Fiber } from "../CMLFiber.js"
 import { Sequence } from "../CMLSequence.js"
 import type { BarrageElem } from "./CMLBarrageElem.js"
 import type { CMLObject } from "./CMLObject.js"
-import type { Global } from "./CMLGlobal.js"
 import { Formula } from "./CMLFormula.js"
 import { ListElem } from "./CMLListElem.js"
 
@@ -70,10 +69,6 @@ export class State extends ListElem {
             Object.assign(this.$, this.formula.calcDynamic(fiber));
         }
         return this.func(this, this.$, fiber, fiber.object);
-    }
-    /** @private initialze call from CannonML first of all */
-    static _initialize(globalVariables_: Global) {
-        State._globalVariables = globalVariables_;
     }
     // position of fiber
     _setHeadAngle(fiber: Fiber, option: number, angleInDeg: number) {
@@ -305,9 +300,7 @@ export class State extends ListElem {
     /** @private */
     static HO_SEQ = 5; // angle is calculated from previous frame
     // command regular expressions
-    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rx|ry|r|kf|ko|i|@ko|@o|@m|@x|fs|f|qx|qy|q|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
-    // global variables
-    static _globalVariables: Global = null!;
+    static command_rex: string = "(\\[|\\]|\\}|\\?|:|w\\?|w|~|pz|p|vz|v|az|a|rx|ry|r|kf|ko|i|@ko|@o|@m|@x|fs|f|ox|oy|o|bm|bs|br|da|do|dp|dt|dv|ds|td|tp|to)";
     // operators
     static operators: Record<string, OperatorDef> = {
     //---- wait
@@ -384,7 +377,7 @@ export class State extends ListElem {
             type: State.ST_BLOCKEND,
             func(state, $, fiber) {
                 if (fiber.lcnt[0] >= 0)  { // loopconter < 0 means branch
-                    var lmax = Math.floor($[0] || state.jump!.$[0]);
+                    const lmax = Math.floor($[0] || state.jump!.$[0]);
                     if (++fiber.lcnt[0] != lmax) { // jump to block_start
                         fiber._pointer = state.jump!;
                         return true;
@@ -565,7 +558,7 @@ export class State extends ListElem {
             }
         },
     //---- fiber center
-        "q":{
+        "o":{
             argc: 2,
             type: State.ST_NORMAL,
             func(_state, $, fiber) {
@@ -574,7 +567,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "qx":{
+        "ox":{
             argc: 1,
             type: State.ST_NORMAL,
             func(_state, $, fiber) {
@@ -582,7 +575,7 @@ export class State extends ListElem {
                 return true;
             }
         },
-        "qy":{
+        "oy":{
             argc: 1,
             type: State.ST_NORMAL,
             func(_state, $, fiber) {

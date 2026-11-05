@@ -1,7 +1,7 @@
 // docs/reference/v3/cannonML.md: 「数式」（演算子・変数・変数代入）と「ユーザー定義コマンド」
 import { describe, it, expect } from "vitest";
 import { run, last, parse, withTarget, at } from "../helpers/run.js";
-import { createCML } from "../helpers/load.js";
+import { createCML, loadCML } from "../helpers/load.js";
 
 const pos = o => [Math.round(o.pos.x * 1e6) / 1e6, Math.round(o.pos.y * 1e6) / 1e6];
 
@@ -319,5 +319,12 @@ describe("ユーザー定義コマンド &name", () => {
     const { cml, calls } = withCommand("a_b", 0);
     exec(cml, "&a_b");
     expect(calls.length).toBe(1);
+  });
+});
+
+describe("CannonML 生成前の static", () => {
+  it("new CannonML() より前に Sequence を作ると、未初期化だと分かる例外になる", () => {
+    const ctx = loadCML();
+    expect(() => new ctx.CML.Sequence("p1,0")).toThrow(/not initialized: Sequence._parser/);
   });
 });

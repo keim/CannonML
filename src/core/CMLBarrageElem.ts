@@ -1,4 +1,4 @@
-import type { Global } from "./CMLGlobal.js"
+import { required, type Global } from "./CMLGlobal.js"
 import { ListElem } from "./CMLListElem.js"
 
 const DEG2RAD = Math.PI / 180;
@@ -148,6 +148,7 @@ export class BarrageElem extends ListElem {
     }
 
     // global variables
-    static _globalVariables: Global = null!;
-
+    static _globalVariablesValue: Global | null = null;
+    static get _globalVariables(): Global { return required(BarrageElem._globalVariablesValue, "BarrageElem._globalVariables"); }
+    static set _globalVariables(v: Global) { BarrageElem._globalVariablesValue = v; }
 }
