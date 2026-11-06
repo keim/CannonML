@@ -207,10 +207,10 @@ target_object = null;                   // target object was destroyed.
      */
     static destroyAll(status: number) {
         const elem_end: CMLObject = CMLObject._activeObjects.end;
-        let elem: CMLObject | null = CMLObject._activeObjects.begin;
-        while (elem && elem != elem_end) {
+        let elem: CMLObject = CMLObject._activeObjects.begin;
+        while (elem != elem_end) {
             // CML.Object(elem).destroy(_destructionStatus);
-            const elem_next: CMLObject | null = elem.next;
+            const elem_next: CMLObject = elem.next;
             elem._destructionStatus = status;
             elem._finalize();
             elem = elem_next;
@@ -227,8 +227,8 @@ target_object = null;                   // target object was destroyed.
     static _updateAll() {
         if (CMLObject._activeObjects.isEmpty()) return;
         const elem_end: CMLObject = CMLObject._activeObjects.end;
-        let object: CMLObject, elem: CMLObject | null = CMLObject._activeObjects.begin;
-        while (elem && elem != elem_end) {
+        let object: CMLObject, elem: CMLObject = CMLObject._activeObjects.begin;
+        while (elem != elem_end) {
             object = elem;
             elem = elem.next;
             if (object._destructionStatus >= 0) 

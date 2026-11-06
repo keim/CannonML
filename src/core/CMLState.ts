@@ -223,7 +223,7 @@ export class State extends ChainListElem<State> {
             else {
                 // reflexive call
                 for (b.init(bul); !b.isEnd(); b.update()) 
-                    this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, b, b.next!, end);
+                    this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, b, b.next, end);
             }
         }
         else {
@@ -232,7 +232,7 @@ export class State extends ChainListElem<State> {
             // copy bullet setting and bullet multiplyer
             newfiber.bul.copy(first);
             newfiber.bul.init(bul);
-            for (let elem: BarrageElem | null = first.next; elem && elem != end; elem = elem.next)
+            for (let elem: BarrageElem = first.next; elem != end; elem = elem.next)
                 newfiber.barrage._appendElementCopyOf(elem);
             // copy other parameters
             newfiber.fx = fiber.fx;

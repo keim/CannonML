@@ -49,8 +49,8 @@ export class Barrage {
      */
     appendCopyOf(src: Barrage) {
         const end: BarrageElem = src.qrtList.end;
-        let qrt: BarrageElem | null = src.qrtList.begin;
-        while (qrt && qrt != end) {
+        let qrt: BarrageElem = src.qrtList.begin;
+        while (qrt != end) {
             this._appendElementCopyOf(qrt);
             qrt = qrt.next;
         }
@@ -88,10 +88,7 @@ export class Barrage {
         this.qrtList.push(Barrage.alloc().copy(src));
     }
     static alloc(): BarrageElem {
-        let qrt = (Barrage.freeList.pop());
-        if (qrt == null)
-            qrt = new BarrageElem();
-        return qrt;
+        return Barrage.freeList.isEmpty() ? new BarrageElem() : Barrage.freeList.pop();
     }
 
     // element factroy

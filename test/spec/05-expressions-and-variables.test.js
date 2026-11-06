@@ -331,13 +331,86 @@ describe("CannonML 生成前の static", () => {
   });
 });
 
-describe("リスト要素の初期状態（prev / next は未接続なら null）", () => {
-  it("未接続で生成した CML.Object・CML.BarrageElem・CML.State は prev / next が null", () => {
+describe("ListElem / List（番兵付きの環。prev / next は非 null、未接続は自分自身）", () => {
+  const setup = () => {
     const { CML } = createCML();
-    for (const o of [new CML.Object(), new CML.BarrageElem(), new CML.State("p")]) {
-      expect(o.prev).toBeNull();
-      expect(o.next).toBeNull();
+    return { CML, list: new CML.List(), mk: () => new CML.BarrageElem() };
+  };
+
+  it("未接続の CML.Object・CML.BarrageElem は prev / next が自分自身で、is_linked() は false", () => {
+    const { CML } = createCML();
+    for (const o of [new CML.Object(), new CML.BarrageElem()]) {
+      expect(o.prev).toBe(o);
+      expect(o.next).toBe(o);
+      expect(o.is_linked()).toBe(false);
     }
+  });
+
+  it("State（ChainListElem）は、未接続なら prev / next が null（null 終端の鎖）", () => {
+    const { CML } = createCML();
+    const st = new CML.State("p");
+    expect(st.prev).toBeNull();
+    expect(st.next).toBeNull();
+  });
+
+  it("push / unshift で接続すると is_linked() は true、pop / shift / remove_from_list で false に戻る", () => {
+    const { list, mk } = setup();
+    const a = mk(), b = mk(), c = mk();
+    list.push(a); list.push(b); list.unshift(c);
+    expect([a, b, c].map(e => e.is_linked())).toEqual([true, true, true]);
+    expect(list.head).toBe(c);
+    expect(list.tail).toBe(b);
+    expect(list.pop()).toBe(b);
+    expect(b.is_linked()).toBe(false);
+    expect(list.shift()).toBe(c);
+    expect(c.is_linked()).toBe(false);
+    a.remove_from_list();
+    expect(a.is_linked()).toBe(false);
+    expect(list.isEmpty()).toBe(true);
+  });
+
+  it("空のリストの shift / pop は例外", () => {
+    const { list } = setup();
+    expect(() => list.pop()).toThrow("empty");
+    expect(() => list.shift()).toThrow("empty");
+  });
+
+  it("接続済みの要素を push / unshift / insert_before / insert_after すると例外", () => {
+    const { list, mk } = setup();
+    const a = mk(), b = mk();
+    list.push(a);
+    expect(() => list.push(a)).toThrow("already linked");
+    expect(() => list.unshift(a)).toThrow("already linked");
+    expect(() => a.insert_before(list.term)).toThrow("already linked");
+    expect(() => a.insert_after(list.term)).toThrow("already linked");
+    expect(() => b.insert_before(a)).not.toThrow(); // 未接続の b は、接続済みの a の前に入れられる
+    expect(b.is_linked()).toBe(true);
+    expect(() => b.insert_after(a)).toThrow("already linked");
+  });
+
+  it("未接続の要素の remove_from_list は例外", () => {
+    const { mk } = setup();
+    expect(() => mk().remove_from_list()).toThrow("not linked");
+  });
+
+  it("List.remove は番兵や未接続の要素を外せず、接続済みの要素を外して返す", () => {
+    const { list, mk } = setup();
+    const a = mk();
+    expect(() => list.remove(list.term)).toThrow();
+    expect(() => list.remove(a)).toThrow("not linked");
+    list.push(a);
+    expect(list.remove(a)).toBe(a);
+    expect(list.isEmpty()).toBe(true);
+  });
+
+  it("cat は別のリストの全要素を末尾に移し、元のリストを空にする", () => {
+    const { CML, list, mk } = setup();
+    const other = new CML.List();
+    const a = mk(), b = mk(), c = mk();
+    list.push(a); other.push(b); other.push(c);
+    list.cat(other);
+    expect(other.isEmpty()).toBe(true);
+    expect([list.head, list.head.next, list.tail]).toEqual([a, b, c]);
   });
 });
 

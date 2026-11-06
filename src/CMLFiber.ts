@@ -163,10 +163,10 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     //------------------------------------------------------------
     /** Stop all child fibers. */
     destroyAllChildren() {
-        const elem_end: Fiber | null = this._listChild.end;
-        let elem: Fiber | null = this._listChild.begin;
-        while (elem && elem != elem_end) {
-            let elem_next: Fiber | null = elem.next;
+        const elem_end: Fiber = this._listChild.end;
+        let elem: Fiber = this._listChild.begin;
+        while (elem != elem_end) {
+            const elem_next: Fiber = elem.next;
             elem.destroy();
             elem = elem_next;
         }
@@ -182,9 +182,9 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     }
     /** Find child fiber with specifyed id. */
     findChild(child_id: number): Fiber | null {
-        let elem: Fiber | null = this._listChild.begin;
-        const elem_end: Fiber | null = this._firstDest;
-        while (elem && elem != elem_end) {
+        let elem: Fiber = this._listChild.begin;
+        const elem_end: Fiber = this._firstDest;
+        while (elem != elem_end) {
             if (elem._access_id == child_id)
                 return elem;
             elem = elem.next;
@@ -196,13 +196,13 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         if (this.hasDestFiber) {
             const fbr = this._firstDest;
             if (fbr._access_id == destructionStatus) {
-                this._firstDest = fbr.next!;
+                this._firstDest = fbr.next;
                 fbr.destroy();
             }
             else {
-                let elem: Fiber | null = this._firstDest.next, 
-                    elem_end: Fiber | null = this._listChild.end;
-                while (elem && elem != elem_end) {
+                let elem: Fiber = this._firstDest.next, 
+                    elem_end: Fiber = this._listChild.end;
+                while (elem != elem_end) {
                     if (elem._access_id == destructionStatus) {
                         elem.destroy();
                         return;
@@ -302,9 +302,9 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         return this;
     }
     // execution in 1 frame and returns next fiber
-    _onUpdate(): Fiber | null {
+    _onUpdate(): Fiber {
         // next fiber
-        let nextElem = this.next;
+        let nextElem: Fiber = this.next;
         // kill fiber, if object was destroyed.
         if (this._object.id != this._object_id) {
             this.destroy();
@@ -326,8 +326,8 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         }
         // run all children
         const elem_end: Fiber = this._listChild.end;
-        let elem: Fiber | null = this._listChild.begin;
-        while (elem && elem != elem_end)
+        let elem: Fiber = this._listChild.begin;
+        while (elem != elem_end)
             elem = elem._onUpdate();
         // update next fiber
         nextElem = this.next;
@@ -338,11 +338,11 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         return nextElem;
     }
     // destroy by object
-    _destroyByObject(obj: CMLObject): Fiber | null {
+    _destroyByObject(obj: CMLObject): Fiber {
         // check all children
-        let elem: Fiber | null = this._listChild.begin;
-        const elem_end: Fiber | null = this._listChild.end; 
-        while (elem && elem !== elem_end) 
+        let elem: Fiber = this._listChild.begin;
+        const elem_end: Fiber = this._listChild.end; 
+        while (elem !== elem_end) 
             elem = elem._destroyByObject(obj);
         const next = this.next; // destroy() moves this fiber into the free list, so read next first
         if (this._object === obj)
@@ -419,9 +419,9 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         if (activeFibers.isEmpty())
             return;
         const elem_end: Fiber = activeFibers.end;
-        let elem: Fiber | null = activeFibers.begin;
-        while (elem && elem != elem_end) {
-            let elem_next: Fiber | null = elem.next;
+        let elem: Fiber = activeFibers.begin;
+        while (elem != elem_end) {
+            const elem_next: Fiber = elem.next;
             elem._finalize();
             elem = elem_next;
         }
@@ -439,8 +439,8 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         if (activeFibers.isEmpty())
             return;
         const elem_end: Fiber = activeFibers.end;
-        let elem: Fiber | null = activeFibers.begin;
-        while (elem && elem != elem_end) {
+        let elem: Fiber = activeFibers.begin;
+        while (elem != elem_end) {
             elem = elem._onUpdate();
         }
     }
@@ -449,7 +449,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     static _newRootFiber(obj: CMLObject, seq: Sequence, mirror: boolean): Fiber | null {
         if (seq.isEmpty)
             return null;
-        const fbr = Fiber._freeFibers.pop() || new Fiber();
+        const fbr = Fiber._allocFiber();
         fbr.insert_before(Fiber._rootFiber._firstDest); // child of root
         fbr._initialize(Fiber._rootFiber, obj, seq, Fiber.ID_NOT_SPECIFYED, mirror); // the generation is counted from root
         return fbr;
@@ -460,7 +460,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             this.destroyChild(id); // destroy old fiber, when id is obtained
         if (seq.isEmpty)
             return null;
-        const fbr = Fiber._freeFibers.pop() || new Fiber();
+        const fbr = Fiber._allocFiber();
         fbr.insert_before(this._firstDest); // child of this
         if (!fbr._initialize(this, this._object, seq, id, mirror)) { // the generation is counted from root
             throw new Error("CML Exection error. The '@' command calls depper than stac limit.");
@@ -474,7 +474,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         this._killDestFiber(id); // destroy old fiber
         if (seq.isEmpty)
             return null;
-        const fbr = Fiber._freeFibers.pop() || new Fiber();
+        const fbr = Fiber._allocFiber();
         // set destruction sequence
         fbr._seqWaitDest = fbr._seqWaitDest || Sequence.newWaitDestruction();
         fbr._seqWaitDest.next!.jump = seq;
@@ -489,7 +489,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     _newObjectFiber(obj: CMLObject, seq: Sequence, mirror: boolean): Fiber | null {
         if (seq.isEmpty)
             return null;
-        const fbr = Fiber._freeFibers.pop() || new Fiber();
+        const fbr = Fiber._allocFiber();
         fbr.insert_before(Fiber._rootFiber._firstDest); // child of root
         if (!fbr._initialize(this, obj, seq, Fiber.ID_NOT_SPECIFYED, mirror)) { // the generation is counted from this
             throw new Error("CML Exection error. The 'n', 'f' or '@o' command calls deeper than stac limit.");
@@ -499,9 +499,9 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     // destroy all fibers
     /** @private _cml_fiber_internal call from CML.Object.halt() */
     static _destroyAllFibers(obj: CMLObject) {
-        let elem: Fiber | null = Fiber._rootFiber._listChild.begin;
+        let elem: Fiber = Fiber._rootFiber._listChild.begin;
         const elem_end: Fiber = Fiber._rootFiber._listChild.end;
-        while (elem && elem != elem_end) {
+        while (elem != elem_end) {
             elem = elem._destroyByObject(obj);
         }
     }
@@ -528,6 +528,10 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     static set _globalVariables(v: Global) { Fiber._globalVariablesValue = v; }
     
     static _freeFibers: List<Fiber> = new List(); // free list
+    /** @private take a pooled fiber, or create a new one when the pool is empty */
+    static _allocFiber(): Fiber {
+        return Fiber._freeFibers.isEmpty() ? new Fiber() : Fiber._freeFibers.pop();
+    }
     // root fiber of active fibers. 作成を遅らせるのは、State との循環 import でモジュール評価時に State が未初期化のため
     static _rootFiberInstance: Fiber | null = null;
     static get _rootFiber(): Fiber {

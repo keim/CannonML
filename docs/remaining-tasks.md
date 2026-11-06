@@ -1,6 +1,6 @@
 # 残タスク（2026-11-06 時点）
 
-現状: `npm run typecheck` が通る。`npm test` は通常の 241 件が通り、既知の不具合 1 件が `it.fails` で固定されている（root 直下の子リスト）。`@ts-expect-error` なし。
+現状: `npm run typecheck` が通る。`npm test` は通常の 248 件が通り、既知の不具合 1 件が `it.fails` で固定されている（root 直下の子リスト）。`@ts-expect-error` なし。
 言語は v3（仕様: `docs/reference/v3/cannonML.md`）。バグ修正や仕様変更は、リファクタとは別のコミットで行うこと。
 
 ## 1. demo
@@ -27,7 +27,7 @@
   - `new CannonML()` で設定される static 9 か所（`Fiber._globalVariables` `Fiber._defaultTarget` `Sequence._parser` など）は、実体を `_xValue: T | null` にして、読み出しを `required()` の getter（`CMLGlobal.ts`）に集約済み。未初期化のアクセスは例外になる。この形を維持する（型が「未設定」を正直に表し、`!` で検査を捨てない）。
   - 将来の候補: static を全廃して、`CannonML` から各クラスへ `Global` を渡す（依存性の注入）。`Fiber._freeFibers` `_rootFiber` `CMLObject._activeObjects` など static メソッドから使う状態があり、ほぼ全ファイルに波及する。要るなら static の洗い出しから始める。
   - `BarrageElem._globalVariables` は `rand()` を呼ぶためだけに持っている。`init` / `update` に `Global` を引数で渡せば、この static を減らせる（`CannonML` を直接 import すると循環 import になるので不可）。
-  - リストの分離（進行中）: `State` の基底を `ChainListElem<T>` / `ChainList<T>`（null 終端の線形の鎖）に分けた（完了）。次の段階で、`ListElem<T>` / `List<T>`（`Fiber` / `CMLObject` / `BarrageElem` の番兵付きの環）の `prev` / `next` を非 null（未接続は `next = prev = this`）にするかを決める。`State` の鎖は null 終端のまま（`_pointer === null` が実行終了）。
+  - リストの分離: 完了。`State` は `ChainListElem<T>` / `ChainList<T>`（null 終端の線形の鎖）。`Fiber` / `CMLObject` / `BarrageElem` は `ListElem<T>` / `List<T>`（番兵付きの環で、`prev` / `next` は非 null、未接続は自己ループ。`is_linked()` で判定）。
   - リストの型付け: 完了。`ListElem<T>` / `List<T>` は既定値なし。`Fiber` / `State` / `CMLObject` / `BarrageElem` が自分の型を渡し、各 `List` に要素の型を付けた。`List<Fiber>` に `State` を入れると型検査で落ちる（確認済み）。走査ループは、毎ステップ null 判定（`while (elem && elem != end)`）で書く。残った `!` は、リストの内部操作（`List` / `ListElem` の繋ぎ替え）と、1 段だけの参照（`bul.next!`、`state.prev!`）のみ。
   - 名前の表（`_mapUsrDefRef` / `_mapUsrDefCmd` / `_childSequences`）は `Object.create(null)`。組み込み変数の表 `FormulaLiteral.operators` は `hasOwnProperty` で引く（完了）。
   - `State.jump` の扱い。
