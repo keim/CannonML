@@ -59,7 +59,7 @@ export class CannonML {
      *  @param cmlScript cml script presents object motion
      *  @param globalFlag true to enable to refer from another CML.Sequence
      *  @see CML.Sequence#global
-     */
+     */    
     sequence(cmlScript: string, globalFlag = false): Sequence {
         return new Sequence(cmlScript, globalFlag);
     }

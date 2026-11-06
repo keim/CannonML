@@ -19,7 +19,7 @@ import { Interpolation } from "./interpolation.js"
  * @see CML.Object#root
  * @see CML.Sequence
  */
-export class CMLObject extends ListElem {
+export class CMLObject extends ListElem<CMLObject> {
     // constructor
     //------------------------------------------------------------
     /** Constructor. */
@@ -34,8 +34,7 @@ export class CMLObject extends ListElem {
     counter: number
     counter_z: number
     _id: number
-    // 破棄後は null になる（isActive で判定）。型は非 null として扱う
-    _parent: CMLObject
+    _parent: CMLObject | null
     _parent_id: number
     _access_id: number
     _destructionStatus: number
@@ -65,7 +64,7 @@ export class CMLObject extends ListElem {
         this.counter_z = 0;
         // common parameters
         this._id = 0; // construction id
-        this._parent = null!; // parent object
+        this._parent = null; // parent object
         this._parent_id = 0; // parent object id
         this._access_id = CMLObject.ID_NOT_SPECIFYED; // access id
         this._destructionStatus = -1; // destruction status
@@ -96,15 +95,6 @@ target_object = null;                   // target object was destroyed.
 </listing>
      */
     get id() { return this._id; }
-    /** The CML.Object that creates this object. Returns root when the parent was destroyed. */
-    get parent() {
-        if (this._parent._id != this._parent_id) {
-            this._parent = CMLObject._root;
-            this._parent_id = this._parent._id;
-            this._access_id = CMLObject.ID_NOT_SPECIFYED;
-        }
-        return this._parent;
-    }
     /** Is this object on stage ? */
     get isActive() { return (this._parent != null); }
     /** Does this object have another object as a part ? */
@@ -150,13 +140,14 @@ target_object = null;                   // target object was destroyed.
     }
     /** Angle of this parent object, scrolling direction is 0 degree. */
     get angleParentOnScreen() {
-        return (this._isRelative) ? this._parent.angleOnScreen : 0;
+        return (this._isRelative) ? this.getParent().angleOnScreen : 0;
     }
     /** Calculate direction of position from origin. */
     get anglePositionOnScreen() {
         if (this._isRelative) {
-            const dx = this.projected.x - this._parent.projected.x,
-                  dy = this.projected.y - this._parent.projected.y;
+            const parent = this.getParent();
+            const dx = this.projected.x - parent.projected.x,
+                  dy = this.projected.y - parent.projected.y;
             return Math.atan2(dy, dx);                  
         }
         return Math.atan2(this.projected.y, this.projected.x);
@@ -215,10 +206,11 @@ target_object = null;                   // target object was destroyed.
      *  @see CML.Object#onDestroy()
      */
     static destroyAll(status: number) {
-        let elem = CMLObject._activeObjects.begin, elem_next;
-        while (elem != CMLObject._activeObjects.end) {
+        const elem_end: CMLObject = CMLObject._activeObjects.end;
+        let elem: CMLObject | null = CMLObject._activeObjects.begin;
+        while (elem && elem != elem_end) {
             // CML.Object(elem).destroy(_destructionStatus);
-            elem_next = elem.next;
+            const elem_next: CMLObject | null = elem.next;
             elem._destructionStatus = status;
             elem._finalize();
             elem = elem_next;
@@ -234,8 +226,9 @@ target_object = null;                   // target object was destroyed.
     /** @private update all call from CannonML.update */
     static _updateAll() {
         if (CMLObject._activeObjects.isEmpty()) return;
-        let object, elem = CMLObject._activeObjects.begin;
-        while (elem != CMLObject._activeObjects.end) {
+        const elem_end: CMLObject = CMLObject._activeObjects.end;
+        let object: CMLObject, elem: CMLObject | null = CMLObject._activeObjects.begin;
+        while (elem && elem != elem_end) {
             object = elem;
             elem = elem.next;
             if (object._destructionStatus >= 0) 
@@ -261,7 +254,7 @@ target_object = null;                   // target object was destroyed.
         this._initialize(parent || CMLObject._root, isRelative, access_id, x, y, z, 0, 0, 0, null);
         return this;
     }
-    /** Destroy this object. The onDestroy() is called when the next CML.Object.update().
+    /** Destroy this object. The onDestroy() is called back in CML.Object.update() of the next frame.
      *  @param status A value of the destruction status. This must be greater than or equal to 0. You can refer this by CML.Object.destructionStatus in onDestroy().
      *  @see CML.Object#destructionStatus
      *  @see CML.Object#onDestroy()
@@ -289,6 +282,19 @@ target_object = null;                   // target object was destroyed.
     }
     // reference
     //------------------------------------------------------------
+    /** The CML.Object that creates this object. Returns root when the parent was destroyed. Throws when this object is not active. 
+     *  @return The parent object.
+     */
+    getParent(): CMLObject {
+        if (!this._parent)
+            throw new Error("This object is not active.");
+        if (this._parent._id != this._parent_id) {
+            this._parent = CMLObject._root;
+            this._parent_id = this._parent._id;
+            this._access_id = CMLObject.ID_NOT_SPECIFYED;
+        }
+        return this._parent;
+    }
     /** Calculate distance from another object.
      * @param target Another object to calculate distance.
      * @return distance.
@@ -523,16 +529,19 @@ target_object = null;                   // target object was destroyed.
     }
     /** Change parent. */
     changeParent(parent: CMLObject | null = null, isRelative = false, access_id = CMLObject.ID_NOT_SPECIFYED) {
+        // getParent() will throw an error when this object is not active
+        const currentParent = this.getParent();
+
         // check parent availability
         isRelative = Boolean(parent) && isRelative;
         // remove this from a parents IDed children list.
         if (this._access_id != CMLObject.ID_NOT_SPECIFYED) {
-            this._parent._accessibleChildren.splice(this._parent._accessibleChildren.indexOf(this), 1);
+            currentParent._accessibleChildren.splice(currentParent._accessibleChildren.indexOf(this), 1);
         }
         // when this WAS a part object ...
         if (this._isRelative) {
             // check parents parts
-            this._parent._relativeChildren.splice(this._parent._relativeChildren.indexOf(this), 1);
+            currentParent._relativeChildren.splice(currentParent._relativeChildren.indexOf(this), 1);
             // calculate absolute angle
             this.head = this.angleOnScreen;
         }
@@ -575,27 +584,25 @@ target_object = null;                   // target object was destroyed.
     // execute in each frame when it's necessary
     //------------------------------------------------------------
     /** Calculate absolute position when the _isRelative is true.
-     *  The protected function _motion_parts() is a typical usage of this.
      */
     calcAbsPosition() {
-        if (this.parent.euler.isZero()) {
-            this.pos.addVectors(this.relative, this.parent.pos);
-        }
-        else {
-            /**/ // with rotation
-            this.pos.addVectors(this.parent.pos, new Vector().copy(this.relative).applyQuat(this.parent.quat));
+        const parent = this.getParent();
+        if (parent.euler.isZero()) {
+            this.pos.addVectors(this.relative, parent.pos);
+        } else {
+            this.pos.addVectors(parent.pos, new Vector().copy(this.relative).applyQuat(parent.quat));
         }
     }
     /** Calculate parent related position from absolute position.
      */
     calcRelatedPosition() {
-        if (this.parent.euler.isZero()) {
-            this.relative.subVectors(this.pos, this.parent.pos);
+        const parent = this.getParent();
+        if (parent.euler.isZero()) {
+            this.relative.subVectors(this.pos, parent.pos);
         }
         else {
-            /**/
-            const q = new Vector().copy(this.parent.quat).negate();
-            this.pos.addVectors(this.parent.pos, new Vector().copy(this.relative).applyQuat(q));
+            const q = new Vector().copy(parent.quat).negate();
+            this.pos.addVectors(parent.pos, new Vector().copy(this.relative).applyQuat(q));
         }
     }
     // operation for children/parts
@@ -669,13 +676,14 @@ target_object = null;                   // target object was destroyed.
     }
     /** @private finalizer */
     _finalize() {
-        if (this.parent != CMLObject._root) {
+        const parent = this.getParent();
+        if (parent !== CMLObject._root) {
             // remove this from the parent id list.
-            if (this._access_id != CMLObject.ID_NOT_SPECIFYED) 
-                this._parent._accessibleChildren.splice(this._parent._accessibleChildren.indexOf(this), 1);
+            if (this._access_id !== CMLObject.ID_NOT_SPECIFYED) 
+                parent._accessibleChildren.splice(parent._accessibleChildren.indexOf(this), 1);
             // check parents parts
             if (this._isRelative) 
-                this._parent._relativeChildren.splice(this._parent._relativeChildren.indexOf(this), 1);
+                parent._relativeChildren.splice(parent._relativeChildren.indexOf(this), 1);
         }
         // destroy all relative children
         this._relativeChildren.forEach(child=>child._destructionStatus=this._destructionStatus);
@@ -684,7 +692,7 @@ target_object = null;                   // target object was destroyed.
         // remove from list
         this.remove_from_list();
         // update construction id
-        this._parent = null!;
+        this._parent = null;
         this._id++;
     }
     // update 
@@ -746,7 +754,7 @@ target_object = null;                   // target object was destroyed.
     // private variables
     //------------------------------------------------------------
     // statics
-    static _activeObjects: List = new List(); // active object list
+    static _activeObjects: List<CMLObject> = new List(); // active object list
 
     static _rootValue: CMLObject | null = null; // root object instance
     static get _root(): CMLObject { return required(CMLObject._rootValue, "CMLObject._root"); }
@@ -759,6 +767,6 @@ target_object = null;                   // target object was destroyed.
     static NO_RELATION = 0;
     static REL_ATTRACT = 1;
     /** @private _cml_internal */
-    static ID_NOT_SPECIFYED = 0;
+    static ID_NOT_SPECIFYED = -1;
 
 }

@@ -9,7 +9,7 @@ const DEG2RAD = Math.PI / 180;
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
 /** @private */
-export class BarrageElem extends ListElem {
+export class BarrageElem extends ListElem<BarrageElem> {
     count: number
     angle: number
     speed: number

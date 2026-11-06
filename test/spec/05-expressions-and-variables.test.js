@@ -101,11 +101,13 @@ describe("変数", () => {
     expect(last("w1 p$td,0", 2, { before: withTarget(3, 4) })).toEqual([5, 0]);
   });
 
-  it("$o は f の第 2 引数で ID を指定した子の数、$o1〜$o9 は ID ごとの数（ID 0 は数えない）", () => {
+  it("$o は f の第 2 引数で ID を指定した子の数、$o1〜$o9 は ID ごとの数（ID 0 も数え、無指定は数えない）", () => {
     // $o1 = 2、$o2 = 1。p は da0（画面の下）の向きで、2 下・1 右
-    const r = run("da0 f0,0{} f0,1{} f0,1{} f0,2{} w1 p$o1,$o2 pz$o", 3);
+    const r = run("da0 f0{} f0,1{} f0,1{} f0,2{} w1 p$o1,$o2 pz$o", 3);
     expect(r.trace.at(-1)).toEqual(at(0, 2, 1));
     expect(r.runner.pos.z).toBe(3);
+    expect(run("f0,0{w9} w1 p$o,0", 3).trace.at(-1)).toEqual([1, 0]);
+    expect(run("f0,0{w9} w1 p$o1,0", 3).trace.at(-1)).toEqual([0, 0]);
   });
 
   it("$p.* は親オブジェクトのパラメータ", () => {
@@ -326,5 +328,69 @@ describe("CannonML 生成前の static", () => {
   it("new CannonML() より前に Sequence を作ると、未初期化だと分かる例外になる", () => {
     const ctx = loadCML();
     expect(() => new ctx.CML.Sequence("p1,0")).toThrow(/not initialized: Sequence._parser/);
+  });
+});
+
+describe("リスト要素の初期状態（prev / next は未接続なら null）", () => {
+  it("未接続で生成した CML.Object・CML.BarrageElem・CML.State は prev / next が null", () => {
+    const { CML } = createCML();
+    for (const o of [new CML.Object(), new CML.BarrageElem(), new CML.State("p")]) {
+      expect(o.prev).toBeNull();
+      expect(o.next).toBeNull();
+    }
+  });
+});
+
+describe("State の基底クラス（線形の鎖）", () => {
+  it("State は ChainListElem を継承し、ListElem（番兵付きの環の要素）は継承しない", () => {
+    const { CML } = createCML();
+    const st = new CML.State("p");
+    expect(st).toBeInstanceOf(CML.ChainListElem);
+    expect(st).not.toBeInstanceOf(CML.ListElem);
+    expect(new CML.Object()).toBeInstanceOf(CML.ListElem);
+  });
+
+  it("ChainList は ChainListElem を並べる（番兵付きの環）", () => {
+    const { CML } = createCML();
+    const list = new CML.ChainList();
+    const a = new CML.State("p"), b = new CML.State("v");
+    expect(list.isEmpty()).toBe(true);
+    list.push(a); list.push(b);
+    expect(list.head).toBe(a);
+    expect(list.tail).toBe(b);
+    expect(list.shift()).toBe(a);
+    expect(list.pop()).toBe(b);
+    expect(list.isEmpty()).toBe(true);
+  });
+});
+
+describe("プロトタイプのキーとの衝突（constructor / toString などの名前）", () => {
+  it("ラベル名 constructor / toString は通常のラベルとして呼べる", () => {
+    expect(last("#constructor{p5,0} &constructor", 2)).toEqual([5, 0]);
+    expect(last("#toString{p5,0} &toString", 2)).toEqual([5, 0]);
+  });
+
+  it("未登録の &hasOwnProperty は、ユーザー命令として誤って解釈されず構文エラー", () => {
+    expect(() => parse("&hasOwnProperty")).toThrow("&hasOwnProperty ?");
+  });
+
+  it("登録したユーザー変数 constructor は、組み込み表のプロトタイプ（Object）より優先して参照される", () => {
+    const { cml } = createCML();
+    cml.setScreenSize(10000, 10000);
+    cml.globalVariables.registerUserVariable("constructor", () => 5);
+    const r = cml.runner(0, 0, 0);
+    r.execute(cml.sequence("p$constructor,0"));
+    cml.update();
+    expect(pos(r)).toEqual([5, 0]);
+  });
+
+  it("登録したユーザー命令の名前が constructor でも呼べる", () => {
+    const { cml } = createCML();
+    const calls = [];
+    cml.globalVariables.registerUserCommand("constructor", (_fbr, args) => calls.push(args.slice()), 1);
+    const r = cml.runner(0, 0, 0);
+    r.execute(cml.sequence("&constructor 7"));
+    cml.update();
+    expect(calls).toEqual([[7]]);
   });
 });

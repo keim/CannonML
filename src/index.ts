@@ -9,6 +9,8 @@ import { RangeLimitNumber } from "./core/RangeLimitNumber.js"
 import { Vector } from "./core/CMLVector.js"
 import { ListElem } from "./core/CMLListElem.js"
 import { List } from "./core/CMLList.js"
+import { ChainListElem } from "./core/CMLChainListElem.js"
+import { ChainList } from "./core/CMLChainList.js"
 import { SinTable } from "./core/CMLSinTable.js"
 import { Global } from "./core/CMLGlobal.js"
 import { State } from "./core/CMLState.js"
@@ -30,6 +32,8 @@ export const CML = {
   Vector,
   ListElem,
   List,
+  ChainListElem,
+  ChainList,
   SinTable,
   Global,
   State,
@@ -55,6 +59,8 @@ export namespace CML {
   export type Vector = InstanceType<typeof Vector>
   export type ListElem = InstanceType<typeof ListElem>
   export type List = InstanceType<typeof List>
+  export type ChainListElem = InstanceType<typeof ChainListElem>
+  export type ChainList = InstanceType<typeof ChainList>
   export type SinTable = InstanceType<typeof SinTable>
   export type Global = InstanceType<typeof Global>
   export type State = InstanceType<typeof State>

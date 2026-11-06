@@ -3,31 +3,36 @@
 //  Copyright (c) 2007 keim All rights reserved.
 //  Distributed under BSD-style license (see license.txt).
 //----------------------------------------------------------------------------------------------------
-/** @private */
-/** shortcut: neighbors are typed any; subclasses (State, Fiber, Object) treat them as their own type. Narrow with generics if it becomes a burden. */
-export class ListElem {
-    prev!: any
-    next!: any
+/** @private
+ *  T is the element type (the subclass itself). Unlinked elements have prev / next null.
+ */
+export class ListElem<T extends ListElem<any>> {
+    prev: T | null = null
+    next: T | null = null
     clear() {
         this.prev = null;
         this.next = null;
     }
     remove_from_list() {
-        this.prev.next = this.next;
-        this.next.prev = this.prev;
+        // linked elements always have both neighbours (List keeps a sentinel term)
+        const prev = this.prev!, next = this.next!;
+        prev.next = next;
+        next.prev = prev;
         this.prev = null;
         this.next = null;
     }
-    insert_before(next_: ListElem) {
+    insert_before(next_: T) {
+        const self = this as unknown as T; // this is an instance of T in every subclass
         this.next = next_;
         this.prev = next_.prev;
-        next_.prev.next = this;
-        next_.prev = this;
+        next_.prev!.next = self;
+        next_.prev = self;
     }
-    insert_after(prev_: ListElem) {
+    insert_after(prev_: T) {
+        const self = this as unknown as T;
         this.prev = prev_;
         this.next = prev_.next;
-        prev_.next.prev = this;
-        prev_.next = this;
+        prev_.next!.prev = self;
+        prev_.next = self;
     }
 }

@@ -1,4 +1,5 @@
 import { State } from "./CMLState.js"
+import type { Sequence } from "../CMLSequence.js"
 
 //--------------------------------------------------
 // CML statement class for reference of sequence
@@ -15,7 +16,8 @@ export class Refer extends State {
     // functions
     //------------------------------------------------------------
     _label: string | null
-    constructor(pointer: State | null = null, label: string | null = null) {
+    declare jump: Sequence | null; // the referenced sequence (narrows State.jump)
+    constructor(pointer: Sequence | null = null, label: string | null = null) {
         super(null);
         this.type = State.ST_REFER;
         this.jump = pointer;

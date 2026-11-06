@@ -200,6 +200,19 @@ describe("補間時間 i / ~", () => {
     expect(a).toEqual(b);
   });
 
+  it("~ の引数の小数は切り捨てる（~2.5 は ~2、i2.5 と同じ）", () => {
+    expect(run("~2.5 p10,0", 6).trace).toEqual(run("~2 p10,0", 6).trace);
+    expect(run("~2.5 p10,0", 6).trace.at(-1)).toEqual(run("i2.5 p10,0 w2", 6).trace.at(-1));
+    // 0.5 は切り捨てて 0 になるので、i の指定値を使う
+    expect(run("i4 ~0.5 p10,0", 6).trace).toEqual(run("i4 ~ p10,0", 6).trace);
+  });
+
+  // ~ の後に続くコマンドは、補間の後ろから実行される（補間命令の位置で止まって次の命令を飛ばさない）
+  it("~ の後の非補間コマンドは飛ばされず、補間が終わるとすぐ実行される", () => {
+    const x = run("~3 p10,0 w1 p20,0", 6).trace.map(([v]) => Math.round(v));
+    expect(x.slice(2)).toEqual([10, 10, 20, 20]);
+  });
+
   it("~ を使うと次の補間コマンドは前の補間が終わってから始まる", () => {
     const t = xs(run("i6 ~ p10,0 ~ p-10,0", 14).trace);
     expect(t[5]).toBe(10);

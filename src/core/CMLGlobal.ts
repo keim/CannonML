@@ -40,8 +40,8 @@ export class Global {
     _scrollRadian!: number
 
     constructor(vertical_: boolean) {
-        this._mapUsrDefRef = {};
-        this._mapUsrDefCmd = {};
+        this._mapUsrDefRef = Object.create(null); // no prototype: names like "constructor" must not match Object.prototype
+        this._mapUsrDefCmd = Object.create(null);
         this._globalRank = new RangeLimitNumber(0, 0, 1);
         this._sin = new SinTable();
         this._funcRand = Math.random;

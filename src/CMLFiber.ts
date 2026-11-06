@@ -6,6 +6,7 @@ import { BarrageElem } from "./core/CMLBarrageElem.js"
 import { List } from "./core/CMLList.js"
 import { ListElem } from "./core/CMLListElem.js"
 import { State } from "./core/CMLState.js"
+import type { CMLString } from "./core/CMLString.js"
 
 //----------------------------------------------------------------------------------------------------
 // CML fiber class
@@ -25,7 +26,7 @@ import { State } from "./core/CMLState.js"
  * @see CML.Fiber#object
  * @see CML.Fiber#target
  */
-export class Fiber extends ListElem {
+export class Fiber extends ListElem<Fiber> {
     // `_object` / `_target` は finalize 後に null になる（isActive で判定）。型は非 null として扱う
     _id: number
     _gene: number
@@ -36,9 +37,9 @@ export class Fiber extends ListElem {
     _barrage: Barrage
     _seqWaitDest: Sequence | null
     /** @private _cml_fiber_internal executing pointer */
-    _pointer: State // 実行終了後は null
+    _pointer: State | null // 実行終了後は null
     _access_id: number
-    _listChild: List
+    _listChild: List<Fiber>
     _firstDest: Fiber // 子が無い間は List の終端 ListElem
     fx: number
     fy: number
@@ -73,7 +74,7 @@ export class Fiber extends ListElem {
         this._target_id = 0; // target object id
         this._barrage = new Barrage(); // bullet multiplyer
         this._seqWaitDest = null; // sequence to wait for object destruction
-        /** @private _cml_fiber_internal */ this._pointer = null!; // executing pointer
+        this._pointer = null; // executing pointer
         /** @private _cml_fiber_internal */ this._access_id = 0; // access id
         // children list
         this._listChild = new List();
@@ -89,8 +90,8 @@ export class Fiber extends ListElem {
         /** @private _cml_fiber_internal */ this.mirror = false; // mirror about the scroll axis (set by '@m')
         /** @private _cml_fiber_internal */ this.wtm1 = 1; // waiting time for "w"
         /** @private _cml_fiber_internal */ this.wtm2 = 1; // waiting time for "~"
-        /** @private _cml_fiber_internal */ this.seqFiber = null!; // previous calling sequence from "@"
-        /** @private _cml_fiber_internal */ this.seqFired = null!; // previous calling sequence from "f"
+        /** @private _cml_fiber_internal */ this.seqFiber = Sequence.nop(); // previous calling sequence from "@"
+        /** @private _cml_fiber_internal */ this.seqFired = Sequence.nop(); // previous calling sequence from "f"
         // runtime parameters
         /** @private _cml_fiber_internal */ this.wcnt = 0; // waiting counter
         /** @private _cml_fiber_internal */ this.lcnt = []; // loop counter
@@ -104,11 +105,11 @@ export class Fiber extends ListElem {
     /** Maximum limitation of the executable gosub nest count. @default 64*/
     static set maxStacCount(sc: number) { Fiber._stacmax = sc; }
     /** CML.Object that this fiber controls. */
-    get object() { return this._object; }
+    get object(): CMLObject { return this._object; }
     /** CML.Object that this fiber targets to. */
     get target(): CMLObject { return this._target; }
     /** CML.Barrage that this fiber uses. */
-    get barrage() { return this._barrage; }
+    get barrage(): Barrage { return this._barrage; }
     /** String argument. <br/>
      *  This property is used in callback function of registerUserCommand().<br/>
      *  When the next statement of user command is not '...', this property shows null.
@@ -128,21 +129,21 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
 </listing>
      */
     get string() {
-        const stateString = this._pointer.next;
-        return (stateString != null) ? stateString._string : null;
+        const stateString = this._pointer!.next;
+        return (stateString != null) ? (stateString as CMLString)._string : null;
     }
     /** Sequence argument. <br/>
      *  This property is used in callback function of registerUserCommand() with the option 'requireSequence' is true.<br/>
      *  When the next statement of user command is not sequence. outputs parsing error. Or, when the next statement is '{.}', returns null.
      */
     get sequence() {
-        const stateRefer = this._pointer.next;
+        const stateRefer = this._pointer!.next;
         return (stateRefer != null) ? (stateRefer.jump) : null;
     }
     /** Is active ? When this property shows false, this fiber is already destroyed. */
-    get isActive() { return (this._object != null); }
+    get isActive() { return (this._object !== null); }
     /** Is sequence executing ? */
-    get isExecuting() { return (this._pointer != null); }
+    get isExecuting() { return (this._pointer !== null); }
     /** Does this fiber have any children ? */
     get isParent() { return (!this._listChild.isEmpty()); }
     /** Does this fiber have any destruction fiber ? */
@@ -162,9 +163,10 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     //------------------------------------------------------------
     /** Stop all child fibers. */
     destroyAllChildren() {
-        let elem = this._listChild.begin, elem_end = this._listChild.end, elem_next;
-        while (elem != elem_end) {
-            elem_next = elem.next;
+        const elem_end: Fiber | null = this._listChild.end;
+        let elem: Fiber | null = this._listChild.begin;
+        while (elem && elem != elem_end) {
+            let elem_next: Fiber | null = elem.next;
             elem.destroy();
             elem = elem_next;
         }
@@ -180,8 +182,9 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     }
     /** Find child fiber with specifyed id. */
     findChild(child_id: number): Fiber | null {
-        let elem = this._listChild.begin, elem_end = this._firstDest;
-        while (elem != elem_end) {
+        let elem: Fiber | null = this._listChild.begin;
+        const elem_end: Fiber | null = this._firstDest;
+        while (elem && elem != elem_end) {
             if (elem._access_id == child_id)
                 return elem;
             elem = elem.next;
@@ -193,12 +196,13 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         if (this.hasDestFiber) {
             const fbr = this._firstDest;
             if (fbr._access_id == destructionStatus) {
-                this._firstDest = fbr.next;
+                this._firstDest = fbr.next!;
                 fbr.destroy();
             }
             else {
-                let elem = this._firstDest.next, elem_end = this._listChild.end;
-                while (elem != elem_end) {
+                let elem: Fiber | null = this._firstDest.next, 
+                    elem_end: Fiber | null = this._listChild.end;
+                while (elem && elem != elem_end) {
                     if (elem._access_id == destructionStatus) {
                         elem.destroy();
                         return;
@@ -253,7 +257,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     // finalizer 
     _finalize() {
         this.destroyAllChildren();
-        this._pointer = null!;
+        this._pointer = null;
         this._object = null!;
         this._target = null!;
         ++this._id;
@@ -298,7 +302,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         return this;
     }
     // execution in 1 frame and returns next fiber
-    _onUpdate() {
+    _onUpdate(): Fiber | null {
         // next fiber
         let nextElem = this.next;
         // kill fiber, if object was destroyed.
@@ -321,27 +325,28 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
             }
         }
         // run all children
-        let elem = this._listChild.begin;
-        while (elem != this._listChild.end)
+        const elem_end: Fiber = this._listChild.end;
+        let elem: Fiber | null = this._listChild.begin;
+        while (elem && elem != elem_end)
             elem = elem._onUpdate();
         // update next fiber
         nextElem = this.next;
         // destroy if no children and no pointer
-        if (this._pointer == null && this._listChild.isEmpty())
+        if (this._pointer === null && this._listChild.isEmpty())
             this.destroy();
         // return next fiber
         return nextElem;
     }
     // destroy by object
-    _destroyByObject(obj: CMLObject): any {
+    _destroyByObject(obj: CMLObject): Fiber | null {
         // check all children
-        let elem = this._listChild.begin;
-        while (elem != this._listChild.end) 
+        let elem: Fiber | null = this._listChild.begin;
+        const elem_end: Fiber | null = this._listChild.end; 
+        while (elem && elem !== elem_end) 
             elem = elem._destroyByObject(obj);
-        elem = this.next;
         if (this._object === obj)
             this.destroy();
-        return elem;
+        return this.next;
     }
     // push mirror
     /** @private _cml_fiber_internal */
@@ -352,6 +357,8 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     // pop mirror
     /** @private _cml_fiber_internal */
     _popMirrorFlag() {
+        if (this.mstc.length == 0)
+            throw new Error("CML Execution error. mirror stack is empty."); // jstc and mstc are pushed and popped together
         this.mirror = this.mstc.shift()!;
     }
     // return fiber's head angle (angle in this game's screen, the scroll direction is 0[rad]).
@@ -410,9 +417,10 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         const activeFibers = Fiber._rootFiber._listChild;
         if (activeFibers.isEmpty())
             return;
-        let elem = activeFibers.begin, elem_end = activeFibers.end, elem_next;
-        while (elem != elem_end) {
-            elem_next = elem.next;
+        const elem_end: Fiber = activeFibers.end;
+        let elem: Fiber | null = activeFibers.begin;
+        while (elem && elem != elem_end) {
+            let elem_next: Fiber | null = elem.next;
             elem._finalize();
             elem = elem_next;
         }
@@ -429,8 +437,9 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         const activeFibers = Fiber._rootFiber._listChild;
         if (activeFibers.isEmpty())
             return;
-        let elem = activeFibers.begin, elem_end = activeFibers.end;
-        while (elem != elem_end) {
+        const elem_end: Fiber = activeFibers.end;
+        let elem: Fiber | null = activeFibers.begin;
+        while (elem && elem != elem_end) {
             elem = elem._onUpdate();
         }
     }
@@ -467,7 +476,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         const fbr = Fiber._freeFibers.pop() || new Fiber();
         // set destruction sequence
         fbr._seqWaitDest = fbr._seqWaitDest || Sequence.newWaitDestruction();
-        fbr._seqWaitDest.next.jump = seq;
+        fbr._seqWaitDest.next!.jump = seq;
         fbr.insert_before(this._firstDest); // child of this
         this._firstDest = fbr; // overwrite first destruction fiber
         if (!fbr._initialize(this, this._object, fbr._seqWaitDest, id, mirror)) {
@@ -489,8 +498,9 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     // destroy all fibers
     /** @private _cml_fiber_internal call from CML.Object.halt() */
     static _destroyAllFibers(obj: CMLObject) {
-        let fibers = Fiber._rootFiber._listChild, elem = fibers.begin, elem_end = fibers.end;
-        while (elem != elem_end) {
+        let elem: Fiber | null = Fiber._rootFiber._listChild.begin;
+        const elem_end: Fiber = Fiber._rootFiber._listChild.end;
+        while (elem && elem != elem_end) {
             elem = elem._destroyByObject(obj);
         }
     }
@@ -516,7 +526,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     static get _globalVariables(): Global { return required(Fiber._globalVariablesValue, "Fiber._globalVariables"); }
     static set _globalVariables(v: Global) { Fiber._globalVariablesValue = v; }
     
-    static _freeFibers: List = new List(); // free list
+    static _freeFibers: List<Fiber> = new List(); // free list
     // root fiber of active fibers. 作成を遅らせるのは、State との循環 import でモジュール評価時に State が未初期化のため
     static _rootFiberInstance: Fiber | null = null;
     static get _rootFiber(): Fiber {

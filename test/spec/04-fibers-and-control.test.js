@@ -30,6 +30,20 @@ describe("@x 排他的ファイバ起動", () => {
   });
 });
 
+describe("@x の ID に変数・0 を使う", () => {
+  it("変数で指定した排他 ID も、静的な ID と同じく前のファイバを止める", () => {
+    expect(run("l$1=1 @x$1{[f0 w1]} w3 @x$1{}", 8).counts).toEqual(run("@x1{[f0 w1]} w3 @x1{}", 8).counts);
+  });
+
+  it("負の排他 ID は実行時エラー", () => {
+    expect(() => run("@x-1{[f0 w1]}", 2)).toThrow("Invalid exclusive ID");
+  });
+
+  it("排他 ID 0 は、同じ ID 同士で止め合う", () => {
+    expect(run("@x0{[f0 w1]} w3 @x0{}", 8).counts.at(-1)).toBe(run("@x1{[f0 w1]} w3 @x1{}", 8).counts.at(-1));
+  });
+});
+
 describe("@o 子オブジェクトファイバ起動", () => {
   it("f の第 2 引数で ID を指定した子オブジェクトに対してだけ、シーケンスを実行する", () => {
     const r = run("f0,1{} f0,2{} @o1{p9,0}", 3);
@@ -210,6 +224,19 @@ describe("@m ミラーファイバ起動", () => {
     expect(pos(run(`@m{f0{${BASE} w1 ${BASE}}}`, 4).spawned[0])).toEqual(mirrored);
   });
 
+  // & の戻りで反転の状態（mstc）が正しく戻ること。@m の中の & は、フレームをまたいでも反転したまま
+  it("@m の中の & は、戻った後の反転も保つ（& を複数回・フレームをまたいで呼んでも）", () => {
+    expect(run(`#A{${BASE}} @m{&A w1 &A}`, 1).trace[0]).toEqual(mirrored);
+    expect(run(`#A{${BASE}} @m{&A w1 &A}`, 2).trace.at(-1)).toEqual(mirrored);
+    expect(run(`#A{${BASE}} @m{&A da30 p0,10}`, 1).trace[0]).toEqual(at(-30, 0, -10));
+  });
+
+  // 位置は同じオブジェクトを動かすので、向きは弾の射出角で確かめる（呼び出し元は反転していないこと）
+  it("& の中で @m を使っても、呼び出し元の反転は戻る", () => {
+    const shot = script => deg(run(script, 1).spawned[0].vel);
+    expect(shot("#A{@m{da30 p10,0}} &A da30 f5")).toBeCloseTo(shot("da30 f5"));
+  });
+
   it("@m の入れ子は反転が打ち消される", () => {
     expect(run(`@m{@m{${BASE}}}`, 1).trace[0]).toEqual(at(30, 10));
   });
@@ -232,5 +259,22 @@ describe("画面サイズの既定値（setScreenSize を呼ばない場合は 2
     expect(alive(100)).toBe(true);
     expect(alive(101)).toBe(false);
     expect(alive(-101)).toBe(false);
+  });
+});
+
+describe("内部の不変条件（壊れていれば実行時に例外）", () => {
+  it("ミラーの退避スタックが空のときに pop すると例外（黙って mirror が undefined にならない）", () => {
+    const r = run("p1,0", 1);
+    expect(() => r.fiber._popMirrorFlag()).toThrow("mirror stack is empty");
+  });
+
+  it("未解決のラベル参照を & で呼ぶと例外（黙って終了しない）", () => {
+    const { cml, CML } = createCML();
+    const r = cml.runner(0, 0, 0);
+    const fiber = r.execute(cml.sequence("p1,0"));
+    const ref = new CML.Refer(null, "NoSuchLabel");
+    const call = new CML.State("$calllabel");
+    call.next = ref;
+    expect(() => call._gosub(fiber)).toThrow("unresolved label");
   });
 });

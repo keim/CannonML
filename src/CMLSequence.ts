@@ -57,7 +57,7 @@ export class Sequence extends State {
         this._label = null;
         this._parent = null;
         this._non_labeled_count = 0;
-        this._childSequences = {};
+        this._childSequences = Object.create(null); // no prototype: labels like "constructor" are plain labels
         this._global = false;
         this.global = globalSequence;
         if (data) Sequence._parser._parse(this, data);
@@ -99,7 +99,7 @@ const seqB:CML.Sequence = new CML.Sequence("&amp;LABEL_G");    // Error; you can
     /** Is this sequence empty ? */
     get isEmpty() {
         const cmd = this.next;
-        return (this.next == null || cmd.type == State.ST_END);
+        return (cmd == null || cmd.type == State.ST_END);
     }
     // static functions
     //------------------------------------------------------------
@@ -238,17 +238,18 @@ const seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]"
             cmd_next = cmd.next;
             // solve named reference
             if (cmd.type == State.ST_REFER) {
-                if (cmd.isLabelUnsolved()) {
-                    cmd.jump = this.findSequence(cmd._label) || this._findGlobalSequence(cmd._label);
-                    if (!cmd.jump)
-                        throw Error("Not defined label; " + cmd._label);
+                const ref = cmd as Refer;
+                if (ref.isLabelUnsolved()) {
+                    ref.jump = this.findSequence(ref._label!) || this._findGlobalSequence(ref._label!);
+                    if (!ref.jump)
+                        throw Error("Not defined label; " + ref._label);
                 }
             }
             else 
             // check a sequence after CML.State.STF_CALLREF (@ko, @o, f commands).
             if (cmd.type & State.STF_CALLREF) {
                 // if there are no references, ... 
-                if (cmd.next.type != State.ST_REFER) {
+                if (cmd.next!.type != State.ST_REFER) {
                     if ((cmd.type & State.ST_RESTRICT) != 0) {
                         // throw error
                         throw Error("No sequences after @ ?");
@@ -265,9 +266,9 @@ const seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]"
             if (cmd.type == State.ST_INTERPOLATE) {
                 // search bark command
                 cmd_verify = cmd.prev;
-                while (cmd_verify.type & State.STF_BE_INTERPOLATED) 
+                while (cmd_verify && (cmd_verify.type & State.STF_BE_INTERPOLATED)) 
                     cmd_verify = cmd_verify.prev;
-                if (cmd_verify.type != State.ST_INTERPOLATE) {
+                if (cmd_verify && cmd_verify.type != State.ST_INTERPOLATE) {
                     // insert interpolation initialize command first of all
                     new_cmd = new State("$init4int");
                     new_cmd.insert_after(cmd_verify);
@@ -280,7 +281,7 @@ const seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]"
                 new_cmd = new State("$init4barrage");
                 new_cmd.insert_before(cmd);
                 // skip barrage command
-                while (cmd_next.type == State.ST_BARRAGE) 
+                while (cmd_next && cmd_next.type == State.ST_BARRAGE) 
                     cmd_next = cmd_next.next;
             }
             cmd = cmd_next;

@@ -1,9 +1,10 @@
 import { Fiber } from "../CMLFiber.js"
 import { Sequence } from "../CMLSequence.js"
 import type { BarrageElem } from "./CMLBarrageElem.js"
-import type { CMLObject } from "./CMLObject.js"
+import { CMLObject } from "./CMLObject.js"
 import { Formula } from "./CMLFormula.js"
-import { ListElem } from "./CMLListElem.js"
+import type { Refer } from "./CMLRefer.js"
+import { ChainListElem } from "./CMLChainListElem.js"
 
 //----------------------------------------------------------------------------------------------------
 // CML statement class
@@ -20,7 +21,7 @@ interface OperatorDef {
 }
 
 /** @private */
-export class State extends ListElem {
+export class State extends ChainListElem<State> {
     key: string
     /** arguments */
     $: number[]
@@ -84,13 +85,15 @@ export class State extends ListElem {
         return true;
     }
     // initialize interpolation
-    _initialize_interplation(fiber: Fiber) {
+    _initialize_interplation(fiber: Fiber, t: number) {
         const _chgt = fiber.chgt;
-        fiber.chgt = 0;
-        while (fiber._pointer.next.type & State.STF_BE_INTERPOLATED) {
-            fiber._pointer = fiber._pointer.next;
-            fiber._pointer.execute(fiber);
+        fiber.chgt = t;
+        let fbr = fiber._pointer!.next
+        while (fbr && (fbr.type & State.STF_BE_INTERPOLATED)) {
+            fbr.execute(fiber);
+            fbr = fbr.next;
         }
+        fiber._pointer = fbr!.prev;
         fiber.chgt = _chgt;
         return true;
     }
@@ -122,11 +125,13 @@ export class State extends ListElem {
         // execution error
         if (fiber.jstc.length > Fiber._stacmax) 
             throw new Error("CML Execution error. '&' call stac overflow.");
-        const ref = this.next; // next statement is referential sequence
+        const ref = this.next as Refer; // next statement is referential sequence
+        if (!ref.jump)
+            throw new Error("CML Execution error. unresolved label: " + ref._label);
         fiber.jstc.push(ref);
         fiber._pushMirrorFlag(fiber.mirror);
         this._setArguments(fiber, ref.$);
-        fiber._pointer = ref.jump!;
+        fiber._pointer = ref.jump;
         return true;
     }
     // set call arguments to the variables $1...$9 of the object
@@ -135,7 +140,7 @@ export class State extends ListElem {
     }
     // run new fiber
     _fiber(fiber: Fiber, fiber_id: number, mirror: boolean) {
-        const ref = this.next; // next statement is referential sequence
+        const ref = this.next as Refer; // next statement is referential sequence
         this._setArguments(fiber, ref.$);
         const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
         const mirrorFlag = mirror ? !fiber.mirror : fiber.mirror
@@ -146,7 +151,7 @@ export class State extends ListElem {
     }
     // run new destruction fiber
     _fiber_destruction(fiber: Fiber, destStatus: number) {
-        const ref = this.next; // next statement is referential sequence
+        const ref = this.next as Refer; // next statement is referential sequence
         const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
         fiber._newDestFiber(seq, destStatus, fiber.mirror); // create and initialize destruction fiber
         fiber.seqFiber = seq; // update executing sequence
@@ -155,7 +160,7 @@ export class State extends ListElem {
     }
     // run new fiber on child object
     _fiber_child(fiber: Fiber, obj: CMLObject, object_id: number) {
-        const ref = this.next; // next statement is referential sequence
+        const ref = this.next as Refer; // next statement is referential sequence
         const seq = ref.jump || fiber.seqFiber; // ref.jump is null when repeat previous call "{.}"
         obj.findAllChildren(object_id).forEach((child: CMLObject)=>fiber._newObjectFiber(child, seq, fiber.mirror));
         fiber.seqFiber = seq; // update executing sequence
@@ -165,7 +170,7 @@ export class State extends ListElem {
     // fire
     _fire(fiber: Fiber, access_id: number, isParts: boolean) {
         // next statement is sequence referene 
-        const ref = this.next;
+        const ref = this.next as Refer;
         // update fire pointer, ref.jump shows executing sequence
         if (ref.type == State.ST_REFER) {
             // ref.jump is reference sequence
@@ -207,9 +212,9 @@ export class State extends ListElem {
         }
     }
     // create object reflexively
-    __reflexive_call(fiber: Fiber, access_id: number, isParts: boolean, args: number[] | null, cx: number, cy: number, bul: BarrageElem, end: ListElem) {
-        if (bul.next.interval == 0) {
-            const b = bul.next;
+    __reflexive_call(fiber: Fiber, access_id: number, isParts: boolean, args: number[] | null, cx: number, cy: number, bul: BarrageElem, end: BarrageElem) {
+        if (bul.next!.interval == 0) {
+            const b = bul.next!;
             if (b.next == end) {
                 // create bullet
                 for (b.init(bul); !b.isEnd(); b.update()) 
@@ -225,9 +230,9 @@ export class State extends ListElem {
             // create new fiber and initialize
             const newfiber = fiber._newChildFiber(Sequence.rapid(), Fiber.ID_NOT_SPECIFYED, fiber.mirror, false)!;
             // copy bullet setting and bullet multiplyer
-            newfiber.bul.copy(bul.next);
+            newfiber.bul.copy(bul.next!);
             newfiber.bul.init(bul);
-            for (let elem = bul.next.next; elem != end; elem = elem.next) 
+            for (let elem: BarrageElem | null = bul.next!.next; elem && elem != end; elem = elem.next)
                 newfiber.barrage._appendElementCopyOf(elem);
             // copy other parameters
             newfiber.fx = fiber.fx;
@@ -311,6 +316,8 @@ export class State extends ListElem {
                 if (state.formula.answerCount > 0)
                     fiber.wtm1 = Math.floor($[0]);
                 fiber.wcnt = fiber.wtm1;
+                if (fiber.wcnt < 0) 
+                    throw new Error("CML Execution error. Wait count cannot be negative.");
                 return fiber.wcnt == 0; // w0 does not wait: continue with the next command
             }
         },
@@ -350,7 +357,7 @@ export class State extends ListElem {
             type: State.ST_IF,
             func(state, _$, fiber) {
                 // loopconter < 0 means branch. true=-1, false=-2
-                fiber.lcnt[0] = (state.prev.$[0]) ? -1: -2;
+                fiber.lcnt[0] = (state.prev!.$[0]) ? -1: -2;
                 if (fiber.lcnt[0] == -2) 
                     fiber._pointer = state.jump!.prev;
                 return true;
@@ -394,23 +401,21 @@ export class State extends ListElem {
             func(_state, $, fiber) {
                 fiber.chgt = Math.floor($[0]);
                 fiber.wtm2 = fiber.chgt;
+                if (fiber.wtm2 < 0) 
+                    throw new Error("CML Execution error. Interpolation frames cannot be negative.");
                 return true;
             }
         },
         "~":{ // wait with interpolation
             argc: 1,
             type: State.ST_INTERPOLATE,
-            func(_state, $, fiber) {
-                const _chgt = fiber.chgt;
-                if ($[0] !== 0) {
-                    fiber.chgt = Math.floor($[0]);
-                }
-                while (fiber._pointer.next.type & State.STF_BE_INTERPOLATED) {
-                    fiber._pointer = fiber._pointer.next;
-                    fiber._pointer.execute(fiber);
-                }
-                fiber.wcnt = fiber.chgt;
-                fiber.chgt = _chgt;
+            func(state, $, fiber) {
+                const n = Math.floor($[0]);
+                const t = (n == 0) ? fiber.chgt : n;
+                if (t < 0) 
+                    throw new Error("CML Execution error. Interpolation frames cannot be negative.");
+                state._initialize_interplation(fiber, t);
+                fiber.wcnt = t;
                 return (fiber.wcnt == 0);
             }
         },
@@ -512,7 +517,10 @@ export class State extends ListElem {
             argc: 1,
             type: State.ST_RESTRICT | State.STF_CALLREF,
             func(state, $, fiber) {
-                return state._fiber(fiber, $[0], false);
+                const id = Math.floor($[0]);
+                if (id < 0)
+                    throw new Error("CML Execution error. Invalid exclusive ID.");
+                return state._fiber(fiber, id, false);
             }
         },
         "@m":{
@@ -542,7 +550,14 @@ export class State extends ListElem {
             type: State.STF_CALLREF,
             func(state, $, fiber) {
                 fiber.bul.speed = $[0];
-                state._fire(fiber, Math.floor($[1]), false);
+                if (state.formula.answerCount > 1) {
+                    const id = Math.floor($[1]);
+                    if (id < 0)
+                        throw new Error("CML Execution error. Invalid object ID.");
+                    state._fire(fiber, id, false);
+                } else {
+                    state._fire(fiber, CMLObject.ID_NOT_SPECIFYED, false);
+                }
                 fiber.bul.update();
                 return true;
             }
@@ -552,7 +567,14 @@ export class State extends ListElem {
             type: State.STF_CALLREF,
             func(state, $, fiber) {
                 fiber.bul.speed = $[0];
-                state._fire(fiber, Math.floor($[1]), true);
+                if (state.formula.answerCount > 1) {
+                    const id = Math.floor($[1]);
+                    if (id < 0)
+                        throw new Error("CML Execution error. Invalid object ID.");
+                    state._fire(fiber, id, true);
+                } else {
+                    state._fire(fiber, CMLObject.ID_NOT_SPECIFYED, true);
+                }
                 fiber.bul.update();
                 return true;
             }
@@ -671,7 +693,7 @@ export class State extends ListElem {
             argc: 0,
             type: State.ST_NORMAL,
             func(_state, _$, fiber, object) {
-                fiber.target = object.parent;
+                fiber.target = object.getParent();
                 return true;
             }
         },
@@ -717,7 +739,7 @@ export class State extends ListElem {
             argc: 0,
             type: State.ST_INIT4INT,
             func(state, _$, fiber) {
-                return state._initialize_interplation(fiber);
+                return state._initialize_interplation(fiber, 0);
             }
         },
         "$w4d":{

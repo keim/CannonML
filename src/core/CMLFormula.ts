@@ -127,6 +127,7 @@ export class Formula {
     calcDynamic(fbr: Fiber): number[] {
         const answers: number[] = [];
         answers.push(this._rootOperator!.calcDynamic(answers, fbr));
+        this.answerCount = answers.length;
         return answers;
     }
 

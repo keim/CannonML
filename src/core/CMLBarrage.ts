@@ -26,7 +26,7 @@ export class Barrage {
      *  @default bm1,0,0,0
      *  @see CML.Fiber#barrage
      */
-    qrtList: List
+    qrtList: List<BarrageElem>
     constructor() {
         // CML.BarrageElem list
         /** @private */
@@ -48,8 +48,9 @@ export class Barrage {
      *  @param copy source.
      */
     appendCopyOf(src: Barrage) {
-        let qrt = src.qrtList.begin;
-        while (qrt != src.qrtList.end) {
+        const end: BarrageElem = src.qrtList.end;
+        let qrt: BarrageElem | null = src.qrtList.begin;
+        while (qrt && qrt != end) {
             this._appendElementCopyOf(qrt);
             qrt = qrt.next;
         }
@@ -95,6 +96,6 @@ export class Barrage {
 
     // element factroy
     //----------------------------------------
-    static freeList: List = new List();
+    static freeList: List<BarrageElem> = new List();
 
 }

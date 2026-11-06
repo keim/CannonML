@@ -3,7 +3,7 @@ import { Sequence } from "../CMLSequence.js"
 import { Assign } from "./CMLAssign.js"
 import { Formula } from "./CMLFormula.js"
 import { FormulaLiteral } from "./CMLFormulaLiteral.js"
-import { List } from "./CMLList.js"
+import { ChainList } from "./CMLChainList.js"
 import { Refer } from "./CMLRefer.js"
 import { State } from "./CMLState.js"
 import { CMLString } from "./CMLString.js"
@@ -19,7 +19,7 @@ export class Parser {
     // constructor
     //------------------------------------------------------------
     // constructor
-    listState: List
+    listState: ChainList<State>
     loopstac: State[]
     childstac: Sequence[]
     cmdTemp: State | null
@@ -45,7 +45,7 @@ export class Parser {
     constructor(globalVariables_: Global) {
         // variables
         //------------------------------------------------------------
-        this.listState = new List(); // statement chain
+        this.listState = new ChainList(); // statement chain
         this.loopstac = []; // loop stac
         this.childstac = []; // child cast "{}" stac
         this.cmdTemp = null; // current parsing statement

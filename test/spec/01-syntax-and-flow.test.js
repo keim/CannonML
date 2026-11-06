@@ -258,6 +258,21 @@ describe("待機", () => {
   });
 });
 
+describe("待機の引数（変数・負の値）", () => {
+  it("変数の値で待機フレーム数を決める（w$1 は $1 のフレーム数だけ待つ）", () => {
+    expect(xs(run("l$1=3 w$1 p1,0", 5).trace)).toEqual([0, 0, 0, 1, 1]);
+    expect(xs(run("w3 p1,0", 5).trace)).toEqual([0, 0, 0, 1, 1]);
+  });
+
+  it("負の待機フレーム数は実行時エラー", () => {
+    expect(() => run("w-1 p1,0", 2)).toThrow("Wait count cannot be negative");
+  });
+
+  it("負の補間フレーム数は実行時エラー", () => {
+    expect(() => run("i-1 p1,0 ~", 2)).toThrow("Interpolation frames cannot be negative");
+  });
+});
+
 describe("シーケンスの再呼出 {.}", () => {
   // 子の x は生成後 3 フレーム後に読む（p の移動量）
   const childXs = script => run(script, 3).spawned.map(o => o.pos.x);

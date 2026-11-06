@@ -24,7 +24,8 @@ export class FormulaLiteral implements FormulaNode {
         } else {
             this.idx = Number(m[2]||0);
             this.num = 0;
-            this.func = FormulaLiteral.operators[m[1]] || Formula._globalVariables._mapUsrDefRef[m[1]];
+            // own keys only: a bare lookup would find Object.prototype members such as "constructor"
+            this.func = Object.prototype.hasOwnProperty.call(FormulaLiteral.operators, m[1]) ? FormulaLiteral.operators[m[1]] : Formula._globalVariables._mapUsrDefRef[m[1]];
             this.isStatic = false;
             if (!this.func)
                 throw Error(opr + " ?");
@@ -58,19 +59,19 @@ export class FormulaLiteral implements FormulaNode {
         "ho": (fbr)=>(fbr.object.angleOnScreen - Formula._globalVariables._scrollRadian) * 180 / Math.PI,
         "td": (fbr)=>fbr.object.getDistance(fbr.target),
         "o": (fbr, idx)=>((idx) ? fbr.object.countIDedChildren(idx) : fbr.object.countAllIDedChildren()),
-        "p.x": (fbr)=>fbr.object.parent.pos.x,
-        "p.y": (fbr)=>fbr.object.parent.pos.y,
-        "p.z": (fbr)=>fbr.object.parent.pos.z,
-        "p.sx": (fbr)=>((fbr.object.parent.pos.x < 0) ? -1 : 1),
-        "p.sy": (fbr)=>((fbr.object.parent.pos.y < 0) ? -1 : 1),
-        "p.sz": (fbr)=>((fbr.object.parent.pos.z < 0) ? -1 : 1),
-        "p.v": (fbr)=>fbr.object.parent.velocity,
-        "p.vx": (fbr)=>fbr.object.parent.vel.x,
-        "p.vy": (fbr)=>fbr.object.parent.vel.y,
-        "p.vz": (fbr)=>fbr.object.parent.vel.z,
-        "p.ho": (fbr)=>(fbr.object.parent.angleOnScreen - Formula._globalVariables._scrollRadian) * 180 / Math.PI,
-        "p.td": (fbr)=>fbr.object.parent.getDistance(fbr.target),
-        "p.o": (fbr, idx)=>((idx) ? fbr.object.parent.countIDedChildren(idx) : fbr.object.parent.countAllIDedChildren()),
+        "p.x": (fbr)=>fbr.object.getParent().pos.x,
+        "p.y": (fbr)=>fbr.object.getParent().pos.y,
+        "p.z": (fbr)=>fbr.object.getParent().pos.z,
+        "p.sx": (fbr)=>((fbr.object.getParent().pos.x < 0) ? -1 : 1),
+        "p.sy": (fbr)=>((fbr.object.getParent().pos.y < 0) ? -1 : 1),
+        "p.sz": (fbr)=>((fbr.object.getParent().pos.z < 0) ? -1 : 1),
+        "p.v": (fbr)=>fbr.object.getParent().velocity,
+        "p.vx": (fbr)=>fbr.object.getParent().vel.x,
+        "p.vy": (fbr)=>fbr.object.getParent().vel.y,
+        "p.vz": (fbr)=>fbr.object.getParent().vel.z,
+        "p.ho": (fbr)=>(fbr.object.getParent().angleOnScreen - Formula._globalVariables._scrollRadian) * 180 / Math.PI,
+        "p.td": (fbr)=>fbr.object.getParent().getDistance(fbr.target),
+        "p.o": (fbr, idx)=>((idx) ? fbr.object.getParent().countIDedChildren(idx) : fbr.object.getParent().countAllIDedChildren()),
         "t.x": (fbr)=>fbr.target.pos.x,
         "t.y": (fbr)=>fbr.target.pos.y,
         "t.z": (fbr)=>fbr.target.pos.z,

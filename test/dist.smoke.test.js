@@ -23,7 +23,7 @@ describe("tsc output (dist)", () => {
         console.log(JSON.stringify([Object.keys(CML).length, r.pos.x]));
       `;
       const res = execFileSync(process.execPath, ["--input-type=module", "-e", script], { encoding: "utf8" });
-      expect(JSON.parse(res)).toEqual([22, 4]);
+      expect(JSON.parse(res)).toEqual([24, 4]);
     } finally {
       rmSync(out, { recursive: true, force: true });
     }

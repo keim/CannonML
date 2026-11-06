@@ -89,6 +89,41 @@ describe("オブジェクト生成 f / fs", () => {
   });
 });
 
+describe("オブジェクト ID（f / fs の第 2 引数）", () => {
+  const xs = s => run(s, 4).spawned.map(o => round(o.pos.x));
+
+  it("ID 0 も参照できる（@o0 が届く）", () => {
+    expect(xs("f0,0{w5 p3,0} w1 @o0{w1 p7,0}")).toEqual([7]);
+  });
+
+  it("無指定の子は ID で参照できない（@o に届かない）", () => {
+    expect(xs("f0{w5 p3,0} w1 @o{w1 p7,0}")).toEqual([0]);
+  });
+
+  it("変数で指定した ID も、静的な ID と同じく参照できる", () => {
+    expect(xs("l$1=2 f0,$1{w5 p3,0} w1 @o2{p7,0}")).toEqual([7]);
+    expect(xs("f0,2{w5 p3,0} w1 @o2{p7,0}")).toEqual([7]);
+  });
+
+  // 既知の不具合: root 直下の ID 付き子は、破棄後も root の子リストに残る（CMLObject._finalize は parent !== root のときだけ外す）
+  it.fails("root 直下の ID 付き子は、破棄すると root の子リストから外れる", () => {
+    const { cml, CML } = createCML();
+    const root = CML.Object.root;
+    new CML.Object().create(0, 0, 0, null, false, 9).destroy(0);
+    cml.update();
+    expect(root.countAllIDedChildren()).toBe(0);
+  });
+
+  it("負の ID は実行時エラー（f / fs）", () => {
+    expect(() => run("f0,-1{}", 2)).toThrow("Invalid object ID");
+    expect(() => run("fs0,-3{}", 2)).toThrow("Invalid object ID");
+  });
+
+  it("@o の負の ID は無指定扱いで、どの子にも届かない", () => {
+    expect(xs("f0,1{w5 p3,0} w1 @o-1{w1 p7,0}")).toEqual([0]);
+  });
+});
+
 describe("原点の指定 o / ox / oy", () => {
   it("o は子オブジェクトの初期位置を指定する", () => {
     expect(pos(run("w1 o5,3 f0", 2).spawned[0])).toEqual([5, 3]);
