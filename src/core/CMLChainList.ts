@@ -8,10 +8,10 @@ import { ChainListElem } from "./CMLChainListElem.js"
 /** @private
  *  T is the element type. The sentinel term is a T too; every link of a valid list is non-null.
  */
-export class ChainList<T extends ChainListElem<any>> {
+export class ChainList<T extends ChainListElem<T>> {
     term: T
     constructor() {
-        this.term = new ChainListElem<any>() as unknown as T;
+        this.term = new ChainListElem<T>() as unknown as T;
         this.term.next = this.term;
         this.term.prev = this.term;
     }

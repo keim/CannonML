@@ -53,9 +53,14 @@ export class Formula {
             const oprcnt = this._stacOperator[0].oprcnt;
             if (this._stacOperand.length < oprcnt)
                 return false;
-            this._stacOperator[0].opr1 = (oprcnt > 1) ? (this._stacOperand.shift()!) : (null);
-            this._stacOperator[0].opr0 = (oprcnt > 0) ? (this._stacOperand.shift()!) : (null);
-            this._stacOperand.unshift(this._stacOperator.shift()!);
+            const opr1 = (oprcnt > 1) ? this._stacOperand.shift() : null;
+            const opr0 = (oprcnt > 0) ? this._stacOperand.shift() : null;
+            const opr = this._stacOperator.shift();
+            if (opr1 === undefined || opr0 === undefined || opr === undefined)
+                return false;
+            opr.opr1 = opr1;
+            opr.opr0 = opr0;
+            this._stacOperand.unshift(opr);
         }
         // closed by ()
         if (isClose) {
@@ -102,13 +107,22 @@ export class Formula {
             const oprcnt = this._stacOperator[0].oprcnt;
             if (this._stacOperand.length < oprcnt)
                 return false;
-            this._stacOperator[0].opr1 = (oprcnt > 1) ? (this._stacOperand.shift()!) : (null);
-            this._stacOperator[0].opr0 = (oprcnt > 0) ? (this._stacOperand.shift()!) : (null);
-            this._stacOperand.unshift(this._stacOperator.shift()!);
+            const opr1 = (oprcnt > 1) ? this._stacOperand.shift() : null;
+            const opr0 = (oprcnt > 0) ? this._stacOperand.shift() : null;
+            const opr = this._stacOperator.shift();
+            if (opr1 === undefined || opr0 === undefined || opr === undefined)
+                return false;
+            opr.opr1 = opr1;
+            opr.opr0 = opr0;
+            this._stacOperand.unshift(opr);
         }
         // success when operand stac has only one member
-        if (this._stacOperand.length == 1)
-            this._rootOperator = this._stacOperand.shift()!;
+        if (this._stacOperand.length == 1) {
+            const root = this._stacOperand.shift();
+            if (root === undefined)
+                return false;
+            this._rootOperator = root;
+        }
         return Boolean(this._rootOperator);
     }
     // calculation

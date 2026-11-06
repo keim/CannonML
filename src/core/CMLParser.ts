@@ -150,7 +150,7 @@ export class Parser {
         if (!res[this.REX_NORMAL])
             return false;
         this.cmdTemp = new State(res[this.REX_NORMAL]);     // new command
-        let topStac: State;
+        let topStac: State | undefined;
         // individual operations
         switch (this.cmdTemp.key) {
             case "[":
@@ -162,7 +162,9 @@ export class Parser {
                 if (this.listState.tail.type != State.ST_BLOCKSTART && 
                     this.listState.tail.type != State.ST_ELSE)
                     throw Error("? should be after [ or :");
-                topStac = this.loopstac.shift()!;      // pop loop stac
+                topStac = this.loopstac.shift(); // pop loop stac
+                if (topStac === undefined)
+                    throw Error("? should be after [ or :");
                 this.cmdTemp.jump = topStac.jump;     // current jump pointer -> "["
                 topStac.jump = this.cmdTemp;          // previous jump pointer -> current command
                 this.loopstac.unshift(this.cmdTemp);  // push new loop stac
@@ -170,7 +172,9 @@ export class Parser {
             case ":":
                 if (this.loopstac[0].type != State.ST_IF)
                     throw Error(": should be after ?");
-                topStac = this.loopstac.shift()!;      // pop loop stac
+                topStac = this.loopstac.shift(); // pop loop stac
+                if (topStac === undefined)
+                    throw Error(": should be after ?");
                 this.cmdTemp.jump = topStac.jump;     // current jump pointer -> "["
                 topStac.jump = this.cmdTemp;          // previous jump pointer -> current command
                 this.loopstac.unshift(this.cmdTemp);  // push new loop stac
@@ -178,7 +182,9 @@ export class Parser {
             case "]":
                 if (this.loopstac.length == 0)
                     throw Error("[...]] ?");
-                topStac = this.loopstac.shift()!;    // pop loop stac
+                topStac = this.loopstac.shift(); // pop loop stac
+                if (topStac === undefined)
+                    throw Error("[...]] ?");
                 this.cmdTemp.jump = topStac.jump;   // set jump pointer -> "["
                 topStac.jump = this.cmdTemp;        // previous jump pointer -> current command
                 break;
@@ -186,7 +192,10 @@ export class Parser {
                 if (this.childstac.length <= 1)
                     throw Error("{...}} ?");
                 this._append_statement(this.cmdTemp);
-                this.cmdTemp = this._cut_sequence(this.childstac.shift()!, this.cmdTemp);
+                const child = this.childstac.shift();
+                if (child === undefined)
+                    throw Error("{...}} ?");
+                this.cmdTemp = this._cut_sequence(child, this.cmdTemp);
                 break;
         }
         return true;

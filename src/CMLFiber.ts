@@ -358,9 +358,10 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
     // pop mirror
     /** @private _cml_fiber_internal */
     _popMirrorFlag() {
-        if (this.mstc.length == 0)
-            throw new Error("CML Execution error. mirror stack is empty."); // jstc and mstc are pushed and popped together
-        this.mirror = this.mstc.shift()!;
+        const mirror = this.mstc.shift();
+        if (mirror === undefined)
+            throw new Error("CML Execution error. mirror stack is empty.");
+        this.mirror = mirror;
     }
     // return fiber's head angle (angle in this game's screen, the scroll direction is 0[rad]).
     /** @private _cml_fiber_internal */

@@ -8,7 +8,7 @@
  *  Unlinked elements have prev / next null. A ChainList keeps a sentinel ring while the statements are being parsed,
  *  and the parser cuts a chain out of it (the cut chain ends with null).
  */
-export class ChainListElem<T extends ChainListElem<any>> {
+export class ChainListElem<T extends ChainListElem<T>> {
     prev: T | null = null
     next: T | null = null
     clear() {

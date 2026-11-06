@@ -7,7 +7,7 @@
  *  Element of a ring list (List keeps a sentinel term). T is the element type (the subclass itself).
  *  prev / next are never null: an element that is not in a List points to itself (next === prev === this).
  */
-export class ListElem<T extends ListElem<any>> {
+export class ListElem<T extends ListElem<T>> {
     prev: T = this as unknown as T
     next: T = this as unknown as T
     /** Is this element registered in a List ? (a pooled element in a free list is linked too) */

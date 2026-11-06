@@ -9,10 +9,10 @@ import { ListElem } from "./CMLListElem.js"
  *  Ring list of T with a sentinel term (term.next === term when empty). Every link is non-null.
  *  Walk it with `while (elem != list.end)`; an unlinked element is a ring of its own and never reaches end.
  */
-export class List<T extends ListElem<any>> {
+export class List<T extends ListElem<T>> {
     term: T
     constructor() {
-        this.term = new ListElem<any>() as unknown as T; // self-linked: an empty ring
+        this.term = new ListElem<T>() as unknown as T; // self-linked: an empty ring
     }
     clear() {
         this.term.clear();

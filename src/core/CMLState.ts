@@ -337,9 +337,10 @@ export class State extends ChainListElem<State> {
             argc: 0,
             type: State.ST_END,
             func(_state, _$, fiber) {
-                if (fiber.jstc.length > 0) { // pop jump stac
-                    fiber._popMirrorFlag();
-                    fiber._pointer = fiber.jstc.pop()!;
+                const ret = fiber.jstc.pop(); // pop jump stac
+                if (ret !== undefined) {
+                    fiber._popMirrorFlag(); // jstc and mstc are pushed and popped together
+                    fiber._pointer = ret;
                 }
                 return true;
             }
