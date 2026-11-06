@@ -262,6 +262,32 @@ describe("画面サイズの既定値（setScreenSize を呼ばない場合は 2
   });
 });
 
+describe("halt: オブジェクトの全ファイバを止める", () => {
+  it("同じオブジェクトに複数のファイバがあっても、全部止まる（他のオブジェクトのファイバは止まらない）", () => {
+    const { cml } = createCML();
+    cml.setScreenSize(10000, 10000);
+    const r = cml.runner(0, 0, 0), other = cml.runner(0, 0, 0);
+    const mine = ["[w1]", "[w1]", "[w1]"].map(s => r.execute(cml.sequence(s)));
+    const theirs = other.execute(cml.sequence("[w1]"));
+    r.halt();
+    expect(mine.map(f => f.isActive)).toEqual([false, false, false]);
+    expect(theirs.isActive).toBe(true);
+  });
+
+  it("子ファイバがあるファイバも、子ごと止まる", () => {
+    const { cml } = createCML();
+    cml.setScreenSize(10000, 10000);
+    const r = cml.runner(0, 0, 0);
+    const f = r.execute(cml.sequence("{[w1]} {[w1]} [w1]"));
+    cml.update();
+    r.halt();
+    expect(f.isActive).toBe(false);
+    r.execute(cml.sequence("p1,0")); // 空きリストが壊れていなければ、再利用して実行できる
+    cml.update();
+    expect(r.pos.x).toBe(1);
+  });
+});
+
 describe("内部の不変条件（壊れていれば実行時に例外）", () => {
   it("ミラーの退避スタックが空のときに pop すると例外（黙って mirror が undefined にならない）", () => {
     const r = run("p1,0", 1);

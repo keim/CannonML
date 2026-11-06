@@ -1,6 +1,6 @@
 # 残タスク（2026-11-06 時点）
 
-現状: `npm run typecheck` が通る。`npm test` は通常の 239 件が通り、既知の不具合 1 件が `it.fails` で固定されている（root 直下の子リスト）。`@ts-expect-error` なし。
+現状: `npm run typecheck` が通る。`npm test` は通常の 241 件が通り、既知の不具合 1 件が `it.fails` で固定されている（root 直下の子リスト）。`@ts-expect-error` なし。
 言語は v3（仕様: `docs/reference/v3/cannonML.md`）。バグ修正や仕様変更は、リファクタとは別のコミットで行うこと。
 
 ## 1. demo

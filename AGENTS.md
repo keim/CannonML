@@ -58,6 +58,6 @@ Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). np
 
 ## Current state (2026-11-05)
 
-`npm run typecheck` passes; `npm test` passes 239 tests plus 1 `it.fails` (the root child list defect below); no `@ts-expect-error`. No `var`, `any` only as the `ListElem<any>` constraint of `List<T>` / `ListElem<T>`, `null!` is 4 (all in `Fiber`). The spec and the implementation agree, except for the open defects below. The full list of open items (including typing cleanup, README, demo) is in `docs/remaining-tasks.md`:
+`npm run typecheck` passes; `npm test` passes 241 tests plus 1 `it.fails` (the root child list defect below); no `@ts-expect-error`. No `var`, `any` only as the `ListElem<any>` constraint of `List<T>` / `ListElem<T>`, `null!` is 4 (all in `Fiber`). The spec and the implementation agree, except for the open defects below. The full list of open items (including typing cleanup, README, demo) is in `docs/remaining-tasks.md`:
 
 - An object with an ID whose parent is the root is not removed from the root's child list when it is destroyed.

@@ -207,14 +207,14 @@ export class State extends ChainListElem<State> {
         }
         else {
             // reflexive call
-            fiber.bul.next = fiber.barrage.qrtList.head;
-            this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, fiber.bul, fiber.barrage.qrtList.end);
+            this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, fiber.bul, fiber.barrage.qrtList.head, fiber.barrage.qrtList.end);
         }
     }
     // create object reflexively
-    __reflexive_call(fiber: Fiber, access_id: number, isParts: boolean, args: number[] | null, cx: number, cy: number, bul: BarrageElem, end: BarrageElem) {
-        if (bul.next!.interval == 0) {
-            const b = bul.next!;
+    __reflexive_call(fiber: Fiber, access_id: number, isParts: boolean, args: number[] | null, cx: number, cy: number, bul: BarrageElem, first: BarrageElem, end: BarrageElem) {
+        // bul is the parent setting (fiber.bul is not linked to the list), first is the first element of this level
+        if (first.interval == 0) {
+            const b = first;
             if (b.next == end) {
                 // create bullet
                 for (b.init(bul); !b.isEnd(); b.update()) 
@@ -223,16 +223,16 @@ export class State extends ChainListElem<State> {
             else {
                 // reflexive call
                 for (b.init(bul); !b.isEnd(); b.update()) 
-                    this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, b, end);
+                    this.__reflexive_call(fiber, access_id, isParts, args, cx, cy, b, b.next!, end);
             }
         }
         else {
             // create new fiber and initialize
             const newfiber = fiber._newChildFiber(Sequence.rapid(), Fiber.ID_NOT_SPECIFYED, fiber.mirror, false)!;
             // copy bullet setting and bullet multiplyer
-            newfiber.bul.copy(bul.next!);
+            newfiber.bul.copy(first);
             newfiber.bul.init(bul);
-            for (let elem: BarrageElem | null = bul.next!.next; elem && elem != end; elem = elem.next)
+            for (let elem: BarrageElem | null = first.next; elem && elem != end; elem = elem.next)
                 newfiber.barrage._appendElementCopyOf(elem);
             // copy other parameters
             newfiber.fx = fiber.fx;

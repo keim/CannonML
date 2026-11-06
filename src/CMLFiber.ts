@@ -344,9 +344,10 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
         const elem_end: Fiber | null = this._listChild.end; 
         while (elem && elem !== elem_end) 
             elem = elem._destroyByObject(obj);
+        const next = this.next; // destroy() moves this fiber into the free list, so read next first
         if (this._object === obj)
             this.destroy();
-        return this.next;
+        return next;
     }
     // push mirror
     /** @private _cml_fiber_internal */
