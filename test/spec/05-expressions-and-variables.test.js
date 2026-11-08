@@ -108,6 +108,7 @@ describe("変数", () => {
     expect(r.runner.pos.z).toBe(3);
     expect(run("f0,0{w9} w1 p$o,0", 3).trace.at(-1)).toEqual([1, 0]);
     expect(run("f0,0{w9} w1 p$o1,0", 3).trace.at(-1)).toEqual([0, 0]);
+    expect(run("f0,10{w9} w1 p$o,0", 3).trace.at(-1)).toEqual([1, 0]);
   });
 
   it("$p.* は親オブジェクトのパラメータ", () => {

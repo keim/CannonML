@@ -105,8 +105,7 @@ describe("オブジェクト ID（f / fs の第 2 引数）", () => {
     expect(xs("f0,2{w5 p3,0} w1 @o2{p7,0}")).toEqual([7]);
   });
 
-  // 既知の不具合: root 直下の ID 付き子は、破棄後も root の子リストに残る（CMLObject._finalize は parent !== root のときだけ外す）
-  it.fails("root 直下の ID 付き子は、破棄すると root の子リストから外れる", () => {
+  it("root 直下の ID 付き子は、破棄すると root の子リストから外れる", () => {
     const { cml, CML } = createCML();
     const root = CML.Object.root;
     new CML.Object().create(0, 0, 0, null, false, 9).destroy(0);

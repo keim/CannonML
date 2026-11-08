@@ -12,7 +12,7 @@ Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). np
 - Demo needs network (ace editor via CDN). `three.min.js` / `ptolemy.js` are vendored locally (classic scripts, globals).
 - Tests: `npm install && npm test` (Vitest). `test/spec/NN-*.test.js` are written from `docs/reference/v3/cannonML.md`, one file per spec section, and assert observable results (positions, spawn counts, frames) by running scripts through `run()` in `test/helpers/run.js` (`before` hook for targets/rank/user commands; `withTarget(x, y, script?)` places a target). A new command or spec change needs a test there. `test/helpers/global-setup.js` bundles `src/index.ts` into one IIFE (vite lib build, written to `node_modules/.cache/cannonml-test/`); `test/helpers/load.js` evaluates it in a fresh `vm` context per test, because CannonML is a singleton. In watch mode the bundle is built once at start — restart after editing `src/`.
 - `test/dist.smoke.test.js` runs `tsc` to a temp dir and imports the output in Node: catches import-order errors and missing `.js` extensions in relative imports. It fails whenever `tsc` fails.
-- Pinning a known bug (one pinned: the root child list, `test/spec/03-spawn.test.js`): `it.fails` in a test, with a `// 既知の不具合: ...` comment above it (when fixed, the test fails: drop `.fails`), and/or `// @ts-expect-error known bug: ...` in `src/` (when fixed, tsc fails: drop the comment). The `it.fails` tests keep the spec's expected value, never the buggy one.
+- Pinning a known bug (currently none): `it.fails` in a test, with a `// 既知の不具合: ...` comment above it (when fixed, the test fails: drop `.fails`), and/or `// @ts-expect-error known bug: ...` in `src/` (when fixed, tsc fails: drop the comment). The `it.fails` tests keep the spec's expected value, never the buggy one.
 - Timing in tests: a command runs in the `update()` that reaches it, and `w n` resumes n frames later; `w0` continues with the next command in the same frame. A bullet already moves by its initial velocity in the frame it is created. An object's `projected` position is stale until its first `update()`, so scripts that read a target/own position at frame 1 start with `w1`.
 
 ## Language (v3)
@@ -56,8 +56,6 @@ Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). np
 - Off-screen culling: `CML.Runner.onUpdate` auto-destroys runners outside `setScreenSize` bounds unless `runner.scopeEnabled = false` (player objects in `demo/main.js`). Without `setScreenSize` the screen is 200 x 200 (bounds ±100), so a runner placed outside it is destroyed on its first `update`.
 - `README.md` still describes the v2 / pre-TypeScript state and links to deleted v2 docs. Do not treat it as current. Open tasks are in `docs/remaining-tasks.md`.
 
-## Current state (2026-11-05)
+## Current state (2026-11-08)
 
-`npm run typecheck` passes; `npm test` passes 248 tests plus 1 `it.fails` (the root child list defect below); no `@ts-expect-error`. No `var`, no `any`, `null!` is 4 (all in `Fiber`: `_object` / `_target`). List constraints are F-bounded (`T extends ListElem<T>`). The spec and the implementation agree, except for the open defects below. The full list of open items (including typing cleanup, README, demo) is in `docs/remaining-tasks.md`:
-
-- An object with an ID whose parent is the root is not removed from the root's child list when it is destroyed.
+`npm run typecheck` passes; `npm test` passes 249 tests (`it.fails` none); no `@ts-expect-error`. No `var`, no `any`, `null!` is 4 (all in `Fiber`: `_object` / `_target`). List constraints are F-bounded (`T extends ListElem<T>`). The spec and the implementation agree, with no known defects. The full list of open items (including typing cleanup, README, demo) is in `docs/remaining-tasks.md`.

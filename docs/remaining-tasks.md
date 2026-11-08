@@ -1,6 +1,6 @@
-# 残タスク（2026-11-06 時点）
+# 残タスク（2026-11-08 時点）
 
-現状: `npm run typecheck` が通る。`npm test` は通常の 248 件が通り、既知の不具合 1 件が `it.fails` で固定されている（root 直下の子リスト）。`@ts-expect-error` なし。`any` 0 件、`var` 0 件、`null!` 4 件、`shift()!` / `pop()!` 0 件。
+現状: `npm run typecheck` が通る。`npm test` は 249 件すべて通る（`it.fails` なし）。`@ts-expect-error` なし。`any` 0 件、`var` 0 件、`null!` 4 件、`shift()!` / `pop()!` 0 件。
 言語は v3（仕様: `docs/reference/v3/cannonML.md`）。バグ修正や仕様変更は、リファクタとは別のコミットで行うこと。
 
 ## 1. demo
@@ -12,9 +12,6 @@
 
 実測で確認したもの。直したらテストを足して、ここから消す。
 
-- **root 直下の ID 付き子が、破棄後も root の子リストに残る（`it.fails` で固定済み）**: `CMLObject._finalize` は `parent !== root` のときだけ `_accessibleChildren` から外す。修正したら `test/spec/03-spawn.test.js` の `it.fails` を外す。
-- **`$o` の仕様の文言**: `$o`（総数）は ID 0 や 10 以上も数えるが、仕様書は「1~9 以外は参照する方法がない」とだけ書いている。`$o` の総数と `$o1`〜`$o9` を分けて書く。
-- **ID 0 を登録するようになった影響が未計測**: `f10,0` のような末尾の `,0` も登録される。破棄時の `splice(indexOf)` が線形なので、弾が多いと遅くなる可能性がある。弾数を増やして計測する。
 - **破棄後のオブジェクトが長く残る経路（未計測）**: `Runner._createdby`（生成元の連鎖を保持する）、`Fiber._target` と子の `_parent`（遅延して初めて解放される）、`Fiber._defaultTarget`。`_createdby` は生成時のコールバック継承にしか使っていないので、不要になった時点で外せる。
 
 ## 3. 型と可読性

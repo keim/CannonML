@@ -677,14 +677,12 @@ target_object = null;                   // target object was destroyed.
     /** @private finalizer */
     _finalize() {
         const parent = this.getParent();
-        if (parent !== CMLObject._root) {
-            // remove this from the parent id list.
-            if (this._access_id !== CMLObject.ID_NOT_SPECIFYED) 
-                parent._accessibleChildren.splice(parent._accessibleChildren.indexOf(this), 1);
-            // check parents parts
-            if (this._isRelative) 
-                parent._relativeChildren.splice(parent._relativeChildren.indexOf(this), 1);
-        }
+        // remove this from the parent id list.
+        if (this._access_id !== CMLObject.ID_NOT_SPECIFYED) 
+            parent._accessibleChildren.splice(parent._accessibleChildren.indexOf(this), 1);
+        // check parents parts
+        if (this._isRelative) 
+            parent._relativeChildren.splice(parent._relativeChildren.indexOf(this), 1);
         // destroy all relative children
         this._relativeChildren.forEach(child=>child._destructionStatus=this._destructionStatus);
         // callback
