@@ -288,6 +288,15 @@ describe("halt: オブジェクトの全ファイバを止める", () => {
   });
 });
 
+describe("Fiber の getter（実行終了後）", () => {
+  it("string / sequence は、実行終了後は例外ではなく null を返す", () => {
+    const { fiber } = run("p1,0", 2);
+    expect(fiber.isExecuting).toBe(false);
+    expect(fiber.string).toBeNull();
+    expect(fiber.sequence).toBeNull();
+  });
+});
+
 describe("内部の不変条件（壊れていれば実行時に例外）", () => {
   it("ミラーの退避スタックが空のときに pop すると例外（黙って mirror が undefined にならない）", () => {
     const r = run("p1,0", 1);

@@ -4,7 +4,6 @@ import type { BarrageElem } from "./CMLBarrageElem.js"
 import { CMLObject } from "./CMLObject.js"
 import { Formula } from "./CMLFormula.js"
 import type { Refer } from "./CMLRefer.js"
-import { ChainListElem } from "./CMLChainListElem.js"
 
 //----------------------------------------------------------------------------------------------------
 // CML statement class
@@ -21,7 +20,10 @@ interface OperatorDef {
 }
 
 /** @private */
-export class State extends ChainListElem<State> {
+export class State {
+    /** previous / next statement. The chain is null-terminated. */
+    prev: State | null = null
+    next: State | null = null
     key: string
     /** arguments */
     $: number[]
@@ -30,7 +32,6 @@ export class State extends ChainListElem<State> {
     jump: State | null
     formula: Formula
     constructor(key?: string | null) {
-        super();
         if (key) {
             const ope = State.operators[key];
             if (!ope)
@@ -52,7 +53,30 @@ export class State extends ChainListElem<State> {
     clear() {
         this.$.length = 0;
         this.jump = null;
-        super.clear();
+        this.prev = null;
+        this.next = null;
+    }
+    /** Insert this in front of next_ (both neighbours must exist). */
+    insert_before(next_: State) {
+        this.next = next_;
+        this.prev = next_.prev;
+        next_.prev!.next = this;
+        next_.prev = this;
+    }
+    /** Insert this after prev_ (both neighbours must exist). */
+    insert_after(prev_: State) {
+        this.prev = prev_;
+        this.next = prev_.next;
+        prev_.next!.prev = this;
+        prev_.next = this;
+    }
+    /** Detach [start .. end] from its chain; both ends become null. */
+    static cutChain(start: State, end: State) {
+        const before = start.prev, after = end.next;
+        if (before) before.next = after;
+        if (after) after.prev = before;
+        start.prev = null;
+        end.next = null;
     }
     /** finalize after all arguments are set */
     construct() {

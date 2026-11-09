@@ -3,7 +3,6 @@ import { Sequence } from "../CMLSequence.js"
 import { Assign } from "./CMLAssign.js"
 import { Formula } from "./CMLFormula.js"
 import { FormulaLiteral } from "./CMLFormulaLiteral.js"
-import { ChainList } from "./CMLChainList.js"
 import { Refer } from "./CMLRefer.js"
 import { State } from "./CMLState.js"
 import { CMLString } from "./CMLString.js"
@@ -19,7 +18,9 @@ export class Parser {
     // constructor
     //------------------------------------------------------------
     // constructor
-    listState: ChainList<State>
+    // statement chain being built (null-terminated)
+    _chainHead: State | null
+    _chainTail: State | null
     loopstac: State[]
     childstac: Sequence[]
     cmdTemp: State | null
@@ -45,7 +46,8 @@ export class Parser {
     constructor(globalVariables_: Global) {
         // variables
         //------------------------------------------------------------
-        this.listState = new ChainList(); // statement chain
+        this._chainHead = null; // statement chain
+        this._chainTail = null;
         this.loopstac = []; // loop stac
         this.childstac = []; // child cast "{}" stac
         this.cmdTemp = null; // current parsing statement
@@ -104,7 +106,7 @@ export class Parser {
             seq.verify(); // verification
         }
         catch (err) {
-            this.listState.cut(this.listState.head, this.listState.tail);
+            this._cutChain();
             seq.clear();
             throw err;
         }
@@ -118,8 +120,8 @@ export class Parser {
     // parsing subroutines
     //------------------------------------------------------------
     _initialize(seq_: Sequence, cml_string: string): RegExp {
-        this.listState.clear();
-        this.listState.push(seq_);
+        this._chainHead = seq_;
+        this._chainTail = seq_;
         this.loopstac.length = 0;
         this.childstac.length = 0;
         this.childstac.unshift(seq_);
@@ -135,7 +137,7 @@ export class Parser {
     }
     _terminate() {
         this._append_statement(new State("$end"));
-        this.listState.cut(this.listState.head, this.listState.tail);
+        this._cutChain();
     }
     _parseFormula(res: RegExpExecArray): boolean {
         if (!res[this.REX_FORMULA])
@@ -159,8 +161,8 @@ export class Parser {
                 this.loopstac.unshift(this.cmdTemp); // push loop stac
                 break;
             case "?":
-                if (this.listState.tail.type != State.ST_BLOCKSTART && 
-                    this.listState.tail.type != State.ST_ELSE)
+                if (this._chainTail!.type != State.ST_BLOCKSTART && 
+                    this._chainTail!.type != State.ST_ELSE)
                     throw Error("? should be after [ or :");
                 topStac = this.loopstac.shift(); // pop loop stac
                 if (topStac === undefined)
@@ -251,7 +253,8 @@ export class Parser {
     }
     // create regular expression once
     _createCMLRegExp(): RegExp {
-        if (this._globalVariables._requestUpdateRegExp || this._compiledLabelRegExpString != this.currentLabelRegExpString) {
+        let regexp = this._regexp;
+        if (regexp === null || this._globalVariables._requestUpdateRegExp || this._compiledLabelRegExpString != this.currentLabelRegExpString) {
             const literalRegExpString = "(0x[0-9a-f]{1,8}|\\d+\\.?\\d*|\\$(\\?\\?|\\?|" + this._userReferenceRegExpString() + ")[0-9]?)";
             const operandRegExpString = Formula._createOperandRegExpString(literalRegExpString);
             // construct regexp string
@@ -280,24 +283,41 @@ export class Parser {
             rexstr += "|(\\{)"; // non-labeled sequence call (res[11])
             rexstr += ")\\s*" + operandRegExpString + ")"; // argument(res[12,13];prefix, res[14,15];literal, res[16,17];postfix)
             rexstr += "|(&?\\w+|&)"; // error (res[18]); "&name" as a whole, and a bare "&"
-            this._regexp = new RegExp(rexstr, "gm"); // "s" option not available on javascript
+            this._regexp = regexp = new RegExp(rexstr, "gm"); // "s" option not available on javascript
             this._globalVariables._requestUpdateRegExp = false;
             this._compiledLabelRegExpString = this.currentLabelRegExpString;
         }
-        this._regexp!.lastIndex = 0;
-        return this._regexp!;
+        regexp.lastIndex = 0;
+        return regexp;
     }
     // append new command
     _append_statement(state: State | null) {
         if (!state) return;
         if (!state.construct())
             throw Error("in formula");
-        this.listState.push(state);
+        this._pushChain(state);
+    }
+    _pushChain(state: State) {
+        // the same statement may be appended twice (after "}"): keep it at the tail
+        if (state === this._chainTail) return;
+        state.prev = this._chainTail;
+        state.next = null;
+        if (this._chainTail) this._chainTail.next = state;
+        else this._chainHead = state;
+        this._chainTail = state;
+    }
+    _cutChain() {
+        if (this._chainHead && this._chainTail)
+            State.cutChain(this._chainHead, this._chainTail);
+        this._chainHead = null;
+        this._chainTail = null;
     }
     // cut sequence from the list
     _cut_sequence(start: State, end: State) {
-        const prev = start.prev; // cut() clears start.prev
-        this.listState.cut(start, end);
+        const prev = start.prev; // cutChain() clears start.prev
+        State.cutChain(start, end);
+        this._chainTail = prev;
+        if (!prev) this._chainHead = null;
         end.jump = start;
         return (start.type == State.ST_NO_LABEL) ? prev : null;
     }
@@ -312,7 +332,7 @@ export class Parser {
     // (null, label) means labeled call "&abc"
     // (null, null) means repeat previous call "{.}"
     _new_reference(seq: Sequence | null, label: string | null): Refer {
-        if ((this.listState.tail.type & State.STF_CALLREF) == 0) {
+        if ((this._chainTail!.type & State.STF_CALLREF) == 0) {
             this._append_statement(new State((label) ? "$calllabel" : "$nonlabel"));
         }
         // create reference 

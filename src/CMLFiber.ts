@@ -129,7 +129,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
 </listing>
      */
     get string() {
-        const stateString = this._pointer!.next;
+        const stateString = this._pointer?.next;
         return (stateString != null) ? (stateString as CMLString)._string : null;
     }
     /** Sequence argument. <br/>
@@ -137,7 +137,7 @@ const seq:CML.Sequence = new CML.Sequence("&amp;print'Hello World !!'");
      *  When the next statement of user command is not sequence. outputs parsing error. Or, when the next statement is '{.}', returns null.
      */
     get sequence() {
-        const stateRefer = this._pointer!.next;
+        const stateRefer = this._pointer?.next;
         return (stateRefer != null) ? (stateRefer.jump) : null;
     }
     /** Is active ? When this property shows false, this fiber is already destroyed. */

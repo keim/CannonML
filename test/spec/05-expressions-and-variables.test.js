@@ -347,7 +347,7 @@ describe("ListElem / List（番兵付きの環。prev / next は非 null、未�
     }
   });
 
-  it("State（ChainListElem）は、未接続なら prev / next が null（null 終端の鎖）", () => {
+  it("State は、未接続なら prev / next が null（null 終端の鎖）", () => {
     const { CML } = createCML();
     const st = new CML.State("p");
     expect(st.prev).toBeNull();
@@ -415,26 +415,22 @@ describe("ListElem / List（番兵付きの環。prev / next は非 null、未�
   });
 });
 
-describe("State の基底クラス（線形の鎖）", () => {
-  it("State は ChainListElem を継承し、ListElem（番兵付きの環の要素）は継承しない", () => {
+describe("State の鎖（null 終端）", () => {
+  it("State は ListElem（番兵付きの環の要素）ではない", () => {
     const { CML } = createCML();
     const st = new CML.State("p");
-    expect(st).toBeInstanceOf(CML.ChainListElem);
     expect(st).not.toBeInstanceOf(CML.ListElem);
     expect(new CML.Object()).toBeInstanceOf(CML.ListElem);
   });
 
-  it("ChainList は ChainListElem を並べる（番兵付きの環）", () => {
+  it("insert_after は鎖の途中に繋ぎ、cutChain は範囲を切り離して両端を null にする", () => {
     const { CML } = createCML();
-    const list = new CML.ChainList();
-    const a = new CML.State("p"), b = new CML.State("v");
-    expect(list.isEmpty()).toBe(true);
-    list.push(a); list.push(b);
-    expect(list.head).toBe(a);
-    expect(list.tail).toBe(b);
-    expect(list.shift()).toBe(a);
-    expect(list.pop()).toBe(b);
-    expect(list.isEmpty()).toBe(true);
+    const a = new CML.State("p"), b = new CML.State("v"), c = new CML.State("w"), x = new CML.State("a");
+    a.next = b; b.prev = a; b.next = c; c.prev = b;
+    x.insert_after(a);
+    expect([a.next, x.prev, x.next, b.prev]).toEqual([x, a, b, x]);
+    CML.State.cutChain(b, c);
+    expect([b.prev, c.next, x.next]).toEqual([null, null, null]);
   });
 });
 

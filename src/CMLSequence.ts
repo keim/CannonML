@@ -240,16 +240,18 @@ const seqAC:CML.Sequence = seq.findSequence("A.C");    // seqAB is "v0,4[w10f2]"
             if (cmd.type == State.ST_REFER) {
                 const ref = cmd as Refer;
                 if (ref.isLabelUnsolved()) {
-                    ref.jump = this.findSequence(ref._label!) || this._findGlobalSequence(ref._label!);
+                    const label = ref._label;
+                    if (label === null) throw Error("label is null"); // isLabelUnsolved() guarantees a label
+                    ref.jump = this.findSequence(label) || this._findGlobalSequence(label);
                     if (!ref.jump)
-                        throw Error("Not defined label; " + ref._label);
+                        throw Error("Not defined label; " + label);
                 }
             }
             else 
             // check a sequence after CML.State.STF_CALLREF (@ko, @o, f commands).
             if (cmd.type & State.STF_CALLREF) {
                 // if there are no references, ... 
-                if (cmd.next!.type != State.ST_REFER) {
+                if (cmd.next?.type != State.ST_REFER) {
                     if ((cmd.type & State.ST_RESTRICT) != 0) {
                         // throw error
                         throw Error("No sequences after @ ?");
