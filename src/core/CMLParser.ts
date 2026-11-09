@@ -29,20 +29,20 @@ export class Parser {
     _regexp: RegExp | null
     _regexpUserCommand: RegExp | null
     _globalVariables: Global
-    // _createCMLRegExp() で設定される正規表現のキャプチャ位置
-    REX_COMMENT!: number
-    REX_STRING!: number
-    REX_FORMULA!: number
-    REX_NORMAL!: number
-    REX_ASSIGN!: number
-    REX_CALLSEQ!: number
-    REX_LABELDEF!: number
-    REX_REPEATCALL!: number
-    REX_NONLABELDEF!: number
-    REX_ARG_PREFIX!: number
-    REX_ARG_LITERAL!: number
-    REX_ARG_POSTFIX!: number
-    REX_ERROR!: number
+    // capture group indexes of the regular expression (fixed)
+    readonly REX_COMMENT = 1
+    readonly REX_STRING = 2
+    readonly REX_FORMULA = 5
+    readonly REX_NORMAL = 6
+    readonly REX_ASSIGN = 7
+    readonly REX_CALLSEQ = 8
+    readonly REX_LABELDEF = 9
+    readonly REX_REPEATCALL = 10
+    readonly REX_NONLABELDEF = 11
+    readonly REX_ARG_PREFIX = 12
+    readonly REX_ARG_LITERAL = 14
+    readonly REX_ARG_POSTFIX = 16
+    readonly REX_ERROR = 18
     constructor(globalVariables_: Global) {
         // variables
         //------------------------------------------------------------
@@ -258,19 +258,6 @@ export class Parser {
             const literalRegExpString = "(0x[0-9a-f]{1,8}|\\d+\\.?\\d*|\\$(\\?\\?|\\?|" + this._userReferenceRegExpString() + ")[0-9]?)";
             const operandRegExpString = Formula._createOperandRegExpString(literalRegExpString);
             // construct regexp string
-            this.REX_COMMENT = 1; // comment
-            this.REX_STRING = 2; // string
-            this.REX_FORMULA = 5; // formula and arguments
-            this.REX_NORMAL = 6; // normal commands
-            this.REX_ASSIGN = 7; // assign
-            this.REX_CALLSEQ = 8; // call sequence
-            this.REX_LABELDEF = 9; // labeled sequence definition
-            this.REX_REPEATCALL = 10; // repeat previous call
-            this.REX_NONLABELDEF = 11; // non-labeled sequence definition
-            this.REX_ARG_PREFIX = 12; // argument prefix
-            this.REX_ARG_LITERAL = 14; // argument literal
-            this.REX_ARG_POSTFIX = 16; // argument postfix
-            this.REX_ERROR = 18; // error
             let rexstr = "(//[^\\n]*$|/\\*[\\s\\S]*?\\*/)"; // comment (res[1]); may span lines
             rexstr += "|'(.*?)'"; // string (res[2])
             rexstr += "|(("; // ---all--- (res[3,4])

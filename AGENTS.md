@@ -55,8 +55,8 @@ Browser-only bullet-pattern (shmup) DSL library, written in TypeScript (ESM). np
 
 - `old/` is a frozen archive (`v1(actionscript)`, and `v2(javascript)` = the pre-TypeScript sources). Never edit or mirror changes there.
 - Off-screen culling: `CML.Runner.onUpdate` auto-destroys runners outside `setScreenSize` bounds unless `runner.scopeEnabled = false` (player objects in `demo/main.js`). Without `setScreenSize` the screen is 200 x 200 (bounds ±100), so a runner placed outside it is destroyed on its first `update`.
-- `README.md` still describes the v2 / pre-TypeScript state and links to deleted v2 docs. Do not treat it as current. Open tasks are in `docs/remaining-tasks.md`.
+- `README.md` describes the v3 / TypeScript state and links to `docs/reference/v3/cannonML.md`. Open tasks are in `docs/remaining-tasks.md`.
 
 ## Current state (2026-11-09)
 
-`npm run typecheck` passes; `npm test` passes 250 tests (`it.fails` none); no `@ts-expect-error`. No `var`, no `any`, `null!` is 4 (all in `Fiber`: `_object` / `_target`). List constraints are F-bounded (`T extends ListElem<T>`); the statement chain lives on `State` itself (`ChainList` was removed). The spec and the implementation agree, with no known defects. The full list of open items (including typing cleanup, README, demo) is in `docs/remaining-tasks.md`.
+`npm run typecheck` passes; `npm test` passes 251 tests (`it.fails` none); no `@ts-expect-error`. No `var`, no `any`, `null!` is 4 (all in `Fiber`: `_object` / `_target`). List constraints are F-bounded (`T extends ListElem<T>`); the statement chain lives on `State` itself (`ChainList` was removed). The spec and the implementation agree, with no known defects. The full list of open items (typing cleanup, demo) is in `docs/remaining-tasks.md`.
