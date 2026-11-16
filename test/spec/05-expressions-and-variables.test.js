@@ -111,6 +111,37 @@ describe("変数", () => {
     expect(run("f0,10{w9} w1 p$o,0", 3).trace.at(-1)).toEqual([1, 0]);
   });
 
+  it("$o は変数・数式で指定した ID も、評価した値で数える", () => {
+    expect(run("l$1=2 f0,$1{} w1 p$o2,0", 3).trace.at(-1)).toEqual([1, 0]);
+    expect(run("l$1=2 f0,$1{} w1 p$o1,0", 3).trace.at(-1)).toEqual([0, 0]);
+    expect(run("f0,1+1{} w1 p$o2,0", 3).trace.at(-1)).toEqual([1, 0]);
+    expect(run("f0,1+1{} w1 p$o1,0", 3).trace.at(-1)).toEqual([0, 0]);
+  });
+
+  it("$o は b* で複製された子も全数数える（複製された子はすべて同じ ID）", () => {
+    const r = run("da0 bm3,0 f0,1{} w1 p$o1,0 pz$o", 3);
+    expect(r.trace.at(-1)).toEqual(at(0, 3, 0));
+    expect(r.runner.pos.z).toBe(3);
+  });
+
+  it("$o は fs で生成した子も数える", () => {
+    expect(run("fs0,1{} w1 p$o1,0", 3).trace.at(-1)).toEqual([1, 0]);
+  });
+
+  it("$o は生存中の子だけを数える（破棄された子は数に含まれない）", () => {
+    expect(run("f0,1{w9} w1 p$o1,0", 3).trace.at(-1)).toEqual([1, 0]);
+    expect(run("f0,1{w1 ko0} w4 p$o1,0", 6).trace.at(-1)).toEqual([0, 0]);
+  });
+
+  it("$o は生成したフレームのうちに参照しても、生成直後の数を返す", () => {
+    expect(run("f0,1{} p$o,0", 2).trace[0]).toEqual([1, 0]);
+  });
+
+  it("非整数の ID は小数部が切り捨てられる", () => {
+    expect(run("f0,1.5{} w1 p$o1,0", 3).trace.at(-1)).toEqual([1, 0]);
+    expect(run("f0,1.5{} w1 p$o2,0", 3).trace.at(-1)).toEqual([0, 0]);
+  });
+
   it("$p.* は親オブジェクトのパラメータ", () => {
     expect(pos(run("p3,4 w1 f0{p$p.x,$p.y}", 4).spawned[0])).toEqual([3, 4]);
     expect(pos(run("p-3,4 w1 f0{p$p.sx,$p.sy}", 4).spawned[0])).toEqual([-1, 1]);

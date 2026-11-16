@@ -56,6 +56,12 @@ describe("@o 子オブジェクトファイバ起動", () => {
     expect(r.spawned.map(pos)).toEqual([[9, 0], [9, 0]]);
   });
 
+  it("@o で起動したファイバでは、補助パラメータ（b* の設定）がリセットされる", () => {
+    // 親が bm3,0 を設定していても、@o 先の子の f は 1 発だけ（設定が漏れると 3 発になる）
+    expect(run("f0,1{} @o1{f0}", 2).spawned.length).toBe(2);
+    expect(run("f0,1{} bm3,0 @o1{f0}", 2).spawned.length).toBe(2);
+  });
+
   it("@o1{@o2{...}} は孫オブジェクトに対してシーケンスを実行する", () => {
     const r = run("f0,1{f0,2{}} w2 @o1{@o2{p9,0}}", 6);
     expect(pos(r.spawned[0])).toEqual([0, 0]);
@@ -65,6 +71,17 @@ describe("@o 子オブジェクトファイバ起動", () => {
   // @o は子オブジェクト ID を 1 つだけ受け取る。2 つ書くと構文エラー
   it("@o に ID を 2 つ書くと構文エラー", () => {
     expect(() => parse("f0,1{} @o1,2{p9,0}")).toThrow();
+  });
+
+  it("存在しない ID への @o は、何も起きない（エラーにならない）", () => {
+    const r = run("f0,1{} @o2{p9,0}", 3);
+    expect(pos(r.spawned[0])).toEqual([0, 0]);
+  });
+
+  it("破棄済みの子への @o は、何も起きない（エラーにならない）", () => {
+    const r = run("f0,1{w1 ko0} w4 @o1{p9,0}", 6);
+    expect(r.spawned.length).toBe(1);
+    expect(pos(r.spawned[0])).toEqual([0, 0]);
   });
 });
 
