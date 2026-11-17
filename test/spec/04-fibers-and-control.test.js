@@ -276,6 +276,24 @@ describe("@m ミラーファイバ起動", () => {
     expect(pos(run(`@m{f0{${BASE} w1 ${BASE}}}`, 4).spawned[0])).toEqual(mirrored);
   });
 
+  it("dt は常にターゲットを狙い、オフセット角だけが反転する", () => {
+    const before = withTarget(0, 100);
+    const shot = s => deg(run(s, 3, { before }).spawned[0].vel);
+    expect(shot("w1 dt30 f5")).toBeCloseTo(120);
+    expect(shot("w1 @m{dt30 f5}")).toBeCloseTo(60);
+    expect(shot("w1 @m{dt0 f5}")).toBeCloseTo(90);
+  });
+
+  it("@m の中で起動した @x / @o / @ko のファイバも全コマンドが反転する", () => {
+    expect(run(`@m{@x1{${BASE}}}`, 1).trace[0]).toEqual(mirrored);
+    expect(pos(run(`@m{f0,1{} @o1{${BASE}}}`, 2).spawned[0])).toEqual(mirrored);
+    expect(run(`@m{@ko1{${BASE}} w1 ko1}`, 3).trace.at(-1)).toEqual(mirrored);
+  });
+
+  it("@m の中で fs で生成した子のファイバも全コマンドが反転する", () => {
+    expect(pos(run(`@m{fs0{${BASE}}}`, 2).spawned[0])).toEqual(mirrored);
+  });
+
   // & の戻りで反転の状態（mstc）が正しく戻ること。@m の中の & は、フレームをまたいでも反転したまま
   it("@m の中の & は、戻った後の反転も保つ（& を複数回・フレームをまたいで呼んでも）", () => {
     expect(run(`#A{${BASE}} @m{&A w1 &A}`, 1).trace[0]).toEqual(mirrored);

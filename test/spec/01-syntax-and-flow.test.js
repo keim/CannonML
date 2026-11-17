@@ -247,6 +247,11 @@ describe("待機", () => {
     expect(xs(run("w0 p1,0 w0 p2,0 w1 p3,0", 3).trace)).toEqual([2, 3, 3]);
   });
 
+  it("w の小数は切り捨てられる（w0.5 は w0 と同じ、w1.5 は w1 と同じ）", () => {
+    expect(run("w0.5 p9,0", 3).trace).toEqual(run("w0 p9,0", 3).trace);
+    expect(run("w1.5 p9,0", 4).trace).toEqual(run("w1 p9,0", 4).trace);
+  });
+
   it("w? は式が 0 になるまで待つ", () => {
     const x = xs(run("l$1=1 {w4 l$1=0} w?$1 p9,0", 8).trace);
     expect(x[3]).toBe(0);
@@ -270,6 +275,10 @@ describe("待機の引数（変数・負の値）", () => {
 
   it("負の補間フレーム数は実行時エラー", () => {
     expect(() => run("i-1 p1,0 ~", 2)).toThrow("Interpolation frames cannot be negative");
+  });
+
+  it("~ に負数を指定しても実行時エラー", () => {
+    expect(() => run("~-1 p1,0", 2)).toThrow("Interpolation frames cannot be negative");
   });
 });
 

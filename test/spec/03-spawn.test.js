@@ -255,8 +255,23 @@ describe("同時生成 bm / bs / br", () => {
     expect(r.spawned.length).toBe(20);
   });
 
+  it("bm と bm を連ねられる（bm3,30 bm5,0,2 は速度幅2の5連多重弾 × 3方向 = 15発）", () => {
+    const r = run("da0 bm3,30 bm5,0,2 f10", 1);
+    expect(r.spawned.length).toBe(15);
+    expect(sorted(angles(r.spawned)).map(a => Math.round(a))).toEqual([
+      -105, -105, -105, -105, -105, -90, -90, -90, -90, -90, -75, -75, -75, -75, -75,
+    ]);
+    const speeds = [...new Set(r.spawned.map(o => Math.round(speed(o) * 100) / 100))];
+    expect(sorted(speeds)).toEqual([9, 9.5, 10, 10.5, 11]);
+  });
+
   it("指定したあと、f を繰り返しても同じ設定で生成される", () => {
     expect(run("da0 bm3,30 f10 f10", 1).spawned.length).toBe(6);
+  });
+
+  it("弾数 0 かつ連射間隔 0 の場合は、1 発だけ発射される", () => {
+    expect(run("da0 bs0,0,0,0 f10", 5).spawned.length).toBe(1);
+    expect(run("da0 bm0,30 f10", 5).spawned.length).toBe(1);
   });
 
   it("bs で弾数 0 かつ連射間隔 > 0 なら、kf するまで連射し続ける", () => {
