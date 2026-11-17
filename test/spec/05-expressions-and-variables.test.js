@@ -149,6 +149,10 @@ describe("変数", () => {
     expect(pos(run("da0 v2,3 f0{w1 p$p.vx,$p.vy}", 4).spawned[0])).toEqual([3, -2]);
   });
 
+  it("$p.* は、親が破棄されている場合はルートオブジェクトのパラメータを参照する", () => {
+    expect(pos(run("p3,4 f0{w4 p$p.x,$p.y} w1 ko0", 7).spawned[0])).toEqual([0, 0]);
+  });
+
   it("$p.o1 などは親の持つ子の数", () => {
     expect(pos(run("f0,1{} f0,1{} f0,2{p$p.o1,$p.o2}", 3).spawned[2])).toEqual([2, 1]);
   });

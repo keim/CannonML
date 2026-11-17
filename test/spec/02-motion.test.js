@@ -33,6 +33,11 @@ describe("方向設定 d*", () => {
     expect(last("w1 dt90 p10,0", 2, { before })).toEqual([-10, 0]);
   });
 
+  it("dt: ターゲットが破棄されていても、破棄時点の位置を基準にする", () => {
+    const before = withTarget(0, 100, "w3 ko0");
+    expect(last("w5 dt0 p10,0", 7, { before })).toEqual([0, 10]);
+  });
+
   // da90 r1,1 で、オブジェクトの角度は画面の 0 度（右）
   it("do: オブジェクト角度との相対角度", () => {
     expect(last("da90 r1,1 do0 p10,0")).toEqual([10, 0]);

@@ -105,12 +105,33 @@ describe("@ko オブジェクト破棄時に起動するファイバ", () => {
     const r = run("@ko1{p9,0 w1 p7,0} w2 ko1", 8);
     expect(r.trace.at(-1)).toEqual([9, 0]);
   });
+
+  it("@ko のシーケンスでは、w より前の f は実行される（破棄フレームに子が生成される）", () => {
+    expect(run("@ko1{f0} w2 ko1", 4).spawned.length).toBe(1);
+    expect(run("@ko1{w1 f0} w2 ko1", 4).spawned.length).toBe(0);
+  });
 });
 
 describe("ko オブジェクト破棄", () => {
   it("このコマンドを実行したオブジェクト自身を破棄する", () => {
     expect(run("w2 ko0", 2).runner.isActive).toBe(true);
     expect(run("w2 ko0", 3).runner.isActive).toBe(false);
+  });
+
+  it("ko と同フレームの残りのコマンドは実行される（破棄はフレーム終わりに確定）", () => {
+    expect(run("ko0 p9,0", 3).trace.at(-1)).toEqual([9, 0]);
+  });
+
+  it("オブジェクトが破棄されると、@x で起動したファイバも止まる", () => {
+    const { counts } = run("@x1{[f0 w1]} w2 ko0", 10);
+    expect(counts.at(-1)).toBe(counts[3]);
+  });
+
+  it("親が破棄されても、生成した子オブジェクトは破棄されず動き続ける", () => {
+    const r = run("f0{da0 v1,0} w2 ko0", 8);
+    expect(r.runner.isActive).toBe(false);
+    expect(r.spawned[0].isActive).toBe(true);
+    expect(r.spawned[0].pos.y).toBeCloseTo(-8);
   });
 
   it("破棄すると onDestroy コールバックが呼ばれる", () => {
@@ -143,6 +164,15 @@ describe("kf 全ファイバ停止", () => {
 
   it("他のファイバが生成したファイバは止めない", () => {
     expect(run("{[f0 w1]} {w3 kf}", 6).counts.at(-1)).toBe(6);
+  });
+
+  it("破棄済みの子がいても kf は例外なく、止められる子ファイバを止める", () => {
+    const { counts } = run("f0{w1 ko0} {[f0 w1]} w3 kf", 10);
+    expect(counts.at(-1)).toBe(counts[3]);
+  });
+
+  it("kf は子オブジェクトを破棄しない（$o は変わらない）", () => {
+    expect(run("f0,1{} f0,1{} f0,1{} kf w1 p$o,0", 3).trace.at(-1)).toEqual([3, 0]);
   });
 });
 
@@ -178,6 +208,11 @@ describe("t* ターゲットオブジェクトの指定", () => {
   it("to: 最古のオブジェクトが破棄されていれば、次に古い生存オブジェクトになる", () => {
     const r = run("f0,1{p0,30 w2 ko0} f0,1{p30,0} w6 to1 dt0 f5", 8);
     expect(deg(r.spawned[2].vel)).toBeCloseTo(0);
+  });
+
+  it("to: 指定 ID の生存オブジェクトがなければ、ターゲットは変更されない", () => {
+    const r = run("f0,1{w1 ko0} w4 to1 dt0 f5", 6, { before: withTarget(0, 100) });
+    expect(deg(r.spawned[1].vel)).toBeCloseTo(90);
   });
 });
 

@@ -57,6 +57,12 @@ describe("オブジェクト生成 f / fs", () => {
     expect(r.runner.pos.y).toBeCloseTo(-6);
   });
 
+  it("fs の子は、親が破棄されると破棄時点の位置に留まる", () => {
+    const y = n => run("da0 fs0 v1,0 w3 ko0", n).spawned[0].pos.y;
+    expect(y(9)).toBeCloseTo(y(5));
+    expect(y(5)).toBeCloseTo(-3);
+  });
+
   it("fs の子は親の相対位置に配置され、親に追従する", () => {
     // 親は da0（画面の下）へ動く。縦方向の差で追従を見る
     const offset = n => {
