@@ -78,6 +78,9 @@ export class Runner extends CMLObject {
         if (this._createdby && this._createdby._onCreateNewRunner) {
             this._createdby._onCreateNewRunner(this);
         }
+        // _createdby is only needed for the callback above; drop it so a
+        // long-lived child does not retain its creator chain.
+        this._createdby = null;
     }
     /** @private */
     onDestroy() {

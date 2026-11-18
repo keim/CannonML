@@ -93,6 +93,12 @@ describe("オブジェクト生成 f / fs", () => {
   it("&label の引数は、生成された子オブジェクトの $1.. になる", () => {
     expect(pos(run("#A{p$1,0} f0 &A 4", 3).spawned[0])).toEqual([4, 0]);
   });
+
+  it("生成された子は、生成元への参照を保持しない（_createdby は生成直後に外れる）", () => {
+    const r = run("f0", 1);
+    expect(r.spawned.length).toBe(1);
+    expect(r.spawned[0]._createdby).toBeNull();
+  });
 });
 
 describe("オブジェクト ID（f / fs の第 2 引数）", () => {
